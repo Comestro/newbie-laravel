@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ProductCategory;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +26,7 @@ class AdminProductController extends Controller
     public function create(): Response
     {
         return Inertia::render('Admin/Products/Create', [
-            'categories' => ProductCategory::cases(),
+            'categories' => Category::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -75,7 +75,7 @@ class AdminProductController extends Controller
 
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
-            'categories' => ProductCategory::cases(),
+            'categories' => Category::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 

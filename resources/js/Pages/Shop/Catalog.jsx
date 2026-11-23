@@ -183,20 +183,24 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
 
                     <div className="space-y-1">
                         {categories.map((cat) => {
-                            const isSelected = currentCategory?.toLowerCase() === cat.value.toLowerCase();
-                            const emoji = cat.value === 'MILK' ? '🥛' : cat.value === 'WATER' ? '💧' : '🍹';
+                            const catVal = cat.name || cat.value || '';
+                            const catSlug = cat.slug || catVal.toLowerCase();
+                            const isSelected =
+                                currentCategory?.toLowerCase() === catSlug.toLowerCase() ||
+                                currentCategory?.toLowerCase() === catVal.toLowerCase();
+                            const emoji = cat.icon || (catVal.toUpperCase() === 'MILK' ? '🥛' : catVal.toUpperCase() === 'WATER' ? '💧' : '🍹');
                             return (
                                 <button
-                                    key={cat.value}
+                                    key={cat.id || catVal}
                                     type="button"
-                                    onClick={() => handleSelectCategory(cat.value.toLowerCase())}
+                                    onClick={() => handleSelectCategory(catSlug)}
                                     className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-xs font-semibold transition ${
                                         isSelected
                                             ? 'bg-purple-50 text-purple-700 border border-purple-200'
                                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
                                     }`}
                                 >
-                                    <span>{cat.value.charAt(0).toUpperCase() + cat.value.slice(1).toLowerCase()}</span>
+                                    <span className="truncate mr-2">{catVal}</span>
                                     <span>{emoji}</span>
                                 </button>
                             );
@@ -222,13 +226,17 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                             </button>
 
                             {categories.map((cat) => {
-                                const isSelected = currentCategory?.toLowerCase() === cat.value.toLowerCase();
-                                const emoji = cat.value === 'MILK' ? '🥛' : cat.value === 'WATER' ? '💧' : '🍹';
+                                const catVal = cat.name || cat.value || '';
+                                const catSlug = cat.slug || catVal.toLowerCase();
+                                const isSelected =
+                                    currentCategory?.toLowerCase() === catSlug.toLowerCase() ||
+                                    currentCategory?.toLowerCase() === catVal.toLowerCase();
+                                const emoji = cat.icon || (catVal.toUpperCase() === 'MILK' ? '🥛' : catVal.toUpperCase() === 'WATER' ? '💧' : '🍹');
                                 return (
                                     <button
-                                        key={cat.value}
+                                        key={cat.id || catVal}
                                         type="button"
-                                        onClick={() => handleSelectCategory(cat.value.toLowerCase())}
+                                        onClick={() => handleSelectCategory(catSlug)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border flex items-center gap-1.5 transition ${
                                             isSelected
                                                 ? 'bg-purple-600 text-white border-purple-600'
@@ -236,7 +244,7 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                                         }`}
                                     >
                                         <span>{emoji}</span>
-                                        <span>{cat.value.charAt(0).toUpperCase() + cat.value.slice(1).toLowerCase()}</span>
+                                        <span>{catVal}</span>
                                     </button>
                                 );
                             })}

@@ -46,6 +46,8 @@ class InertiaRoutesTest extends TestCase
         $this->actingAs($admin)->get('/admin/orders')->assertStatus(200);
         $this->actingAs($admin)->get('/admin/review-retailer')->assertStatus(200);
         $this->actingAs($admin)->get('/admin/customers')->assertStatus(200);
+        $this->actingAs($admin)->get('/admin/categories')->assertStatus(200);
+        $this->actingAs($admin)->get('/admin/categories/create')->assertStatus(200);
     }
 
     public function test_retailer_can_access_retailer_dashboard(): void

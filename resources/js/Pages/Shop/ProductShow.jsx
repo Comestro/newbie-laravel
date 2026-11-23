@@ -16,9 +16,14 @@ export default function ProductShow({ product }) {
 
     const getCategoryEmoji = (cat) => {
         const c = (cat?.value || cat || '').toUpperCase();
-        if (c === 'MILK') return '🥛';
-        if (c === 'WATER') return '💧';
-        return '🍹';
+        if (c.includes('MILK') || c.includes('DAIRY')) return '🥛';
+        if (c.includes('WATER')) return '💧';
+        if (c.includes('BEVERAGE') || c.includes('JUICE') || c.includes('DRINK')) return '🍹';
+        if (c.includes('BAKER') || c.includes('BREAD')) return '🥖';
+        if (c.includes('FRUIT') || c.includes('APPLE')) return '🍎';
+        if (c.includes('VEG')) return '🥦';
+        if (c.includes('SNACK')) return '🍪';
+        return '📦';
     };
 
     return (

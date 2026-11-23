@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use App\Enums\ProductCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -14,7 +15,6 @@ class Product extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'category' => ProductCategory::class,
         'is_active' => 'boolean',
     ];
 
@@ -29,7 +29,7 @@ class Product extends Model
 
         static::saving(function ($product) {
             if (empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name);
+                $product->slug = Str::slug($product->name);
             }
         });
     }
@@ -37,5 +37,10 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function categoryRelation(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category', 'name');
     }
 }

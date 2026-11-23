@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ProductCategory;
 use App\Models\Address;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -28,9 +28,12 @@ class ShopController extends Controller
             ->get()
             ->groupBy(fn($item) => $item->category instanceof \BackedEnum ? $item->category->value : (string) $item->category);
 
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+
         return Inertia::render('Shop/Home', [
             'groupedProducts' => $products,
             'selectedCategory' => $selectedCategory,
+            'categories' => $categories,
         ]);
     }
 
@@ -84,8 +87,11 @@ class ShopController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+
         return Inertia::render('Shop/Catalog', [
             'products' => $products,
+            'categories' => $categories,
             'filters' => [
                 'category' => $category,
                 'search' => $search,

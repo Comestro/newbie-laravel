@@ -3,6 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import {
     LayoutDashboard,
     Package,
+    Layers,
     ShoppingBag,
     Users,
     ShieldCheck,
@@ -22,6 +23,7 @@ export default function AdminSidebar() {
 
     const links = [
         { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { label: 'Categories', href: '/admin/categories', icon: Layers },
         { label: 'Products', href: '/admin/products', icon: Package },
         { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
         { label: 'Customers', href: '/admin/customers', icon: Users },

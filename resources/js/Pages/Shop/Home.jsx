@@ -127,12 +127,17 @@ function ProductCard({ product, categoryName }) {
     );
 }
 
-export default function Home({ groupedProducts = {} }) {
+export default function Home({ groupedProducts = {}, categories = [] }) {
     const getCategoryDisplayTitle = (cat) => {
+        const found = categories.find(
+            (c) => c.name?.toLowerCase() === cat?.toLowerCase() || c.slug?.toLowerCase() === cat?.toLowerCase()
+        );
+        if (found) return found.name;
         const c = (cat || '').toUpperCase();
         if (c === 'MILK') return 'Milk & Dairy';
         if (c === 'WATER') return 'Water & Hydration';
-        return 'Beverages & Soft Drinks';
+        if (c === 'BEVERAGES') return 'Beverages & Soft Drinks';
+        return cat;
     };
 
     return (
@@ -146,32 +151,47 @@ export default function Home({ groupedProducts = {} }) {
                         Shop by Category
                     </h2>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                        {/* Milk */}
-                        <Link
-                            href="/catalog?category=milk"
-                            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
-                        >
-                            <span className="text-3xl mb-1.5">🥛</span>
-                            <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Milk</span>
-                        </Link>
-
-                        {/* Water */}
-                        <Link
-                            href="/catalog?category=water"
-                            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
-                        >
-                            <span className="text-3xl mb-1.5">💧</span>
-                            <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Water</span>
-                        </Link>
-
-                        {/* Beverages */}
-                        <Link
-                            href="/catalog?category=beverages"
-                            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
-                        >
-                            <span className="text-3xl mb-1.5">🍹</span>
-                            <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Beverages</span>
-                        </Link>
+                        {categories.length > 0 ? (
+                            categories.map((cat) => {
+                                const slug = cat.slug || cat.name?.toLowerCase();
+                                return (
+                                    <Link
+                                        key={cat.id || slug}
+                                        href={`/catalog?category=${slug}`}
+                                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                                    >
+                                        <span className="text-3xl mb-1.5">{cat.icon || '📦'}</span>
+                                        <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700 text-center truncate max-w-full">
+                                            {cat.name}
+                                        </span>
+                                    </Link>
+                                );
+                            })
+                        ) : (
+                            <>
+                                <Link
+                                    href="/catalog?category=milk"
+                                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                                >
+                                    <span className="text-3xl mb-1.5">🥛</span>
+                                    <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Milk</span>
+                                </Link>
+                                <Link
+                                    href="/catalog?category=water"
+                                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                                >
+                                    <span className="text-3xl mb-1.5">💧</span>
+                                    <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Water</span>
+                                </Link>
+                                <Link
+                                    href="/catalog?category=beverages"
+                                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                                >
+                                    <span className="text-3xl mb-1.5">🍹</span>
+                                    <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Beverages</span>
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
 
