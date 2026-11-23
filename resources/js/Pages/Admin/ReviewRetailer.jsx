@@ -107,7 +107,7 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                                 <tr>
                                     <th className="py-3 px-4">Applicant</th>
                                     <th className="py-3 px-4">Email / Phone</th>
-                                    <th className="py-3 px-4">Aadhar Card</th>
+                                    <th className="py-3 px-4">Aadhaar Card</th>
                                     <th className="py-3 px-4">Status</th>
                                     <th className="py-3 px-4 text-right">Actions</th>
                                 </tr>
@@ -130,7 +130,7 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                                                 <div className="text-[10px] text-slate-400">{u.phone || 'No phone'}</div>
                                             </td>
                                             <td className="py-3 px-4 font-mono text-slate-700">
-                                                {u.aadhar_card || 'Not provided'}
+                                                {u.aadhaar_card || 'Not provided'}
                                             </td>
                                             <td className="py-3 px-4">
                                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -186,22 +186,22 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                             <div className="text-xs space-y-1.5 text-slate-600">
                                 <p><strong className="text-slate-900">Email:</strong> {selectedUser.email}</p>
                                 <p><strong className="text-slate-900">Phone:</strong> {selectedUser.phone || 'N/A'}</p>
-                                <p><strong className="text-slate-900">Aadhar:</strong> {selectedUser.aadhar_card}</p>
+                                <p><strong className="text-slate-900">Aadhaar:</strong> {selectedUser.aadhaar_card}</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 pt-2">
                                 <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhar Front</p>
-                                    {selectedUser.aadhar_front ? (
-                                        <img src={`/storage/${selectedUser.aadhar_front}`} alt="Front" className="h-28 w-full object-cover rounded-lg" />
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhaar Front</p>
+                                    {selectedUser.aadhaar_front ? (
+                                        <img src={`/storage/${selectedUser.aadhaar_front}`} alt="Front" className="h-28 w-full object-cover rounded-lg" />
                                     ) : (
                                         <p className="text-xs text-slate-400 py-8">No front image</p>
                                     )}
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhar Back</p>
-                                    {selectedUser.aadhar_back ? (
-                                        <img src={`/storage/${selectedUser.aadhar_back}`} alt="Back" className="h-28 w-full object-cover rounded-lg" />
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhaar Back</p>
+                                    {selectedUser.aadhaar_back ? (
+                                        <img src={`/storage/${selectedUser.aadhaar_back}`} alt="Back" className="h-28 w-full object-cover rounded-lg" />
                                     ) : (
                                         <p className="text-xs text-slate-400 py-8">No back image</p>
                                     )}
@@ -215,7 +215,7 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
                                         rows={2}
-                                        placeholder="e.g. Aadhar card photo is blurry or invalid..."
+                                        placeholder="e.g. Aadhaar card photo is blurry or invalid..."
                                         className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white"
                                         required
                                     />

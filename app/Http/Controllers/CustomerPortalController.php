@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Address;
 use App\Models\Order;
-use App\Models\RetailerKyc;
+use App\Models\RetailerProfile;
 use App\Models\Wishlist;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -199,9 +199,9 @@ class CustomerPortalController extends Controller
 
         $request->validate([
             'avatar' => 'nullable|image|max:2048',
-            'aadhar_card' => 'required|string|size:12',
-            'aadhar_front' => 'required|image|max:2048',
-            'aadhar_back' => 'required|image|max:2048',
+            'aadhaar_card' => 'required|string|size:12',
+            'aadhaar_front' => 'required|image|max:2048',
+            'aadhaar_back' => 'required|image|max:2048',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -212,25 +212,25 @@ class CustomerPortalController extends Controller
             $user->update(['avatar_url' => $avatarPath]);
         }
 
-        $existingKyc = RetailerKyc::where('user_id', $user->id)->first();
-        if ($existingKyc) {
-            if ($existingKyc->aadhar_card_front && Storage::disk('public')->exists($existingKyc->aadhar_card_front)) {
-                Storage::disk('public')->delete($existingKyc->aadhar_card_front);
+        $existingProfile = RetailerProfile::where('user_id', $user->id)->first();
+        if ($existingProfile) {
+            if ($existingProfile->aadhaar_card_front && Storage::disk('public')->exists($existingProfile->aadhaar_card_front)) {
+                Storage::disk('public')->delete($existingProfile->aadhaar_card_front);
             }
-            if ($existingKyc->aadhar_card_back && Storage::disk('public')->exists($existingKyc->aadhar_card_back)) {
-                Storage::disk('public')->delete($existingKyc->aadhar_card_back);
+            if ($existingProfile->aadhaar_card_back && Storage::disk('public')->exists($existingProfile->aadhaar_card_back)) {
+                Storage::disk('public')->delete($existingProfile->aadhaar_card_back);
             }
         }
 
-        $frontPath = $request->file('aadhar_front')->store('retailer/aadhar', 'public');
-        $backPath = $request->file('aadhar_back')->store('retailer/aadhar', 'public');
+        $frontPath = $request->file('aadhaar_front')->store('retailer/aadhaar', 'public');
+        $backPath = $request->file('aadhaar_back')->store('retailer/aadhaar', 'public');
 
-        RetailerKyc::updateOrCreate(
+        RetailerProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'aadhar_card' => $request->input('aadhar_card'),
-                'aadhar_card_front' => $frontPath,
-                'aadhar_card_back' => $backPath,
+                'aadhaar_card' => $request->input('aadhaar_card'),
+                'aadhaar_card_front' => $frontPath,
+                'aadhaar_card_back' => $backPath,
                 'status' => 'PENDING',
                 'rejection_reason' => null,
             ]

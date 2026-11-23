@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Models\RetailerKyc;
+use App\Models\RetailerProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,24 +17,25 @@ class AdminRetailerReviewController extends Controller
     {
         $status = $request->query('status', 'PENDING');
 
-        $requests = RetailerKyc::with('user')
+        $requests = RetailerProfile::with('user')
             ->where('status', $status)
             ->latest()
             ->get()
-            ->map(function ($kyc) {
+            ->map(function ($profile) {
                 return [
-                    'id' => $kyc->user->id,
-                    'kyc_id' => $kyc->id,
-                    'name' => $kyc->user->name,
-                    'email' => $kyc->user->email,
-                    'phone' => $kyc->user->phone,
-                    'aadhar_card' => $kyc->aadhar_card,
-                    'aadhar_front' => $kyc->aadhar_card_front,
-                    'aadhar_back' => $kyc->aadhar_card_back,
-                    'apply_status' => $kyc->status,
-                    'status' => $kyc->status,
-                    'rejection_reason' => $kyc->rejection_reason,
-                    'created_at' => $kyc->created_at,
+                    'id' => $profile->user->id,
+                    'profile_id' => $profile->id,
+                    'name' => $profile->user->name,
+                    'email' => $profile->user->email,
+                    'phone' => $profile->user->phone,
+                    'shop_name' => $profile->shop_name,
+                    'aadhaar_card' => $profile->aadhaar_card,
+                    'aadhaar_front' => $profile->aadhaar_card_front,
+                    'aadhaar_back' => $profile->aadhaar_card_back,
+                    'apply_status' => $profile->status,
+                    'status' => $profile->status,
+                    'rejection_reason' => $profile->rejection_reason,
+                    'created_at' => $profile->created_at,
                 ];
             });
 
@@ -50,8 +51,10 @@ class AdminRetailerReviewController extends Controller
             'role' => UserRole::RETAILER,
         ]);
 
-        RetailerKyc::where('user_id', $user->id)->update([
+        RetailerProfile::where('user_id', $user->id)->update([
             'status' => 'VERIFIED',
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
         ]);
 
         return back()->with('success', "{$user->name} has been approved as Retailer.");
@@ -63,7 +66,7 @@ class AdminRetailerReviewController extends Controller
             'reject_reason' => 'required|string|min:5',
         ]);
 
-        RetailerKyc::where('user_id', $user->id)->update([
+        RetailerProfile::where('user_id', $user->id)->update([
             'status' => 'REJECTED',
             'rejection_reason' => $request->input('reject_reason'),
         ]);

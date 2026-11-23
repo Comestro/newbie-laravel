@@ -56,39 +56,39 @@ class User extends Authenticatable
             ->implode('');
     }
 
+    public function retailerProfile(): HasOne
+    {
+        return $this->hasOne(RetailerProfile::class);
+    }
+
     public function retailerKyc(): HasOne
     {
-        return $this->hasOne(RetailerKyc::class);
+        return $this->hasOne(RetailerProfile::class);
     }
 
     public function getApplyStatusAttribute(): ?string
     {
-        return $this->retailerKyc?->status;
+        return $this->retailerProfile?->status;
     }
 
-    public function getAadharCardAttribute(): ?string
+    public function getAadhaarCardAttribute(): ?string
     {
-        return $this->retailerKyc?->aadhar_card;
+        return $this->retailerProfile?->aadhaar_card;
     }
 
-    public function getAadharCardFrontAttribute(): ?string
+    public function getAadhaarCardFrontAttribute(): ?string
     {
-        return $this->retailerKyc?->aadhar_card_front;
+        return $this->retailerProfile?->aadhaar_card_front;
     }
 
-    public function getAadharCardBackAttribute(): ?string
+    public function getAadhaarCardBackAttribute(): ?string
     {
-        return $this->retailerKyc?->aadhar_card_back;
+        return $this->retailerProfile?->aadhaar_card_back;
     }
 
     public function getKycRejectReasonAttribute(): ?string
     {
-        return $this->retailerKyc?->rejection_reason;
-    }
-
-    public function retailerProfile(): HasOne
-    {
-        return $this->hasOne(RetailerProfile::class);
+        return $this->retailerProfile?->rejection_reason;
     }
 
     public function addresses(): HasMany

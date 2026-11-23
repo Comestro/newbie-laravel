@@ -6,9 +6,9 @@ import { ShieldCheck, AlertCircle, UploadCloud, CheckCircle2, Clock } from 'luci
 export default function ApplyToRetailer({ user }) {
     const { data, setData, post, processing, errors } = useForm({
         avatar: null,
-        aadhar_card: user?.aadhar_card || '',
-        aadhar_front: null,
-        aadhar_back: null,
+        aadhaar_card: user?.aadhaar_card || '',
+        aadhaar_front: null,
+        aadhaar_back: null,
     });
 
     const handleSubmit = (e) => {
@@ -45,7 +45,7 @@ export default function ApplyToRetailer({ user }) {
                         <div>
                             <p className="font-bold text-xs">Application Under Review</p>
                             <p className="text-[11px] text-amber-700 mt-0.5">
-                                Our admin team is currently reviewing your uploaded Aadhar details. We'll update your status shortly.
+                                Our admin team is currently reviewing your uploaded Aadhaar details. We'll update your status shortly.
                             </p>
                         </div>
                     </div>
@@ -69,45 +69,45 @@ export default function ApplyToRetailer({ user }) {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                    Aadhar Card Number (12 Digits)
+                                    Aadhaar Card Number (12 Digits)
                                 </label>
                                 <input
                                     type="text"
-                                    value={data.aadhar_card}
-                                    onChange={(e) => setData('aadhar_card', e.target.value)}
+                                    value={data.aadhaar_card}
+                                    onChange={(e) => setData('aadhaar_card', e.target.value)}
                                     placeholder="XXXX XXXX XXXX"
                                     maxLength="12"
                                     className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-mono"
                                     required
                                 />
-                                {errors.aadhar_card && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhar_card}</p>}
+                                {errors.aadhaar_card && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhaar_card}</p>}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                        Aadhar Front Side Photo
+                                        Aadhaar Front Side Photo
                                     </label>
                                     <input
                                         type="file"
-                                        onChange={(e) => setData('aadhar_front', e.target.files[0])}
+                                        onChange={(e) => setData('aadhaar_front', e.target.files[0])}
                                         className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
                                         required
                                     />
-                                    {errors.aadhar_front && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhar_front}</p>}
+                                    {errors.aadhaar_front && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhaar_front}</p>}
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                        Aadhar Back Side Photo
+                                        Aadhaar Back Side Photo
                                     </label>
                                     <input
                                         type="file"
-                                        onChange={(e) => setData('aadhar_back', e.target.files[0])}
+                                        onChange={(e) => setData('aadhaar_back', e.target.files[0])}
                                         className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
                                         required
                                     />
-                                    {errors.aadhar_back && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhar_back}</p>}
+                                    {errors.aadhaar_back && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhaar_back}</p>}
                                 </div>
                             </div>
 

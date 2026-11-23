@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\RetailerKyc;
+use App\Models\RetailerProfile;
 use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +16,7 @@ class AdminDashboardController extends Controller
         $totalOrders = Order::count();
         $totalCustomer = User::where('role', '!=', 'ADMIN')->count();
         $totalRevenue = Order::where('status', 'COMPLETED')->orWhere('status', 'completed')->sum('total_amount');
-        $unVerifiedRetailer = RetailerKyc::where('status', 'PENDING')->count();
+        $unVerifiedRetailer = RetailerProfile::where('status', 'PENDING')->count();
         $recentOrders = Order::with('user')->latest()->take(8)->get();
 
         return Inertia::render('Admin/Dashboard', [

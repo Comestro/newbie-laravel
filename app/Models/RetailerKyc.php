@@ -2,21 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-class RetailerKyc extends Model
+class RetailerKyc extends RetailerProfile
 {
-    use HasFactory;
-
-    protected $table = 'retailer_kyc';
-
-    protected $guarded = ['id'];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $table = 'retailer_profiles';
 }
-

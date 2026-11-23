@@ -30,10 +30,12 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::RETAILER,
         ]);
 
-        \App\Models\RetailerKyc::create([
+        \App\Models\RetailerProfile::create([
             'user_id' => $retailer->id,
-            'aadhar_card' => '123456789012',
+            'shop_name' => 'Demo Retail Store',
+            'aadhaar_card' => '123456789012',
             'status' => 'VERIFIED',
+            'approved_at' => now(),
         ]);
 
         // Customer
