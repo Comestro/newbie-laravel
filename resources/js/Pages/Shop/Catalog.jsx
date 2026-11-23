@@ -30,7 +30,7 @@ function CatalogProductCard({ product }) {
     };
 
     const getCategoryEmoji = (cat) => {
-        const c = (cat?.value || cat || '').toUpperCase();
+        const c = (cat?.name || cat?.value || cat || '').toUpperCase();
         if (c === 'MILK') return '🥛';
         if (c === 'WATER') return '💧';
         return '🍹';

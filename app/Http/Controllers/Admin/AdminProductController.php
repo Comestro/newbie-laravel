@@ -16,7 +16,7 @@ class AdminProductController extends Controller
 {
     public function index(): Response
     {
-        $products = Product::withCount('variants')->latest()->paginate(10);
+        $products = Product::with('category')->withCount('variants')->latest()->paginate(10);
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
@@ -36,7 +36,7 @@ class AdminProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'brand' => 'required|string|max:255',
-            'category' => 'required',
+            'category_id' => 'required|exists:categories,id',
             'variants' => 'required|array|min:1',
             'variants.*.unit_size' => 'required|string',
             'variants.*.retail_price' => 'required|numeric|min:0',
@@ -50,7 +50,7 @@ class AdminProductController extends Controller
             'slug' => Str::slug($validated['name']),
             'description' => $validated['description'] ?? null,
             'brand' => $validated['brand'],
-            'category' => $validated['category'],
+            'category_id' => $validated['category_id'],
             'is_active' => $request->boolean('is_active', true),
         ]);
 
@@ -71,7 +71,7 @@ class AdminProductController extends Controller
 
     public function edit(Product $product): Response
     {
-        $product->load('variants');
+        $product->load(['variants', 'category']);
 
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
@@ -85,7 +85,7 @@ class AdminProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'brand' => 'required|string|max:255',
-            'category' => 'required',
+            'category_id' => 'required|exists:categories,id',
             'variants' => 'required|array|min:1',
             'variants.*.id' => 'nullable|exists:product_variants,id',
             'variants.*.unit_size' => 'required|string',
@@ -101,7 +101,7 @@ class AdminProductController extends Controller
             'slug' => Str::slug($validated['name']),
             'description' => $validated['description'] ?? null,
             'brand' => $validated['brand'],
-            'category' => $validated['category'],
+            'category_id' => $validated['category_id'],
             'is_active' => $request->boolean('is_active', true),
         ]);
 

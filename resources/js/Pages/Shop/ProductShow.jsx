@@ -15,7 +15,7 @@ export default function ProductShow({ product }) {
     const price = Number(selectedVariant.retail_price || 0);
 
     const getCategoryEmoji = (cat) => {
-        const c = (cat?.value || cat || '').toUpperCase();
+        const c = (cat?.name || cat?.value || cat || '').toUpperCase();
         if (c.includes('MILK') || c.includes('DAIRY')) return '🥛';
         if (c.includes('WATER')) return '💧';
         if (c.includes('BEVERAGE') || c.includes('JUICE') || c.includes('DRINK')) return '🍹';

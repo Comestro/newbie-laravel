@@ -17,16 +17,17 @@ class ShopController extends Controller
         $selectedCategory = $request->query('category');
 
         $products = Product::with([
+            'category',
             'variants' => function ($query) {
                 $query->where('is_active', true)->orderBy('retail_price');
             }
         ])
             ->where('is_active', true)
             ->when($selectedCategory, function ($query, $cat) {
-                $query->where('category', $cat);
+                $query->whereHas('category', fn($q) => $q->where('slug', $cat)->orWhere('name', $cat)->orWhere('id', $cat));
             })
             ->get()
-            ->groupBy(fn($item) => $item->category instanceof \BackedEnum ? $item->category->value : (string) $item->category);
+            ->groupBy(fn($item) => $item->category?->name ?? 'Other');
 
         $categories = Category::where('is_active', true)->orderBy('name')->get();
 
@@ -45,8 +46,11 @@ class ShopController extends Controller
 
         $query = Product::query()
             ->where('is_active', true)
-            ->with(['variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')])
-            ->when($category, fn($q) => $q->where('category', $category))
+            ->with([
+                'category',
+                'variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')
+            ])
+            ->when($category, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $category)->orWhere('name', $category)->orWhere('id', $category)))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'like', '%' . $search . '%')
@@ -102,15 +106,18 @@ class ShopController extends Controller
 
     public function show(Product $product): Response
     {
-        $product->load(['variants' => function ($q) {
-            $q->where('is_active', true)->orderBy('retail_price');
-        }]);
+        $product->load([
+            'category',
+            'variants' => function ($q) {
+                $q->where('is_active', true)->orderBy('retail_price');
+            }
+        ]);
 
         $relatedProducts = Product::query()
-            ->where('category', $product->category)
+            ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
-            ->with(['variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')])
+            ->with(['category', 'variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')])
             ->take(4)
             ->get();
 

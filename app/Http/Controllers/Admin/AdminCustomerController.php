@@ -26,7 +26,7 @@ class AdminCustomerController extends Controller
                     ->orWhere('phone', 'like', "%{$search}%");
             }))
             ->when($role, fn($q) => $q->where('role', $role))
-            ->when($status, fn($q) => $q->where('apply_status', $status))
+            ->when($status, fn($q) => $q->whereHas('retailerKyc', fn($k) => $k->where('status', $status)))
             ->when($active !== null && $active !== '', fn($q) => $q->where('is_active', (bool) $active))
             ->latest()
             ->paginate(10)

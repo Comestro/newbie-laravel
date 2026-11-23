@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ProductCategory;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Seeder;
@@ -14,11 +14,15 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        $milkCategory = Category::firstOrCreate(['name' => 'Milk'], ['slug' => 'milk', 'is_active' => true]);
+        $waterCategory = Category::firstOrCreate(['name' => 'Water'], ['slug' => 'water', 'is_active' => true]);
+        $beveragesCategory = Category::firstOrCreate(['name' => 'Beverages'], ['slug' => 'beverages', 'is_active' => true]);
+
         // 1. Milk Products
         $milk = Product::create([
+            'category_id' => $milkCategory->id,
             'name' => 'Fresh Cow Milk',
             'description' => 'Pure, organic fresh cow milk delivered daily.',
-            'category' => ProductCategory::MILK,
             'brand' => 'FarmFresh',
             'is_active' => true,
         ]);
@@ -45,9 +49,9 @@ class ProductSeeder extends Seeder
         ]);
 
         $buffaloMilk = Product::create([
+            'category_id' => $milkCategory->id,
             'name' => 'Buffalo Milk',
             'description' => 'Rich and creamy buffalo milk.',
-            'category' => ProductCategory::MILK,
             'brand' => 'FarmFresh',
             'is_active' => true,
         ]);
@@ -66,9 +70,9 @@ class ProductSeeder extends Seeder
 
         // 2. Water Products
         $water20 = Product::create([
+            'category_id' => $waterCategory->id,
             'name' => 'Mineral Water Jar',
             'description' => '20 Litre Mineral Water Jar for home and office.',
-            'category' => ProductCategory::WATER,
             'brand' => 'Bisleri',
             'is_active' => true,
         ]);
@@ -85,9 +89,9 @@ class ProductSeeder extends Seeder
         ]);
 
         $water1 = Product::create([
+            'category_id' => $waterCategory->id,
             'name' => 'Water Bottle Box',
             'description' => 'Box of 1 Litre Water Bottles (12 pcs).',
-            'category' => ProductCategory::WATER,
             'brand' => 'Kinley',
             'is_active' => true,
         ]);
@@ -106,9 +110,9 @@ class ProductSeeder extends Seeder
 
         // 3. Beverages
         $coke = Product::create([
+            'category_id' => $beveragesCategory->id,
             'name' => 'Coca Cola',
             'description' => 'Refreshing soft drink.',
-            'category' => ProductCategory::BEVERAGES,
             'brand' => 'Coca Cola',
             'is_active' => true,
         ]);
@@ -135,9 +139,9 @@ class ProductSeeder extends Seeder
         ]);
 
         $juice = Product::create([
+            'category_id' => $beveragesCategory->id,
             'name' => 'Mango Juice',
             'description' => 'Real mango pulp juice without preservatives.',
-            'category' => ProductCategory::BEVERAGES,
             'brand' => 'Real',
             'is_active' => true,
         ]);

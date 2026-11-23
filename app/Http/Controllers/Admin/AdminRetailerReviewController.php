@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\RetailerKyc;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,9 +17,26 @@ class AdminRetailerReviewController extends Controller
     {
         $status = $request->query('status', 'PENDING');
 
-        $requests = User::where('apply_status', $status)
+        $requests = RetailerKyc::with('user')
+            ->where('status', $status)
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($kyc) {
+                return [
+                    'id' => $kyc->user->id,
+                    'kyc_id' => $kyc->id,
+                    'name' => $kyc->user->name,
+                    'email' => $kyc->user->email,
+                    'phone' => $kyc->user->phone,
+                    'aadhar_card' => $kyc->aadhar_card,
+                    'aadhar_front' => $kyc->aadhar_card_front,
+                    'aadhar_back' => $kyc->aadhar_card_back,
+                    'apply_status' => $kyc->status,
+                    'status' => $kyc->status,
+                    'rejection_reason' => $kyc->rejection_reason,
+                    'created_at' => $kyc->created_at,
+                ];
+            });
 
         return Inertia::render('Admin/ReviewRetailer', [
             'requests' => $requests,
@@ -30,8 +48,10 @@ class AdminRetailerReviewController extends Controller
     {
         $user->update([
             'role' => UserRole::RETAILER,
-            'apply_status' => 'VERIFIED',
-            'is_verified' => true,
+        ]);
+
+        RetailerKyc::where('user_id', $user->id)->update([
+            'status' => 'VERIFIED',
         ]);
 
         return back()->with('success', "{$user->name} has been approved as Retailer.");
@@ -43,12 +63,13 @@ class AdminRetailerReviewController extends Controller
             'reject_reason' => 'required|string|min:5',
         ]);
 
-        $user->update([
-            'apply_status' => 'REJECTED',
+        RetailerKyc::where('user_id', $user->id)->update([
+            'status' => 'REJECTED',
             'rejection_reason' => $request->input('reject_reason'),
         ]);
 
         return back()->with('success', "Application for {$user->name} was rejected.");
     }
 }
+
 

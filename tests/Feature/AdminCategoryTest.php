@@ -104,10 +104,10 @@ class AdminCategoryTest extends TestCase
         ]);
 
         Product::create([
+            'category_id' => $category->id,
             'name' => 'Cow Milk Test',
             'slug' => 'cow-milk-test',
             'brand' => 'FarmFresh',
-            'category' => 'Dairy Test',
             'is_active' => true,
         ]);
 

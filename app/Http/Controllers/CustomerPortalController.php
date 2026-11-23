@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Address;
 use App\Models\Order;
+use App\Models\RetailerKyc;
 use App\Models\Wishlist;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -197,34 +198,43 @@ class CustomerPortalController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'avatar' => 'required|image|max:2048',
+            'avatar' => 'nullable|image|max:2048',
             'aadhar_card' => 'required|string|size:12',
             'aadhar_front' => 'required|image|max:2048',
             'aadhar_back' => 'required|image|max:2048',
         ]);
 
-        if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
-            Storage::disk('public')->delete($user->avatar_url);
-        }
-        if ($user->aadhar_card_front && Storage::disk('public')->exists($user->aadhar_card_front)) {
-            Storage::disk('public')->delete($user->aadhar_card_front);
-        }
-        if ($user->aadhar_card_back && Storage::disk('public')->exists($user->aadhar_card_back)) {
-            Storage::disk('public')->delete($user->aadhar_card_back);
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+                Storage::disk('public')->delete($user->avatar_url);
+            }
+            $avatarPath = $request->file('avatar')->store('retailer/avatar', 'public');
+            $user->update(['avatar_url' => $avatarPath]);
         }
 
-        $avatarPath = $request->file('avatar')->store('retailer/avatar', 'public');
+        $existingKyc = RetailerKyc::where('user_id', $user->id)->first();
+        if ($existingKyc) {
+            if ($existingKyc->aadhar_card_front && Storage::disk('public')->exists($existingKyc->aadhar_card_front)) {
+                Storage::disk('public')->delete($existingKyc->aadhar_card_front);
+            }
+            if ($existingKyc->aadhar_card_back && Storage::disk('public')->exists($existingKyc->aadhar_card_back)) {
+                Storage::disk('public')->delete($existingKyc->aadhar_card_back);
+            }
+        }
+
         $frontPath = $request->file('aadhar_front')->store('retailer/aadhar', 'public');
         $backPath = $request->file('aadhar_back')->store('retailer/aadhar', 'public');
 
-        $user->update([
-            'avatar_url' => $avatarPath,
-            'aadhar_card' => $request->input('aadhar_card'),
-            'aadhar_card_front' => $frontPath,
-            'aadhar_card_back' => $backPath,
-            'apply_status' => 'PENDING',
-            'rejection_reason' => null,
-        ]);
+        RetailerKyc::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'aadhar_card' => $request->input('aadhar_card'),
+                'aadhar_card_front' => $frontPath,
+                'aadhar_card_back' => $backPath,
+                'status' => 'PENDING',
+                'rejection_reason' => null,
+            ]
+        );
 
         return back()->with('success', 'Your application has been submitted for verification.');
     }

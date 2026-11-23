@@ -21,17 +21,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
         'mobile',
         'role',
         'is_active',
         'avatar_url',
         'last_login_at',
-        'aadhar_card',
-        'aadhar_card_front',
-        'aadhar_card_back',
-        'apply_status',
-        'rejection_reason',
-        'is_verified',
     ];
 
     protected $hidden = [
@@ -59,6 +54,36 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function retailerKyc(): HasOne
+    {
+        return $this->hasOne(RetailerKyc::class);
+    }
+
+    public function getApplyStatusAttribute(): ?string
+    {
+        return $this->retailerKyc?->status;
+    }
+
+    public function getAadharCardAttribute(): ?string
+    {
+        return $this->retailerKyc?->aadhar_card;
+    }
+
+    public function getAadharCardFrontAttribute(): ?string
+    {
+        return $this->retailerKyc?->aadhar_card_front;
+    }
+
+    public function getAadharCardBackAttribute(): ?string
+    {
+        return $this->retailerKyc?->aadhar_card_back;
+    }
+
+    public function getKycRejectReasonAttribute(): ?string
+    {
+        return $this->retailerKyc?->rejection_reason;
     }
 
     public function retailerProfile(): HasOne

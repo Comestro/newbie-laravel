@@ -23,11 +23,17 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Retailer
-        User::create([
+        $retailer = User::create([
             'name' => 'Retailer User',
             'email' => 'retailer@newbie.com',
             'password' => Hash::make('password'),
             'role' => UserRole::RETAILER,
+        ]);
+
+        \App\Models\RetailerKyc::create([
+            'user_id' => $retailer->id,
+            'aadhar_card' => '123456789012',
+            'status' => 'VERIFIED',
         ]);
 
         // Customer

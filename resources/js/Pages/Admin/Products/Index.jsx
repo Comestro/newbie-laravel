@@ -83,7 +83,7 @@ export default function Index({ products }) {
                                         </td>
                                         <td className="py-3 px-4">
                                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
-                                                {prod.category?.value || prod.category}
+                                                {prod.category?.name || 'Uncategorized'}
                                             </span>
                                         </td>
                                         <td className="py-3 px-4 text-slate-600">

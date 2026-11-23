@@ -39,8 +39,8 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function categoryRelation(): BelongsTo
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'category', 'name');
+        return $this->belongsTo(Category::class);
     }
 }
