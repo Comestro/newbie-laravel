@@ -1,13 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
+import ConfirmModal from '../../../Components/ConfirmModal';
 import { Plus, Edit, Trash2, Package } from 'lucide-react';
 
 export default function Index({ products }) {
-    const handleDelete = (id, name) => {
-        if (confirm(`Are you sure you want to delete "${name}"?`)) {
-            router.delete(`/admin/products/${id}`, { preserveScroll: true });
-        }
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        id: null,
+        name: '',
+        loading: false,
+    });
+
+    const openDeleteModal = (id, name) => {
+        setDeleteModal({
+            isOpen: true,
+            id,
+            name,
+            loading: false,
+        });
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deleteModal.id) return;
+        setDeleteModal((prev) => ({ ...prev, loading: true }));
+        router.delete(`/admin/products/${deleteModal.id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
+            },
+        });
     };
 
     return (
@@ -86,7 +108,7 @@ export default function Index({ products }) {
                                                 </Link>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDelete(prod.id, prod.name)}
+                                                    onClick={() => openDeleteModal(prod.id, prod.name)}
                                                     className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-rose-600"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
@@ -115,6 +137,21 @@ export default function Index({ products }) {
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={deleteModal.isOpen}
+                title="Delete Product"
+                message={
+                    <span>
+                        Are you sure you want to delete <strong className="text-slate-800 font-semibold">"{deleteModal.name}"</strong>? All associated variant SKUs will also be deleted.
+                    </span>
+                }
+                confirmText="Delete Product"
+                variant="danger"
+                loading={deleteModal.loading}
+                onConfirm={handleConfirmDelete}
+                onClose={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+            />
         </AdminLayout>
     );
 }

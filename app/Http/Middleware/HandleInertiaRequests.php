@@ -55,12 +55,11 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'cart' => session('cart', []),
-            'categories' => array_map(fn($c) => [
-                'name' => $c->name,
-                'value' => $c->value,
-            ], ProductCategory::cases()),
+            'categories' => fn () => \Illuminate\Support\Facades\Schema::hasTable('categories')
+                ? \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug'])
+                : [],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
+                'success' => fn () => $request->session()->get('success') ?? $request->session()->get('status'),
                 'error' => fn () => $request->session()->get('error'),
             ],
         ];

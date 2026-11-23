@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
+import ConfirmModal from '../../Components/ConfirmModal';
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 
 export default function UserAddress({ addresses = [] }) {
     const [isEditing, setIsEditing] = useState(false);
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        id: null,
+        label: '',
+        loading: false,
+    });
 
     const { data, setData, post, processing, errors, reset } = useForm({
         id: null,
@@ -49,10 +56,24 @@ export default function UserAddress({ addresses = [] }) {
         });
     };
 
-    const handleDelete = (id) => {
-        if (confirm('Delete this delivery address?')) {
-            router.delete(`/my-addresses/${id}`, { preserveScroll: true });
-        }
+    const openDeleteModal = (id, label) => {
+        setDeleteModal({
+            isOpen: true,
+            id,
+            label,
+            loading: false,
+        });
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deleteModal.id) return;
+        setDeleteModal((prev) => ({ ...prev, loading: true }));
+        router.delete(`/my-addresses/${deleteModal.id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeleteModal({ isOpen: false, id: null, label: '', loading: false });
+            },
+        });
     };
 
     return (
@@ -237,8 +258,9 @@ export default function UserAddress({ addresses = [] }) {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDelete(addr.id)}
+                                                    onClick={() => openDeleteModal(addr.id, addr.label)}
                                                     className="text-slate-400 hover:text-rose-600"
+                                                    title="Delete Address"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
@@ -258,6 +280,21 @@ export default function UserAddress({ addresses = [] }) {
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={deleteModal.isOpen}
+                title="Delete Address"
+                message={
+                    <span>
+                        Are you sure you want to delete <strong className="text-slate-800 font-semibold">"{deleteModal.label || 'this address'}"</strong>?
+                    </span>
+                }
+                confirmText="Delete Address"
+                variant="danger"
+                loading={deleteModal.loading}
+                onConfirm={handleConfirmDelete}
+                onClose={() => setDeleteModal({ isOpen: false, id: null, label: '', loading: false })}
+            />
         </AppLayout>
     );
 }

@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
+import ConfirmModal from '../../../Components/ConfirmModal';
 import { Plus, Edit, Trash2, Layers, Search } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Index({ categories, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        id: null,
+        name: '',
+        loading: false,
+    });
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -15,14 +23,28 @@ export default function Index({ categories, filters = {} }) {
         router.post(route('admin.categories.toggle-active', category.id), {}, { preserveScroll: true });
     };
 
-    const handleDelete = (id, name, productCount) => {
+    const openDeleteModal = (id, name, productCount) => {
         if (productCount > 0) {
-            alert(`Cannot delete "${name}" because it has ${productCount} assigned product(s). Please reassign or delete those products first.`);
+            toast.error(`Cannot delete "${name}" because it has ${productCount} assigned product(s). Please reassign or delete those products first.`);
             return;
         }
-        if (confirm(`Are you sure you want to delete category "${name}"?`)) {
-            router.delete(route('admin.categories.destroy', id), { preserveScroll: true });
-        }
+        setDeleteModal({
+            isOpen: true,
+            id,
+            name,
+            loading: false,
+        });
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deleteModal.id) return;
+        setDeleteModal((prev) => ({ ...prev, loading: true }));
+        router.delete(route('admin.categories.destroy', deleteModal.id), {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
+            },
+        });
     };
 
     const categoryList = categories?.data || (Array.isArray(categories) ? categories : []);
@@ -141,7 +163,7 @@ export default function Index({ categories, filters = {} }) {
                                                     </Link>
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleDelete(cat.id, cat.name, cat.products_count ?? 0)}
+                                                        onClick={() => openDeleteModal(cat.id, cat.name, cat.products_count ?? 0)}
                                                         className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition"
                                                         title="Delete Category"
                                                     >
@@ -184,6 +206,21 @@ export default function Index({ categories, filters = {} }) {
                     )}
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={deleteModal.isOpen}
+                title="Delete Category"
+                message={
+                    <span>
+                        Are you sure you want to delete category <strong className="text-slate-800 font-semibold">"{deleteModal.name}"</strong>? This action cannot be undone.
+                    </span>
+                }
+                confirmText="Delete Category"
+                variant="danger"
+                loading={deleteModal.loading}
+                onConfirm={handleConfirmDelete}
+                onClose={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+            />
         </AdminLayout>
     );
 }

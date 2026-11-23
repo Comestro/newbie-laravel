@@ -1,24 +1,44 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
+import ConfirmModal from '../../Components/ConfirmModal';
 import { ShieldCheck, CheckCircle2, XCircle, Eye, X } from 'lucide-react';
 
 export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING' }) {
     const [selectedUser, setSelectedUser] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const [showRejectForm, setShowRejectForm] = useState(false);
+    const [confirmApprove, setConfirmApprove] = useState({
+        isOpen: false,
+        userId: null,
+        loading: false,
+    });
 
     const handleFilter = (status) => {
         router.get('/admin/review-retailer', { status }, { preserveScroll: true });
     };
 
     const handleApprove = (userId) => {
-        if (confirm('Approve this retailer application?')) {
-            router.post(`/admin/review-retailer/${userId}/approve`, {}, {
-                preserveScroll: true,
-                onSuccess: () => setSelectedUser(null),
-            });
-        }
+        setConfirmApprove({
+            isOpen: true,
+            userId,
+            loading: false,
+        });
+    };
+
+    const executeApprove = () => {
+        if (!confirmApprove.userId) return;
+        setConfirmApprove((prev) => ({ ...prev, loading: true }));
+        router.post(`/admin/review-retailer/${confirmApprove.userId}/approve`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSelectedUser(null);
+                setConfirmApprove({ isOpen: false, userId: null, loading: false });
+            },
+            onError: () => {
+                setConfirmApprove((prev) => ({ ...prev, loading: false }));
+            },
+        });
     };
 
     const handleReject = (e) => {
@@ -230,6 +250,17 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={confirmApprove.isOpen}
+                title="Approve Retailer Application"
+                message="Are you sure you want to approve this retailer account? They will be granted retailer pricing and catalog access."
+                confirmText="Approve Application"
+                variant="primary"
+                loading={confirmApprove.loading}
+                onConfirm={executeApprove}
+                onClose={() => setConfirmApprove({ isOpen: false, userId: null, loading: false })}
+            />
         </AdminLayout>
     );
 }

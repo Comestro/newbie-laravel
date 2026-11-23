@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useSyncExternalStore } from 'react';
 import { router, usePage } from '@inertiajs/react';
+import toast from 'react-hot-toast';
 
 // Reactive store for cart drawer visibility across components
 let isCartOpenState = false;
@@ -52,7 +53,10 @@ export function useCartState() {
     const addToCart = (variantId, quantity = 1) => {
         router.post('/cart/add', { variant_id: variantId, quantity }, {
             preserveScroll: true,
-            onSuccess: () => cartDrawerStore.setOpen(true),
+            onSuccess: () => {
+                cartDrawerStore.setOpen(true);
+                toast.success('Added to cart!');
+            },
         });
     };
 

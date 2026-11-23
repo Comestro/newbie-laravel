@@ -1,26 +1,52 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function FlashMessages() {
     const { flash = {} } = usePage().props;
+    const lastFlash = useRef({});
 
-    if (!flash.success && !flash.error) return null;
+    useEffect(() => {
+        if (flash.success && flash.success !== lastFlash.current.success) {
+            toast.success(flash.success);
+            lastFlash.current.success = flash.success;
+        }
+        if (flash.error && flash.error !== lastFlash.current.error) {
+            toast.error(flash.error);
+            lastFlash.current.error = flash.error;
+        }
+    }, [flash]);
 
     return (
-        <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
-            {flash.success && (
-                <div className="pointer-events-auto flex items-center gap-3 p-3.5 bg-emerald-50 border border-emerald-200/80 text-emerald-800 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <p className="text-sm font-medium">{flash.success}</p>
-                </div>
-            )}
-            {flash.error && (
-                <div className="pointer-events-auto flex items-center gap-3 p-3.5 bg-rose-50 border border-rose-200/80 text-rose-800 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <p className="text-sm font-medium">{flash.error}</p>
-                </div>
-            )}
-        </div>
+        <Toaster
+            position="top-right"
+            toastOptions={{
+                duration: 3500,
+                style: {
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1px solid #f1f5f9',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    padding: '12px 16px',
+                },
+                success: {
+                    iconTheme: {
+                        primary: '#10b981',
+                        secondary: '#ffffff',
+                    },
+                },
+                error: {
+                    iconTheme: {
+                        primary: '#f43f5e',
+                        secondary: '#ffffff',
+                    },
+                },
+            }}
+        />
     );
 }
+
+export { toast };
