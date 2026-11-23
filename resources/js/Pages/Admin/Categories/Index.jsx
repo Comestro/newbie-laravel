@@ -8,11 +8,11 @@ export default function Index({ categories, filters = {} }) {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        router.get('/admin/categories', { search: search || undefined }, { preserveScroll: true });
+        router.get(route('admin.categories.index'), { search: search || undefined }, { preserveScroll: true });
     };
 
     const handleToggleActive = (category) => {
-        router.post(`/admin/categories/${category.id}/toggle-active`, {}, { preserveScroll: true });
+        router.post(route('admin.categories.toggle-active', category.id), {}, { preserveScroll: true });
     };
 
     const handleDelete = (id, name, productCount) => {
@@ -21,7 +21,7 @@ export default function Index({ categories, filters = {} }) {
             return;
         }
         if (confirm(`Are you sure you want to delete category "${name}"?`)) {
-            router.delete(`/admin/categories/${id}`, { preserveScroll: true });
+            router.delete(route('admin.categories.destroy', id), { preserveScroll: true });
         }
     };
 
@@ -33,7 +33,7 @@ export default function Index({ categories, filters = {} }) {
             subtitle="Manage product categories and active status"
             action={
                 <Link
-                    href="/admin/categories/create"
+                    href={route('admin.categories.create')}
                     className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-lg flex items-center gap-1.5 shadow-xs transition"
                 >
                     <Plus className="w-3.5 h-3.5" />
@@ -64,7 +64,7 @@ export default function Index({ categories, filters = {} }) {
                     </button>
                     {filters.search && (
                         <Link
-                            href="/admin/categories"
+                            href={route('admin.categories.index')}
                             className="px-3 py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center"
                         >
                             Clear
@@ -94,7 +94,7 @@ export default function Index({ categories, filters = {} }) {
                                                 <p className="font-semibold text-slate-700">No categories found</p>
                                                 <p className="text-[11px] text-slate-400">Create categories so products can be grouped and filtered in your store.</p>
                                                 <Link
-                                                    href="/admin/categories/create"
+                                                    href={route('admin.categories.create')}
                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-semibold hover:bg-purple-700 transition"
                                                 >
                                                     <Plus className="w-3.5 h-3.5" />
@@ -133,7 +133,7 @@ export default function Index({ categories, filters = {} }) {
                                             <td className="py-3 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Link
-                                                        href={`/admin/categories/${cat.id}/edit`}
+                                                        href={route('admin.categories.edit', cat.id)}
                                                         className="p-1.5 text-slate-400 hover:text-purple-600 rounded-lg hover:bg-slate-100 transition"
                                                         title="Edit Category"
                                                     >

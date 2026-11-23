@@ -36,7 +36,9 @@ class AdminCategoryController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Categories/Create');
+        return Inertia::render('Admin/Categories/Form', [
+            'category' => null,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -62,7 +64,7 @@ class AdminCategoryController extends Controller
 
     public function edit(Category $category): Response
     {
-        return Inertia::render('Admin/Categories/Edit', [
+        return Inertia::render('Admin/Categories/Form', [
             'category' => $category,
         ]);
     }
