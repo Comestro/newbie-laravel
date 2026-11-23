@@ -27,24 +27,24 @@ export default function ApplyToRetailer({ user }) {
         <AppLayout title="Apply to Retailer" subtitle="Submit your KYC documents to become a verified Newbie retailer">
             <Head title="Retailer Verification - Newbie Service" />
 
-            <div className="space-y-6 max-w-2xl">
+            <div className="space-y-4 max-w-2xl">
                 {/* Status Banners */}
                 {isVerified && (
-                    <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
-                        <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                         <div>
-                            <p className="font-bold text-sm">Congratulations! Your Retailer account is verified.</p>
-                            <p className="text-xs text-emerald-700 mt-0.5">You can now access the Retailer Portal and fulfill orders.</p>
+                            <p className="font-bold text-xs">Congratulations! Your Retailer account is verified.</p>
+                            <p className="text-[11px] text-emerald-700 mt-0.5">You can now access the Retailer Portal and fulfill orders.</p>
                         </div>
                     </div>
                 )}
 
                 {isSubmitted && (
-                    <div className="p-5 rounded-2xl bg-yellow-50 border border-yellow-200 text-yellow-800 flex items-center gap-3">
-                        <Clock className="w-6 h-6 text-yellow-600 shrink-0" />
+                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-3">
+                        <Clock className="w-5 h-5 text-amber-600 shrink-0" />
                         <div>
-                            <p className="font-bold text-sm">Application Under Review</p>
-                            <p className="text-xs text-yellow-700 mt-0.5">
+                            <p className="font-bold text-xs">Application Under Review</p>
+                            <p className="text-[11px] text-amber-700 mt-0.5">
                                 Our admin team is currently reviewing your uploaded Aadhar details. We'll update your status shortly.
                             </p>
                         </div>
@@ -52,88 +52,72 @@ export default function ApplyToRetailer({ user }) {
                 )}
 
                 {isRejected && (
-                    <div className="p-5 rounded-2xl bg-red-50 border border-red-200 text-red-800 flex items-center gap-3">
-                        <AlertCircle className="w-6 h-6 text-red-600 shrink-0" />
+                    <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
                         <div>
-                            <p className="font-bold text-sm">Application Rejected</p>
-                            <p className="text-xs text-red-700 mt-0.5">
-                                Reason: {user?.rejection_reason || 'Incomplete or unreadable documents.'} You can resubmit below.
+                            <p className="font-bold text-xs">KYC Rejected</p>
+                            <p className="text-[11px] text-rose-700 mt-0.5">
+                                Reason: {user?.kyc_reject_reason || 'Please upload valid and clear documents.'}
                             </p>
                         </div>
                     </div>
                 )}
 
-                {/* Form (only shown if not verified or if rejected) */}
-                {!isVerified && (
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700/60 p-6 sm:p-8 shadow-sm">
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Form */}
+                {(!isVerified || isRejected) && (
+                    <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                    Owner Photo / Store Avatar (Max 2MB)
-                                </label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => setData('avatar', e.target.files[0])}
-                                    className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 p-2.5"
-                                    required={!user?.avatar_url}
-                                />
-                                {errors.avatar && <p className="text-xs text-red-600 mt-1">{errors.avatar}</p>}
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Aadhar Card Number (12 Digits)
                                 </label>
                                 <input
                                     type="text"
-                                    maxLength="12"
                                     value={data.aadhar_card}
                                     onChange={(e) => setData('aadhar_card', e.target.value)}
-                                    placeholder="e.g. 123456789012"
-                                    className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 p-2.5 font-mono"
+                                    placeholder="XXXX XXXX XXXX"
+                                    maxLength="12"
+                                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-mono"
                                     required
                                 />
-                                {errors.aadhar_card && <p className="text-xs text-red-600 mt-1">{errors.aadhar_card}</p>}
+                                {errors.aadhar_card && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhar_card}</p>}
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                        Aadhar Front Photo
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                        Aadhar Front Side Photo
                                     </label>
                                     <input
                                         type="file"
-                                        accept="image/*"
                                         onChange={(e) => setData('aadhar_front', e.target.files[0])}
-                                        className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 p-2.5"
-                                        required={!user?.aadhar_card_front}
+                                        className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                                        required
                                     />
-                                    {errors.aadhar_front && <p className="text-xs text-red-600 mt-1">{errors.aadhar_front}</p>}
+                                    {errors.aadhar_front && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhar_front}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                        Aadhar Back Photo
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                        Aadhar Back Side Photo
                                     </label>
                                     <input
                                         type="file"
-                                        accept="image/*"
                                         onChange={(e) => setData('aadhar_back', e.target.files[0])}
-                                        className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 p-2.5"
-                                        required={!user?.aadhar_card_back}
+                                        className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                                        required
                                     />
-                                    {errors.aadhar_back && <p className="text-xs text-red-600 mt-1">{errors.aadhar_back}</p>}
+                                    {errors.aadhar_back && <p className="text-[10px] text-rose-600 mt-1">{errors.aadhar_back}</p>}
                                 </div>
                             </div>
 
-                            <div className="pt-4 flex justify-end">
+                            <div className="pt-2">
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition"
+                                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-xs transition shadow-xs"
                                 >
-                                    {isSubmitted ? 'Update Application' : 'Submit KYC Application'}
+                                    {isSubmitted ? 'Resubmit Verification' : 'Submit KYC Application'}
                                 </button>
                             </div>
                         </form>
@@ -143,4 +127,3 @@ export default function ApplyToRetailer({ user }) {
         </AppLayout>
     );
 }
-

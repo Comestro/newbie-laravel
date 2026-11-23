@@ -1,55 +1,70 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
-import { Store, CheckCircle2, Package, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Store, ShoppingBag, Package, CheckCircle2 } from 'lucide-react';
 
-export default function Dashboard({ user }) {
+export default function Dashboard({ totalAssignedOrders = 0, fulfilledOrders = 0, recentOrders = [] }) {
     return (
         <ShopLayout>
-            <Head title="Retailer Hub - Newbie Service" />
+            <Head title="Retailer Dashboard - Newbie Service" />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl shadow-emerald-600/20 mb-10">
-                    <div className="flex items-center gap-2 mb-2 text-emerald-200 text-xs font-bold uppercase tracking-wider">
-                        <Store className="w-4 h-4" />
-                        <span>Verified Retailer Partner</span>
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl font-extrabold">Welcome, {user?.name}!</h1>
-                    <p className="mt-2 text-emerald-100 max-w-xl text-base">
-                        Your store KYC is approved. You have full access to supplier inventory and order fulfillment on the Newbie Network.
-                    </p>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                <div>
+                    <h1 className="text-xl font-bold text-slate-900">Retailer Hub</h1>
+                    <p className="text-xs text-slate-500 mt-0.5">Manage stock fulfillment and dispatch incoming grocery orders.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-xs">
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">Fulfillment Orders</h3>
-                        <p className="text-sm text-gray-500 mb-4">Orders scheduled for store dispatch.</p>
-                        <Link href="/my-orders" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                            <span>View Store Orders</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-xs">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-400 uppercase">Total Orders</span>
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                <Package className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-2">{totalAssignedOrders}</p>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-xs">
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">Catalog Sourcing</h3>
-                        <p className="text-sm text-gray-500 mb-4">Explore dairy, beverages and supply prices.</p>
-                        <Link href="/catalog" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                            <span>Browse Catalog</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-xs">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-400 uppercase">Fulfilled Orders</span>
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-2">{fulfilledOrders}</p>
                     </div>
+                </div>
 
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-xs">
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">Retailer Support</h3>
-                        <p className="text-sm text-gray-500 mb-4">Need help with logistics or payout queries?</p>
-                        <a href="mailto:support@newbie.com" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                            <span>Contact Manager</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </a>
-                    </div>
+                {/* Orders List */}
+                <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
+                    <h2 className="text-sm font-bold text-slate-900 mb-3">Assigned Orders</h2>
+                    {recentOrders.length === 0 ? (
+                        <div className="text-center py-10">
+                            <p className="text-xs text-slate-400">No pending orders assigned to your retail hub.</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-slate-100">
+                            {recentOrders.map((ord) => (
+                                <div key={ord.id} className="py-3 flex items-center justify-between">
+                                    <div>
+                                        <span className="font-mono font-bold text-xs text-slate-900">
+                                            #{ord.order_number}
+                                        </span>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">
+                                            {ord.customer_name} &bull; ₹{ord.total_amount}
+                                        </p>
+                                    </div>
+                                    <span className="text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                                        {ord.status?.value || ord.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </ShopLayout>
     );
 }
-

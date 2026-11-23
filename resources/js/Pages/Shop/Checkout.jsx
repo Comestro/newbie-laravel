@@ -82,173 +82,155 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
         <ShopLayout>
             <Head title="Checkout - Newbie Service" />
 
-            <div className="min-h-screen bg-gray-50 dark:bg-black/40 py-8">
-                <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     {/* LEFT SECTION */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-5">
                         {/* Delivery Address */}
-                        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-lg font-bold">Delivery Address</h2>
+                        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
+                            <div className="flex justify-between items-center mb-3.5">
+                                <h2 className="text-base font-bold text-slate-900">Delivery Address</h2>
+                                {!showAddressForm && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAddNewAddress}
+                                        className="text-xs font-semibold text-purple-600 hover:text-purple-700"
+                                    >
+                                        + Add New Address
+                                    </button>
+                                )}
                             </div>
 
-                            <div className="space-y-3">
-                                {/* Address List */}
+                            <div className="space-y-2.5">
                                 {!showAddressForm && (
                                     <>
                                         {addresses.length === 0 ? (
-                                            <div className="text-center py-10">
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                                    No saved address found
-                                                </p>
+                                            <div className="text-center py-8">
+                                                <p className="text-xs text-slate-500 mb-2">No saved addresses found.</p>
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewAddress}
-                                                    className="inline-flex items-center gap-2 text-sm font-bold text-[#A855F7] hover:underline"
+                                                    className="text-xs font-bold text-purple-600"
                                                 >
-                                                    + Add New Address
+                                                    + Add Delivery Address
                                                 </button>
                                             </div>
                                         ) : (
                                             addresses.map((address) => (
                                                 <div
                                                     key={address.id}
-                                                    className={`group flex items-start justify-between gap-4 p-5 rounded-xl border transition ${
+                                                    className={`group flex items-start justify-between gap-3 p-3.5 rounded-xl border transition ${
                                                         selectedAddressId === address.id
-                                                            ? 'border-[#A855F7] bg-purple-50 dark:bg-purple-900/20 shadow-sm'
-                                                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/40 dark:hover:bg-purple-900/10'
+                                                            ? 'border-purple-400 bg-purple-50/40'
+                                                            : 'border-slate-200/80 bg-white hover:border-slate-300'
                                                     }`}
                                                 >
-                                                    {/* LEFT */}
-                                                    <label className="flex gap-4 cursor-pointer flex-1">
+                                                    <label className="flex gap-3 cursor-pointer flex-1">
                                                         <input
                                                             type="radio"
                                                             name="delivery_address"
                                                             value={address.id}
                                                             checked={selectedAddressId === address.id}
                                                             onChange={() => setSelectedAddressId(address.id)}
-                                                            className="mt-1 accent-[#A855F7]"
+                                                            className="mt-1 accent-purple-600"
                                                         />
 
-                                                        <div className="text-sm leading-relaxed">
-                                                            <p className="font-extrabold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                                                {auth?.user?.name || 'Customer'}
-                                                                {/* Home / Office badge */}
+                                                        <div className="text-xs leading-relaxed">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="font-bold text-slate-900">{auth?.user?.name}</span>
                                                                 <span
-                                                                    className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded ${
+                                                                    className={`text-[9px] uppercase font-bold tracking-wide px-1.5 py-0.2 rounded ${
                                                                         address.label === 'Home'
-                                                                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-                                                                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                                                            ? 'bg-purple-100 text-purple-700'
+                                                                            : 'bg-blue-100 text-blue-700'
                                                                     }`}
                                                                 >
                                                                     {address.label}
                                                                 </span>
+                                                            </div>
+                                                            <p className="text-slate-600">
+                                                                {address.line1}{address.line2 ? `, ${address.line2}` : ''}
                                                             </p>
-
-                                                            <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                                                {address.line1}
-                                                                {address.line2 ? `, ${address.line2}` : ''}
-                                                            </p>
-
-                                                            <p className="text-gray-600 dark:text-gray-400">
+                                                            <p className="text-slate-600">
                                                                 {address.city}, {address.state} - {address.pincode}
                                                             </p>
-
-                                                            <p className="mt-2 text-xs font-bold text-gray-500 dark:text-gray-400">
+                                                            <p className="mt-1 font-medium text-slate-500">
                                                                 📞 {address.phone}
                                                             </p>
                                                         </div>
                                                     </label>
 
-                                                    {/* RIGHT */}
                                                     <button
                                                         type="button"
                                                         onClick={() => handleEditAddress(address)}
-                                                        className="text-xs font-extrabold text-[#A855F7] opacity-70 group-hover:opacity-100 transition"
+                                                        className="text-xs font-semibold text-purple-600 hover:text-purple-700"
                                                     >
                                                         Edit
                                                     </button>
                                                 </div>
                                             ))
                                         )}
-
-                                        {addresses.length > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={handleAddNewAddress}
-                                                className="text-sm font-bold text-purple-600 hover:text-purple-700"
-                                            >
-                                                + Add New Address
-                                            </button>
-                                        )}
                                     </>
                                 )}
 
-                                {/* Add / Edit Form */}
+                                {/* Form */}
                                 {showAddressForm && (
-                                    <form onSubmit={handleSaveAddress} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {/* Address Type */}
+                                    <form onSubmit={handleSaveAddress} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3 border-t border-slate-100">
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
                                                 Address Type
                                             </label>
                                             <select
                                                 value={data.label}
                                                 onChange={(e) => setData('label', e.target.value)}
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             >
                                                 <option value="Home">Home</option>
                                                 <option value="Office">Office</option>
                                             </select>
                                         </div>
 
-                                        {/* Phone */}
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
                                                 Phone Number
                                             </label>
                                             <input
                                                 type="tel"
                                                 value={data.phone}
                                                 onChange={(e) => setData('phone', e.target.value)}
-                                                placeholder="10 digit mobile number"
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                placeholder="10 digit mobile"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             />
-                                            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                                         </div>
 
-                                        {/* Address Line 1 */}
-                                        <div className="md:col-span-2">
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                                                House / Flat / Block No.
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                                                Flat / House / Block
                                             </label>
                                             <input
                                                 type="text"
                                                 value={data.line1}
                                                 onChange={(e) => setData('line1', e.target.value)}
-                                                placeholder="Flat 101, Galaxy Apartments"
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                placeholder="Flat 101, Galaxy"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             />
-                                            {errors.line1 && <p className="text-red-500 text-xs mt-1">{errors.line1}</p>}
                                         </div>
 
-                                        {/* Address Line 2 */}
-                                        <div className="md:col-span-2">
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
                                                 Landmark / Area (Optional)
                                             </label>
                                             <input
                                                 type="text"
                                                 value={data.line2}
                                                 onChange={(e) => setData('line2', e.target.value)}
-                                                placeholder="Near Central Park"
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                placeholder="Near Green Park"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             />
                                         </div>
 
-                                        {/* City */}
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
                                                 City
                                             </label>
                                             <input
@@ -256,14 +238,12 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                                 value={data.city}
                                                 onChange={(e) => setData('city', e.target.value)}
                                                 placeholder="City"
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             />
-                                            {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                                         </div>
 
-                                        {/* State */}
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
                                                 State
                                             </label>
                                             <input
@@ -271,43 +251,38 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                                 value={data.state}
                                                 onChange={(e) => setData('state', e.target.value)}
                                                 placeholder="State"
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             />
-                                            {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
                                         </div>
 
-                                        {/* Pincode */}
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
                                                 Pincode
                                             </label>
                                             <input
                                                 type="text"
                                                 value={data.pincode}
                                                 onChange={(e) => setData('pincode', e.target.value)}
-                                                placeholder="6 digit pincode"
-                                                className="w-full rounded-lg px-3 py-2 text-sm outline-none border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#A855F7] focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900"
+                                                placeholder="6 digits"
+                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             />
-                                            {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>}
                                         </div>
 
-                                        {/* ACTIONS */}
-                                        <div className="md:col-span-2 flex gap-3 pt-2">
+                                        <div className="sm:col-span-2 flex gap-2 pt-2">
                                             <button
                                                 type="submit"
                                                 disabled={processing}
-                                                className="flex-1 bg-[#A855F7] hover:bg-[#9333EA] text-white py-2.5 rounded-lg font-bold transition active:scale-[0.98] shadow"
+                                                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-semibold text-xs transition"
                                             >
                                                 {editingAddressId ? 'Update Address' : 'Save Address'}
                                             </button>
-
                                             <button
                                                 type="button"
                                                 onClick={() => {
                                                     setShowAddressForm(false);
                                                     setEditingAddressId(null);
                                                 }}
-                                                className="flex-1 border border-gray-300 dark:border-gray-700 py-2.5 rounded-lg font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                                                className="flex-1 border border-slate-200 py-2 rounded-lg font-semibold text-xs text-slate-700 hover:bg-slate-50 transition"
                                             >
                                                 Cancel
                                             </button>
@@ -318,26 +293,26 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                         </div>
 
                         {/* Order Items */}
-                        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6">
-                            <h2 className="text-lg font-bold mb-4">Order Items</h2>
-                            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+                        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
+                            <h2 className="text-base font-bold text-slate-900 mb-3">Order Items</h2>
+                            <ul className="divide-y divide-slate-100">
                                 {items.map((item) => (
-                                    <li key={item.id} className="flex gap-4 py-4">
-                                        <div className="w-16 h-16 rounded-lg object-cover border border-gray-100 dark:border-gray-700 bg-gray-50 flex items-center justify-center overflow-hidden">
+                                    <li key={item.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
+                                        <div className="w-14 h-14 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
                                             {item.image_url ? (
                                                 <img src={item.image_url} alt="" className="w-full h-full object-cover" />
                                             ) : (
-                                                <span className="text-2xl">📦</span>
+                                                <span className="text-lg">📦</span>
                                             )}
                                         </div>
                                         <div className="flex-1">
-                                            <p className="font-bold text-sm">
+                                            <p className="font-semibold text-xs text-slate-900">
                                                 {item.name ? item.name.split(' - ')[0] : ''}
                                             </p>
-                                            <p className="text-xs text-gray-500">{item.unit_size}</p>
-                                            <p className="font-bold mt-1">₹{item.price}</p>
+                                            <p className="text-[11px] text-slate-400 mt-0.5">{item.unit_size}</p>
+                                            <p className="font-bold text-xs text-slate-900 mt-1">₹{item.price}</p>
                                         </div>
-                                        <div className="text-sm font-bold">
+                                        <div className="text-xs font-semibold text-slate-600">
                                             × {item.quantity}
                                         </div>
                                     </li>
@@ -345,54 +320,49 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                             </ul>
                         </div>
 
-                        {/* Payment */}
-                        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6">
-                            <h2 className="text-lg font-bold mb-4">Payment Method</h2>
-                            <label className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer">
+                        {/* Payment Method */}
+                        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
+                            <h2 className="text-base font-bold text-slate-900 mb-3">Payment Method</h2>
+                            <label className="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl cursor-pointer bg-slate-50/50">
                                 <input type="radio" checked readOnly className="accent-purple-600" />
-                                <span className="font-bold text-sm">Cash on Delivery (Dummy)</span>
+                                <span className="font-semibold text-xs text-slate-900">Cash on Delivery (Standard)</span>
                             </label>
                         </div>
                     </div>
 
                     {/* RIGHT SUMMARY */}
-                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6 h-fit sticky top-6">
-                        <h2 className="text-lg font-bold mb-4">Price Details</h2>
+                    <div className="bg-white rounded-2xl border border-slate-100 p-5 sticky top-20 shadow-xs">
+                        <h2 className="text-base font-bold text-slate-900 mb-3.5">Price Summary</h2>
 
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between text-gray-500">
+                        <div className="space-y-2 text-xs text-slate-600">
+                            <div className="flex justify-between">
                                 <span>Items Total</span>
-                                <span>₹{subtotal.toLocaleString()}</span>
+                                <span className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</span>
                             </div>
 
-                            <div className="flex justify-between text-gray-500">
-                                <span>Delivery</span>
-                                <span>₹{deliveryCharge}</span>
+                            <div className="flex justify-between">
+                                <span>Delivery Fee</span>
+                                <span className="font-semibold text-slate-900">₹{deliveryCharge}</span>
                             </div>
 
-                            <div className="border-t border-gray-100 dark:border-gray-800 pt-3 flex justify-between text-base font-extrabold text-gray-900 dark:text-white">
-                                <span>Total</span>
+                            <div className="border-t border-slate-100 pt-3 flex justify-between text-sm font-bold text-slate-900">
+                                <span>Grand Total</span>
                                 <span>₹{grandTotal.toLocaleString()}</span>
                             </div>
                         </div>
 
-                        {selectedAddressId ? (
-                            <button
-                                type="button"
-                                onClick={handlePlaceOrder}
-                                className="w-full mt-6 bg-[#A855F7] hover:bg-[#9333EA] text-white py-3 rounded-xl font-bold transition"
-                            >
-                                Place Order
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                disabled
-                                className="w-full mt-6 bg-[#312041] hover:bg-[#3c2f47] cursor-not-allowed text-white py-3 rounded-xl font-bold transition"
-                            >
-                                Place Order
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={handlePlaceOrder}
+                            disabled={!selectedAddressId}
+                            className={`w-full mt-5 py-3 rounded-xl font-bold text-xs transition shadow-xs ${
+                                selectedAddressId
+                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            }`}
+                        >
+                            Place Order &rarr;
+                        </button>
                     </div>
                 </div>
             </div>

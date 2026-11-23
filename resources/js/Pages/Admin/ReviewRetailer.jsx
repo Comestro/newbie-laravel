@@ -41,77 +41,108 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
         <AdminLayout title="Retailer KYC Reviews" subtitle="Verify store credentials and identity documents">
             <Head title="Retailer KYC - Admin Console" />
 
-            <div className="space-y-6">
+            <div className="space-y-4">
                 {/* Tabs */}
                 <div className="flex items-center gap-2">
                     <button
+                        type="button"
                         onClick={() => handleFilter('PENDING')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                             currentStatus === 'PENDING'
                                 ? 'bg-purple-600 text-white'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                     >
-                        Pending Verification
+                        Pending Requests
                     </button>
                     <button
+                        type="button"
                         onClick={() => handleFilter('VERIFIED')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                             currentStatus === 'VERIFIED'
                                 ? 'bg-purple-600 text-white'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                     >
                         Approved Retailers
                     </button>
+                    <button
+                        type="button"
+                        onClick={() => handleFilter('REJECTED')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                            currentStatus === 'REJECTED'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                    >
+                        Rejected
+                    </button>
                 </div>
 
                 {/* Table */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-400 uppercase">
+                        <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase">
                                 <tr>
-                                    <th className="py-3.5 px-6">Applicant</th>
-                                    <th className="py-3.5 px-6">Aadhar Number</th>
-                                    <th className="py-3.5 px-6">Status</th>
-                                    <th className="py-3.5 px-6 text-right">Review Action</th>
+                                    <th className="py-3 px-4">Applicant</th>
+                                    <th className="py-3 px-4">Email / Phone</th>
+                                    <th className="py-3 px-4">Aadhar Card</th>
+                                    <th className="py-3 px-4">Status</th>
+                                    <th className="py-3 px-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                            <tbody className="divide-y divide-slate-100">
                                 {requests.length === 0 ? (
                                     <tr>
-                                        <td colSpan="4" className="py-12 text-center text-gray-400">
-                                            No applications with {currentStatus} status.
+                                        <td colSpan="5" className="py-10 text-center text-slate-400">
+                                            No {currentStatus.toLowerCase()} KYC submissions.
                                         </td>
                                     </tr>
                                 ) : (
                                     requests.map((u) => (
-                                        <tr key={u.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition">
-                                            <td className="py-4 px-6">
-                                                <p className="font-bold text-gray-900 dark:text-white">{u.name}</p>
-                                                <p className="text-xs text-gray-400">{u.email}</p>
+                                        <tr key={u.id} className="hover:bg-slate-50/50 transition">
+                                            <td className="py-3 px-4 font-bold text-slate-900">
+                                                {u.name}
                                             </td>
-                                            <td className="py-4 px-6 font-mono text-gray-700 dark:text-gray-300">
-                                                {u.aadhar_card || 'N/A'}
+                                            <td className="py-3 px-4 text-slate-600">
+                                                <div>{u.email}</div>
+                                                <div className="text-[10px] text-slate-400">{u.phone || 'No phone'}</div>
                                             </td>
-                                            <td className="py-4 px-6">
-                                                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                                            <td className="py-3 px-4 font-mono text-slate-700">
+                                                {u.aadhar_card || 'Not provided'}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                                     u.apply_status === 'VERIFIED'
                                                         ? 'bg-emerald-50 text-emerald-700'
+                                                        : u.apply_status === 'REJECTED'
+                                                        ? 'bg-rose-50 text-rose-700'
                                                         : 'bg-amber-50 text-amber-700'
                                                 }`}>
-                                                    {u.apply_status}
+                                                    {u.apply_status || 'PENDING'}
                                                 </span>
                                             </td>
-                                            <td className="py-4 px-6 text-right">
-                                                <button
-                                                    onClick={() => setSelectedUser(u)}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 rounded-xl text-xs font-bold transition"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5" />
-                                                    <span>Review Docs</span>
-                                                </button>
+                                            <td className="py-3 px-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedUser(u)}
+                                                        className="px-2.5 py-1 text-xs font-semibold text-purple-600 hover:bg-purple-50 rounded"
+                                                    >
+                                                        Review
+                                                    </button>
+                                                    {u.apply_status !== 'VERIFIED' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleApprove(u.id)}
+                                                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                                                            title="Approve"
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -121,106 +152,77 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                     </div>
                 </div>
 
-                {/* Document Inspection Modal */}
+                {/* Review Modal */}
                 {selectedUser && (
-                    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-in zoom-in-95">
-                            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
-                                <div>
-                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                                        Review Retailer: {selectedUser.name}
-                                    </h3>
-                                    <p className="text-xs text-gray-400 font-mono mt-0.5">
-                                        Aadhar: {selectedUser.aadhar_card}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedUser(null)}
-                                    className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full"
-                                >
-                                    <X className="w-5 h-5" />
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs">
+                        <div className="bg-white rounded-2xl border border-slate-100 max-w-lg w-full p-6 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <h3 className="font-bold text-sm text-slate-900">Review KYC: {selectedUser.name}</h3>
+                                <button type="button" onClick={() => setSelectedUser(null)} className="text-slate-400 hover:text-slate-600 text-lg">
+                                    &times;
                                 </button>
                             </div>
 
-                            {/* Images Grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Aadhar Front</p>
-                                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                                        {selectedUser.aadhar_card_front ? (
-                                            <img
-                                                src={`/storage/${selectedUser.aadhar_card_front}`}
-                                                alt="Front"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-xs text-gray-400">No image</span>
-                                        )}
-                                    </div>
-                                </div>
+                            <div className="text-xs space-y-1.5 text-slate-600">
+                                <p><strong className="text-slate-900">Email:</strong> {selectedUser.email}</p>
+                                <p><strong className="text-slate-900">Phone:</strong> {selectedUser.phone || 'N/A'}</p>
+                                <p><strong className="text-slate-900">Aadhar:</strong> {selectedUser.aadhar_card}</p>
+                            </div>
 
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-2">Aadhar Back</p>
-                                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                                        {selectedUser.aadhar_card_back ? (
-                                            <img
-                                                src={`/storage/${selectedUser.aadhar_card_back}`}
-                                                alt="Back"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-xs text-gray-400">No image</span>
-                                        )}
-                                    </div>
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                                <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhar Front</p>
+                                    {selectedUser.aadhar_front ? (
+                                        <img src={`/storage/${selectedUser.aadhar_front}`} alt="Front" className="h-28 w-full object-cover rounded-lg" />
+                                    ) : (
+                                        <p className="text-xs text-slate-400 py-8">No front image</p>
+                                    )}
+                                </div>
+                                <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhar Back</p>
+                                    {selectedUser.aadhar_back ? (
+                                        <img src={`/storage/${selectedUser.aadhar_back}`} alt="Back" className="h-28 w-full object-cover rounded-lg" />
+                                    ) : (
+                                        <p className="text-xs text-slate-400 py-8">No back image</p>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Rejection input */}
                             {showRejectForm ? (
-                                <form onSubmit={handleReject} className="space-y-3 pt-2">
-                                    <label className="text-xs font-semibold text-red-600">Rejection Reason</label>
+                                <form onSubmit={handleReject} className="space-y-2 pt-2 border-t border-slate-100">
+                                    <label className="block text-xs font-semibold text-slate-700">Reason for rejection</label>
                                     <textarea
-                                        rows="2"
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
-                                        placeholder="Explain why this application cannot be accepted..."
-                                        className="w-full text-sm rounded-xl border border-red-200 bg-red-50/40 p-2.5 text-red-900"
+                                        rows={2}
+                                        placeholder="e.g. Aadhar card photo is blurry or invalid..."
+                                        className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white"
                                         required
                                     />
-                                    <div className="flex justify-end gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowRejectForm(false)}
-                                            className="px-4 py-2 text-xs font-semibold text-gray-500"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold"
-                                        >
+                                    <div className="flex gap-2">
+                                        <button type="submit" className="px-3 py-1.5 bg-rose-600 text-white font-semibold text-xs rounded-lg">
                                             Confirm Rejection
+                                        </button>
+                                        <button type="button" onClick={() => setShowRejectForm(false)} className="px-3 py-1.5 border border-slate-200 text-xs rounded-lg">
+                                            Cancel
                                         </button>
                                     </div>
                                 </form>
                             ) : (
-                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowRejectForm(true)}
-                                        className="px-4 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition flex items-center gap-1.5"
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        <span>Reject Application</span>
-                                    </button>
-
+                                <div className="flex gap-2 pt-3 border-t border-slate-100">
                                     <button
                                         type="button"
                                         onClick={() => handleApprove(selectedUser.id)}
-                                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition"
                                     >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        <span>Approve Retailer</span>
+                                        Approve Retailer
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowRejectForm(true)}
+                                        className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-lg transition"
+                                    >
+                                        Reject with Reason
                                     </button>
                                 </div>
                             )}
@@ -231,4 +233,3 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
         </AdminLayout>
     );
 }
-

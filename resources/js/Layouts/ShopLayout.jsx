@@ -9,7 +9,7 @@ import FlashMessages from '../Components/FlashMessages';
 export default function ShopLayout({ children }) {
     return (
         <CartProvider>
-            <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-500 selection:text-white">
+            <div className="min-h-screen flex flex-col bg-slate-50/60 text-slate-800 font-sans">
                 <FlashMessages />
                 <Navbar />
                 <CartDrawer />
@@ -22,4 +22,3 @@ export default function ShopLayout({ children }) {
         </CartProvider>
     );
 }
-

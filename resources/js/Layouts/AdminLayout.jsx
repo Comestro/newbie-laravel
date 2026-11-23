@@ -4,16 +4,16 @@ import FlashMessages from '../Components/FlashMessages';
 
 export default function AdminLayout({ children, title, subtitle, action }) {
     return (
-        <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans">
+        <div className="min-h-screen flex bg-slate-50/70 text-slate-800 font-sans">
             <FlashMessages />
             <AdminSidebar />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
                 {title && (
-                    <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-8 py-6">
+                    <header className="bg-white border-b border-slate-100 px-6 sm:px-8 py-5">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-                                {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
+                                <h1 className="text-xl font-bold tracking-tight text-slate-900">{title}</h1>
+                                {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
                             </div>
                             {action && <div>{action}</div>}
                         </div>
@@ -26,4 +26,3 @@ export default function AdminLayout({ children, title, subtitle, action }) {
         </div>
     );
 }
-

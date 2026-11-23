@@ -25,73 +25,72 @@ export default function UserProfile({ user }) {
         <AppLayout title="Profile Settings" subtitle="Update your personal account information and credentials">
             <Head title="Profile Settings - Newbie Service" />
 
-            <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700/60 p-6 sm:p-8 shadow-sm max-w-xl">
-                <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="bg-white rounded-xl border border-slate-100 p-6 max-w-xl shadow-xs">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Full Name</label>
+                        <label className="text-xs font-semibold text-slate-700">Full Name</label>
                         <div className="relative mt-1">
                             <input
                                 type="text"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50"
+                                className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                 required
                             />
-                            <User className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                            <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                         </div>
-                        {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+                        {errors.name && <p className="text-[10px] text-rose-600 mt-1">{errors.name}</p>}
                     </div>
 
                     <div>
-                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
+                        <label className="text-xs font-semibold text-slate-700">Email Address</label>
                         <div className="relative mt-1">
                             <input
                                 type="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50"
+                                className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                 required
                             />
-                            <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                            <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                         </div>
-                        {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+                        {errors.email && <p className="text-[10px] text-rose-600 mt-1">{errors.email}</p>}
                     </div>
 
                     <div>
-                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Phone Number</label>
+                        <label className="text-xs font-semibold text-slate-700">Phone Number</label>
                         <div className="relative mt-1">
                             <input
-                                type="text"
+                                type="tel"
                                 value={data.phone}
                                 onChange={(e) => setData('phone', e.target.value)}
-                                className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50"
-                                placeholder="+91..."
+                                className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             />
-                            <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                            <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                         </div>
-                        {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
+                        {errors.phone && <p className="text-[10px] text-rose-600 mt-1">{errors.phone}</p>}
                     </div>
 
-                    <div className="pt-2">
-                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">New Password (leave blank to keep current)</label>
+                    <div>
+                        <label className="text-xs font-semibold text-slate-700">New Password (leave blank to keep)</label>
                         <div className="relative mt-1">
                             <input
                                 type="password"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50"
+                                className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                 placeholder="••••••••"
                             />
-                            <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                            <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                         </div>
-                        {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+                        {errors.password && <p className="text-[10px] text-rose-600 mt-1">{errors.password}</p>}
                     </div>
 
-                    <div className="pt-4 flex justify-end">
+                    <div className="pt-2">
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition"
+                            className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-xs transition shadow-xs"
                         >
                             Save Changes
                         </button>
@@ -101,4 +100,3 @@ export default function UserProfile({ user }) {
         </AppLayout>
     );
 }
-

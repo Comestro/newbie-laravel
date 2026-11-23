@@ -37,95 +37,91 @@ function ProductCard({ product, categoryName }) {
     };
 
     return (
-        <div className="min-w-50 w-[200px] bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-50 dark:border-gray-700 relative group shrink-0">
+        <div className="min-w-48 w-[190px] bg-white rounded-2xl p-3 border border-slate-100 hover:border-purple-200 transition-all duration-200 relative group shrink-0 shadow-xs flex flex-col justify-between">
             {/* Discount Badge */}
-            <div className="absolute top-0 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-br-lg rounded-tl-xl z-10 shadow-sm">
-                13% OFF
+            <div className="absolute top-2.5 left-2.5 z-10">
+                <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-xs">
+                    13% OFF
+                </span>
             </div>
 
-            <div className="flex flex-col h-full">
-                {/* Image Area */}
-                <div className="group h-32 w-full flex items-center justify-center mb-3 relative rounded-lg bg-gray-50 dark:bg-gray-700/50 overflow-hidden">
-                    {/* Wishlist Button */}
-                    <button
-                        type="button"
-                        onClick={toggleWishlist}
-                        className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 text-gray-400 hover:text-red-500 transition shadow-xs"
-                    >
-                        <Heart className="w-4 h-4" />
-                    </button>
+            {/* Wishlist Button */}
+            <button
+                type="button"
+                onClick={toggleWishlist}
+                className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/90 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow-xs"
+            >
+                <Heart className="w-3.5 h-3.5" />
+            </button>
 
-                    {/* Image / Placeholder */}
+            <div>
+                {/* Image Area */}
+                <div className="h-32 w-full flex items-center justify-center mb-2.5 rounded-xl bg-slate-50 overflow-hidden">
                     {image ? (
                         <img
                             src={image}
                             alt={product.name}
-                            className="h-full w-full object-cover transition duration-300 transform group-hover:scale-105"
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
                     ) : (
-                        <span className="text-4xl filter grayscale opacity-50">
+                        <span className="text-4xl filter grayscale opacity-60">
                             {getEmojiPlaceholder(categoryName)}
                         </span>
                     )}
                 </div>
 
                 {/* Product Info */}
-                <div className="flex flex-col flex-grow">
-                    <Link
-                        href={`/product/${product.slug || product.id}`}
-                        className="block group-hover:text-purple-600 transition-colors"
+                <Link
+                    href={`/product/${product.slug || product.id}`}
+                    className="block group-hover:text-purple-600 transition-colors"
+                >
+                    <h3 className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 min-h-[2.4em]">
+                        {product.name}
+                    </h3>
+                </Link>
+                <p className="text-[11px] text-slate-400 mt-0.5">{unit}</p>
+            </div>
+
+            {/* Price & Add */}
+            <div className="mt-2.5 pt-2 border-t border-slate-50">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <span className="text-[10px] text-slate-400 line-through block leading-none">
+                            ₹{Math.round(Number(price) * 1.2)}
+                        </span>
+                        <span className="text-sm font-bold text-slate-900 leading-tight">
+                            ₹{price}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => addToCart(selectedVariantId, 1)}
+                        className="px-3.5 py-1 rounded-lg border border-purple-200 bg-purple-50/70 hover:bg-purple-600 text-purple-700 hover:text-white font-bold text-[11px] uppercase transition shadow-xs"
                     >
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight mb-1 line-clamp-2 h-10">
-                            {product.name}
-                        </h3>
-                    </Link>
-                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-2">
-                        <span>{unit}</span>
-                    </div>
-
-                    {/* Variants / Price */}
-                    <div className="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
-                        <div className="flex items-center justify-between">
-                            <div className="flex flex-col">
-                                <span className="text-xs text-gray-400 line-through font-medium">
-                                    ₹{Math.round(Number(price) * 1.2)}
-                                </span>
-                                <span className="text-base font-bold text-gray-900 dark:text-white">
-                                    ₹{price}
-                                </span>
-                            </div>
-
-                            {/* Add Button */}
-                            <button
-                                type="button"
-                                onClick={() => addToCart(selectedVariantId, 1)}
-                                className="px-5 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 font-bold text-xs uppercase hover:bg-purple-50 dark:hover:bg-purple-900/30 transition shadow-sm bg-white dark:bg-gray-800"
-                            >
-                                ADD
-                            </button>
-                        </div>
-
-                        {/* Variant Selection (Mini Pills) */}
-                        {variants.length > 1 && (
-                            <div className="flex items-center space-x-1 mt-3 overflow-x-auto scrollbar-hide">
-                                {variants.map((v) => (
-                                    <button
-                                        key={v.id}
-                                        type="button"
-                                        onClick={() => handleSelectVariant(v)}
-                                        className={`px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap transition cursor-pointer ${
-                                            selectedVariantId === v.id
-                                                ? 'bg-purple-100 text-purple-700 ring-1 ring-purple-300'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-                                        }`}
-                                    >
-                                        <span>{v.unit_size}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                        ADD
+                    </button>
                 </div>
+
+                {/* Variant Selection Mini Pills */}
+                {variants.length > 1 && (
+                    <div className="flex items-center gap-1 mt-2 overflow-x-auto scrollbar-none py-0.5">
+                        {variants.map((v) => (
+                            <button
+                                key={v.id}
+                                type="button"
+                                onClick={() => handleSelectVariant(v)}
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-semibold whitespace-nowrap transition cursor-pointer border ${
+                                    selectedVariantId === v.id
+                                        ? 'bg-purple-50 border-purple-300 text-purple-700'
+                                        : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-slate-200'
+                                }`}
+                            >
+                                {v.unit_size}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -135,106 +131,122 @@ export default function Home({ groupedProducts = {} }) {
     const getCategoryDisplayTitle = (cat) => {
         const c = (cat || '').toUpperCase();
         if (c === 'MILK') return 'Milk & Dairy';
-        if (c === 'WATER') return 'Water';
-        return 'Beverages & Water';
+        if (c === 'WATER') return 'Water & Hydration';
+        return 'Beverages & Soft Drinks';
     };
 
     return (
         <ShopLayout>
             <Head title="Premium Grocery Delivery" />
 
-            <div>
-                {/* Hero Section */}
-
-                {/* Categories */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Shop by category</h2>
-                    <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+                {/* Categories Row */}
+                <div>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">
+                        Shop by Category
+                    </h2>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                         {/* Milk */}
-                        <Link href="/catalog?category=milk" className="flex flex-col items-center group min-w-20">
-                            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-2 transition-colors bg-gray-100 group-hover:bg-purple-50 dark:bg-gray-800">
-                                <span className="text-3xl">🥛</span>
-                            </div>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-purple-700">Milk</span>
+                        <Link
+                            href="/catalog?category=milk"
+                            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                        >
+                            <span className="text-3xl mb-1.5">🥛</span>
+                            <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Milk</span>
                         </Link>
 
                         {/* Water */}
-                        <Link href="/catalog?category=water" className="flex flex-col items-center group min-w-20">
-                            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-2 transition-colors bg-gray-100 group-hover:bg-purple-50 dark:bg-gray-800">
-                                <span className="text-3xl">💧</span>
-                            </div>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-purple-700">Water</span>
+                        <Link
+                            href="/catalog?category=water"
+                            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                        >
+                            <span className="text-3xl mb-1.5">💧</span>
+                            <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Water</span>
                         </Link>
 
                         {/* Beverages */}
-                        <Link href="/catalog?category=beverages" className="flex flex-col items-center group min-w-20">
-                            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-2 transition-colors bg-gray-100 group-hover:bg-purple-50 dark:bg-gray-800">
-                                <span className="text-3xl">☕</span>
-                            </div>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-purple-700">Beverages</span>
+                        <Link
+                            href="/catalog?category=beverages"
+                            className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                        >
+                            <span className="text-3xl mb-1.5">🍹</span>
+                            <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700">Beverages</span>
                         </Link>
                     </div>
                 </div>
 
                 {/* Promo Banners */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Banner 1 */}
-                        <div className="bg-[#3B82F6] rounded-xl p-6 text-white relative overflow-hidden h-40 flex flex-col justify-center">
-                            <h3 className="font-bold text-lg mb-1 relative z-10">Fresh Milk Delivered</h3>
-                            <p className="text-blue-100 text-xs mb-4 relative z-10">Farm fresh goodness everyday</p>
-                            <Link
-                                href="/catalog?category=milk"
-                                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-1.5 rounded-lg w-fit transition relative z-10 backdrop-blur-sm"
-                            >
-                                Order Now
-                            </Link>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Banner 1 */}
+                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white flex flex-col justify-between h-36 shadow-xs">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
+                                Farm Fresh
+                            </span>
+                            <h3 className="font-bold text-base mt-1.5">Fresh Milk Delivered</h3>
+                            <p className="text-blue-100 text-xs mt-0.5">Pure dairy at your doorstep</p>
                         </div>
+                        <Link
+                            href="/catalog?category=milk"
+                            className="inline-block px-3.5 py-1.5 bg-white text-blue-700 text-xs font-bold rounded-lg w-fit hover:bg-blue-50 transition"
+                        >
+                            Order Now &rarr;
+                        </Link>
+                    </div>
 
-                        {/* Banner 2 */}
-                        <div className="bg-[#06B6D4] rounded-xl p-6 text-white relative overflow-hidden h-40 flex flex-col justify-center">
-                            <h3 className="font-bold text-lg mb-1 relative z-10">Pure Natural Water</h3>
-                            <p className="text-cyan-100 text-xs mb-4 relative z-10">Stay hydrated with us</p>
-                            <Link
-                                href="/catalog?category=water"
-                                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-1.5 rounded-lg w-fit transition relative z-10 backdrop-blur-sm"
-                            >
-                                Order Now
-                            </Link>
+                    {/* Banner 2 */}
+                    <div className="bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl p-5 text-white flex flex-col justify-between h-36 shadow-xs">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
+                                Pure Water
+                            </span>
+                            <h3 className="font-bold text-base mt-1.5">Natural Mineral Water</h3>
+                            <p className="text-cyan-100 text-xs mt-0.5">Safe, pure drinking water</p>
                         </div>
+                        <Link
+                            href="/catalog?category=water"
+                            className="inline-block px-3.5 py-1.5 bg-white text-teal-700 text-xs font-bold rounded-lg w-fit hover:bg-cyan-50 transition"
+                        >
+                            Order Now &rarr;
+                        </Link>
+                    </div>
 
-                        {/* Banner 3 */}
-                        <div className="bg-[#F97316] rounded-xl p-6 text-white relative overflow-hidden h-40 flex flex-col justify-center">
-                            <h3 className="font-bold text-lg mb-1 relative z-10">Refreshing Beverages</h3>
-                            <p className="text-orange-100 text-xs mb-4 relative z-10">Juices, sodas & energy drinks</p>
-                            <Link
-                                href="/catalog?category=beverages"
-                                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-1.5 rounded-lg w-fit transition relative z-10 backdrop-blur-sm"
-                            >
-                                Order Now
-                            </Link>
+                    {/* Banner 3 */}
+                    <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-white flex flex-col justify-between h-36 shadow-xs">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
+                                Daily Sips
+                            </span>
+                            <h3 className="font-bold text-base mt-1.5">Refreshing Drinks</h3>
+                            <p className="text-amber-100 text-xs mt-0.5">Juices, sodas & beverages</p>
                         </div>
+                        <Link
+                            href="/catalog?category=beverages"
+                            className="inline-block px-3.5 py-1.5 bg-white text-orange-700 text-xs font-bold rounded-lg w-fit hover:bg-orange-50 transition"
+                        >
+                            Order Now &rarr;
+                        </Link>
                     </div>
                 </div>
 
-                {/* Grouped Sections */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+                {/* Grouped Product Rows */}
+                <div className="space-y-10">
                     {Object.entries(groupedProducts).map(([category, products]) => (
                         <div key={category} id={`category-${category.toLowerCase()}`}>
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                                    {getCategoryDisplayTitle(category)}
+                            <div className="flex items-center justify-between mb-3.5">
+                                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                    <span>{getCategoryDisplayTitle(category)}</span>
                                 </h2>
                                 <Link
                                     href={`/catalog?category=${category.toLowerCase()}`}
-                                    className="text-purple-600 font-bold text-xs uppercase tracking-wide hover:text-purple-700"
+                                    className="text-purple-600 hover:text-purple-700 font-bold text-xs uppercase tracking-wider transition"
                                 >
-                                    see all
+                                    See all &rarr;
                                 </Link>
                             </div>
 
-                            {/* Horizontal Scroll Container */}
-                            <div className="flex overflow-x-auto pb-8 -mx-4 px-4 space-x-4 scrollbar-hide">
+                            {/* Horizontal Scroll */}
+                            <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-3.5 scrollbar-none">
                                 {products.map((product) => (
                                     <ProductCard
                                         key={product.id}
@@ -246,9 +258,6 @@ export default function Home({ groupedProducts = {} }) {
                         </div>
                     ))}
                 </div>
-
-                {/* Bottom Spacer for Mobile Nav */}
-                <div className="h-20 md:hidden"></div>
             </div>
         </ShopLayout>
     );

@@ -19,26 +19,26 @@ export default function ConfirmPassword() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Password</label>
+                    <label className="text-xs font-semibold text-slate-700">Password</label>
                     <div className="relative mt-1">
                         <input
                             type="password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="••••••••"
-                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
                             required
                             autoFocus
                         />
-                        <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
-                    {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+                    {errors.password && <p className="text-xs text-rose-600 mt-1">{errors.password}</p>}
                 </div>
 
                 <button
                     type="submit"
                     disabled={processing}
-                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition text-sm"
+                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm shadow-xs flex items-center justify-center gap-2 transition duration-150 disabled:opacity-50"
                 >
                     <ShieldCheck className="w-4 h-4" />
                     <span>Confirm Security Password</span>
@@ -47,4 +47,3 @@ export default function ConfirmPassword() {
         </GuestLayout>
     );
 }
-

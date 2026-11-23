@@ -44,163 +44,146 @@ export default function Create({ categories = [] }) {
             action={
                 <Link
                     href="/admin/products"
-                    className="px-3.5 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 flex items-center gap-1.5"
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Back to Products</span>
                 </Link>
             }
         >
             <Head title="New Product - Admin Console" />
 
-            <form onSubmit={handleSubmit} className="max-w-4xl space-y-8">
+            <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
                 {/* General Info Card */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8 shadow-xs space-y-5">
-                    <h3 className="font-bold text-base text-gray-900 dark:text-white">Product Information</h3>
+                <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs space-y-4">
+                    <h3 className="font-bold text-sm text-slate-900">Product Information</h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Product Name</label>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Product Name</label>
                             <input
                                 type="text"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder="e.g. Standard Toned Fresh Milk"
-                                className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5"
+                                placeholder="e.g. Fresh Cow Milk"
+                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                 required
                             />
-                            {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+                            {errors.name && <p className="text-rose-500 text-[10px] mt-1">{errors.name}</p>}
                         </div>
 
                         <div>
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Brand Name</label>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Brand Name</label>
                             <input
                                 type="text"
                                 value={data.brand}
                                 onChange={(e) => setData('brand', e.target.value)}
-                                placeholder="e.g. Amul, Mother Dairy"
-                                className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5"
+                                placeholder="e.g. FarmFresh"
+                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                 required
                             />
-                            {errors.brand && <p className="text-xs text-red-600 mt-1">{errors.brand}</p>}
+                            {errors.brand && <p className="text-rose-500 text-[10px] mt-1">{errors.brand}</p>}
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Category</label>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
                             <select
                                 value={data.category}
                                 onChange={(e) => setData('category', e.target.value)}
-                                className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5"
+                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             >
                                 {categories.map((c) => (
                                     <option key={c.value} value={c.value}>{c.value}</option>
                                 ))}
                             </select>
-                            {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category}</p>}
                         </div>
 
                         <div className="flex items-center gap-2 pt-6">
-                            <input
-                                type="checkbox"
-                                id="is_active"
-                                checked={data.is_active}
-                                onChange={(e) => setData('is_active', e.target.checked)}
-                                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                            />
-                            <label htmlFor="is_active" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                Product is Active & Visible in Shop
+                            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={data.is_active}
+                                    onChange={(e) => setData('is_active', e.target.checked)}
+                                    className="rounded accent-purple-600"
+                                />
+                                <span>Publish Immediately (Active)</span>
                             </label>
                         </div>
-                    </div>
 
-                    <div>
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Description</label>
-                        <textarea
-                            rows="3"
-                            value={data.description}
-                            onChange={(e) => setData('description', e.target.value)}
-                            className="mt-1 w-full text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5"
-                            placeholder="Nutritional facts, origin, refrigeration guidance..."
-                        />
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+                            <textarea
+                                value={data.description}
+                                onChange={(e) => setData('description', e.target.value)}
+                                rows={3}
+                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                placeholder="Describe nutritional highlights, farm sourcing, or pack info..."
+                            />
+                        </div>
                     </div>
                 </div>
 
                 {/* Variants Card */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8 shadow-xs space-y-4">
+                <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="font-bold text-base text-gray-900 dark:text-white">Product Variants</h3>
-                            <p className="text-xs text-gray-500">Add size, quantity, and price variations</p>
+                            <h3 className="font-bold text-sm text-slate-900">Sizes & Variants</h3>
+                            <p className="text-[11px] text-slate-400">At least one pack size/price variant is required.</p>
                         </div>
                         <button
                             type="button"
                             onClick={addVariant}
-                            className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition"
                         >
                             <Plus className="w-3.5 h-3.5" />
-                            <span>Add Variant</span>
+                            <span>Add Size</span>
                         </button>
                     </div>
 
                     <div className="space-y-3">
-                        {data.variants.map((v, idx) => (
-                            <div key={idx} className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-                                <div>
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase">Unit / Size</label>
+                        {data.variants.map((v, i) => (
+                            <div key={i} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-slate-50/70 p-3.5 rounded-xl border border-slate-100">
+                                <div className="flex-1 w-full sm:w-auto">
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Size/Weight</label>
                                     <input
                                         type="text"
                                         value={v.unit_size}
-                                        onChange={(e) => updateVariant(idx, 'unit_size', e.target.value)}
-                                        placeholder="500ml, 1L, 20L..."
-                                        className="mt-1 w-full text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 bg-white dark:bg-gray-700"
+                                        onChange={(e) => updateVariant(i, 'unit_size', e.target.value)}
+                                        placeholder="e.g. 1L or 500ml"
+                                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-white text-slate-900"
                                         required
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase">Retail Price (₹)</label>
+                                <div className="w-full sm:w-32">
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Price (₹)</label>
                                     <input
                                         type="number"
-                                        step="0.01"
                                         value={v.retail_price}
-                                        onChange={(e) => updateVariant(idx, 'retail_price', e.target.value)}
-                                        placeholder="0.00"
-                                        className="mt-1 w-full text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 bg-white dark:bg-gray-700"
+                                        onChange={(e) => updateVariant(i, 'retail_price', e.target.value)}
+                                        placeholder="30"
+                                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-white text-slate-900"
                                         required
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase">Inventory Stock</label>
+                                <div className="w-full sm:w-28">
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Stock</label>
                                     <input
                                         type="number"
                                         value={v.stock}
-                                        onChange={(e) => updateVariant(idx, 'stock', e.target.value)}
-                                        className="mt-1 w-full text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 bg-white dark:bg-gray-700"
-                                        required
+                                        onChange={(e) => updateVariant(i, 'stock', e.target.value)}
+                                        placeholder="100"
+                                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-white text-slate-900"
                                     />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex-1">
-                                        <label className="text-[11px] font-bold text-gray-500 uppercase">SKU (optional)</label>
-                                        <input
-                                            type="text"
-                                            value={v.sku}
-                                            onChange={(e) => updateVariant(idx, 'sku', e.target.value)}
-                                            placeholder="AUTO"
-                                            className="mt-1 w-full text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 bg-white dark:bg-gray-700 font-mono"
-                                        />
-                                    </div>
-                                    {data.variants.length > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeVariant(idx)}
-                                            className="p-2 text-gray-400 hover:text-red-600"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
+                                {data.variants.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeVariant(i)}
+                                        className="mt-4 sm:mt-0 p-1.5 text-slate-400 hover:text-rose-600 transition"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -209,16 +192,16 @@ export default function Create({ categories = [] }) {
                 <div className="flex justify-end gap-3">
                     <Link
                         href="/admin/products"
-                        className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900"
+                        className="px-4 py-2 border border-slate-200 text-xs font-semibold rounded-lg text-slate-700 hover:bg-slate-50 transition"
                     >
                         Cancel
                     </Link>
                     <button
                         type="submit"
                         disabled={processing}
-                        className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm shadow-sm transition"
+                        className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-xs transition"
                     >
-                        Publish Product
+                        Create Product
                     </button>
                 </div>
             </form>

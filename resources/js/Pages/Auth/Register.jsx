@@ -22,81 +22,81 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Full Name</label>
+                    <label className="text-xs font-semibold text-slate-700">Full Name</label>
                     <div className="relative mt-1">
                         <input
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="John Doe"
-                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
                             required
                             autoFocus
                         />
-                        <User className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                        <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
-                    {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+                    {errors.name && <p className="text-xs text-rose-600 mt-1">{errors.name}</p>}
                 </div>
 
                 <div>
-                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
+                    <label className="text-xs font-semibold text-slate-700">Email Address</label>
                     <div className="relative mt-1">
                         <input
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             placeholder="name@example.com"
-                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
                             required
                         />
-                        <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
-                    {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+                    {errors.email && <p className="text-xs text-rose-600 mt-1">{errors.email}</p>}
                 </div>
 
                 <div>
-                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Password</label>
+                    <label className="text-xs font-semibold text-slate-700">Password</label>
                     <div className="relative mt-1">
                         <input
                             type="password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="••••••••"
-                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
                             required
                         />
-                        <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
-                    {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+                    {errors.password && <p className="text-xs text-rose-600 mt-1">{errors.password}</p>}
                 </div>
 
                 <div>
-                    <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Confirm Password</label>
+                    <label className="text-xs font-semibold text-slate-700">Confirm Password</label>
                     <div className="relative mt-1">
                         <input
                             type="password"
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                             placeholder="••••••••"
-                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
                             required
                         />
-                        <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
                 </div>
 
                 <button
                     type="submit"
                     disabled={processing}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 transition text-sm pt-2"
+                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm shadow-xs flex items-center justify-center gap-2 transition duration-150 disabled:opacity-50 mt-2"
                 >
                     <UserPlus className="w-4 h-4" />
                     <span>Create Free Account</span>
                 </button>
 
-                <p className="text-center text-xs text-gray-500 pt-3">
+                <p className="text-center text-xs text-slate-500 pt-3">
                     Already registered?{' '}
-                    <Link href="/login" className="font-bold text-blue-600 hover:text-blue-700">
+                    <Link href="/login" className="font-semibold text-purple-600 hover:text-purple-700">
                         Sign In
                     </Link>
                 </p>
@@ -104,4 +104,3 @@ export default function Register() {
         </GuestLayout>
     );
 }
-

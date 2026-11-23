@@ -7,12 +7,12 @@ export default function AppLayout({ children, title, subtitle }) {
         <ShopLayout>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {title && (
-                    <div className="mb-8">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
-                        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
+                        {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
                     </div>
                 )}
-                <div className="flex flex-col lg:flex-row gap-8 items-start">
+                <div className="flex flex-col lg:flex-row gap-6 items-start">
                     <UserSidebar />
                     <div className="flex-1 w-full min-w-0">
                         {children}
@@ -22,4 +22,3 @@ export default function AppLayout({ children, title, subtitle }) {
         </ShopLayout>
     );
 }
-

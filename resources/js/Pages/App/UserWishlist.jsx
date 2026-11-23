@@ -2,71 +2,83 @@ import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useCart } from '../../Context/CartContext';
-import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 
-export default function UserWishlist({ wishlists = [] }) {
+export default function UserWishlist({ wishlist = [] }) {
     const { addToCart } = useCart();
 
-    const handleRemove = (productId) => {
-        router.delete(`/wishlist/${productId}`, { preserveScroll: true });
+    const removeFromWishlist = (productId) => {
+        router.post(`/wishlist/${productId}/toggle`, {}, { preserveScroll: true });
     };
 
     return (
-        <AppLayout title="My Wishlist" subtitle="Saved items you want to buy later">
+        <AppLayout title="My Wishlist" subtitle="Saved products you'd like to purchase later">
             <Head title="My Wishlist - Newbie Service" />
 
-            {wishlists.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700/60 p-12 text-center">
-                    <Heart className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                    <h3 className="font-bold text-gray-800 dark:text-gray-200">Your wishlist is empty</h3>
-                    <p className="text-sm text-gray-500 mt-1">Explore our products and tap the heart icon to save favorites.</p>
+            {wishlist.length === 0 ? (
+                <div className="bg-white rounded-xl border border-slate-100 p-12 text-center shadow-xs">
+                    <Heart className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <h3 className="font-bold text-sm text-slate-800">Your wishlist is empty</h3>
+                    <p className="text-xs text-slate-400 mt-1">Explore our products and tap the heart icon to save favorites.</p>
                     <Link
                         href="/catalog"
-                        className="inline-block mt-4 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition"
+                        className="inline-block mt-3 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-xs transition shadow-xs"
                     >
-                        Browse Products
+                        Browse Catalog
                     </Link>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {wishlists.map((w) => {
-                        const product = w.product;
-                        if (!product) return null;
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                    {wishlist.map((item) => {
+                        const product = item.product || item;
                         const defaultVariant = product.variants?.[0];
-
                         return (
                             <div
-                                key={w.id}
-                                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/60 p-4 flex flex-col justify-between"
+                                key={item.id}
+                                className="bg-white rounded-xl border border-slate-100 p-3 shadow-xs hover:border-purple-200 transition flex flex-col justify-between relative group"
                             >
+                                <button
+                                    type="button"
+                                    onClick={() => removeFromWishlist(product.id)}
+                                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-xs transition"
+                                >
+                                    <Trash2 className="w-3 h-3" />
+                                </button>
+
                                 <div>
-                                    <div className="aspect-square bg-gray-50 dark:bg-gray-700/40 rounded-xl overflow-hidden mb-3 flex items-center justify-center">
+                                    <div className="h-32 w-full rounded-lg bg-slate-50 flex items-center justify-center mb-2 overflow-hidden">
                                         {defaultVariant?.image_url ? (
-                                            <img src={defaultVariant.image_url} alt={product.name} className="w-full h-full object-cover" />
+                                            <img
+                                                src={defaultVariant.image_url}
+                                                alt={product.name}
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
-                                            <ShoppingBag className="w-8 h-8 text-gray-400" />
+                                            <span className="text-3xl">📦</span>
                                         )}
                                     </div>
-                                    <span className="text-[10px] font-bold text-blue-600 uppercase">{product.brand}</span>
-                                    <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{product.name}</h4>
-                                    <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">₹{defaultVariant?.retail_price || 0}</p>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                                        {product.brand}
+                                    </span>
+                                    <Link href={`/product/${product.slug || product.id}`} className="block">
+                                        <h4 className="font-semibold text-xs text-slate-900 line-clamp-1 group-hover:text-purple-600 transition">
+                                            {product.name}
+                                        </h4>
+                                    </Link>
+                                    <p className="text-xs font-bold text-slate-900 mt-1">
+                                        ₹{defaultVariant?.retail_price || 0}
+                                    </p>
                                 </div>
 
-                                <div className="pt-3 mt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                                {defaultVariant && (
                                     <button
-                                        onClick={() => defaultVariant && addToCart(defaultVariant.id, 1)}
-                                        className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition"
+                                        type="button"
+                                        onClick={() => addToCart(defaultVariant.id, 1)}
+                                        className="w-full mt-2.5 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white rounded-lg text-xs font-semibold transition"
                                     >
                                         Add to Cart
                                     </button>
-                                    <button
-                                        onClick={() => handleRemove(product.id)}
-                                        className="text-gray-400 hover:text-red-600 p-1"
-                                        title="Remove"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
+                                )}
                             </div>
                         );
                     })}
@@ -75,4 +87,3 @@ export default function UserWishlist({ wishlists = [] }) {
         </AppLayout>
     );
 }
-

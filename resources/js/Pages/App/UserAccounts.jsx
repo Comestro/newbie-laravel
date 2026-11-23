@@ -1,75 +1,51 @@
 import React from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
-import {
-    LayoutDashboard,
-    ShoppingBag,
-    Heart,
-    MapPin,
-    User,
-    Store,
-    LogOut,
-    ChevronRight
-} from 'lucide-react';
+import { User, ShoppingBag, Heart, MapPin, ShieldCheck, LogOut } from 'lucide-react';
 
-export default function UserAccounts() {
-    const handleLogout = () => {
-        router.post('/logout');
-    };
-
-    const links = [
-        { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { label: 'My Orders', href: '/my-orders', icon: ShoppingBag },
-        { label: 'Wishlist', href: '/wishlist', icon: Heart },
-        { label: 'My Addresses', href: '/my-addresses', icon: MapPin },
-        { label: 'Profile Information', href: '/profile', icon: User },
-        { label: 'Apply to Retailer', href: '/apply-to-retailer', icon: Store },
-    ];
+export default function UserAccounts({ auth }) {
+    const user = auth?.user || {};
 
     return (
         <ShopLayout>
-            <Head title="Account Menu - Newbie Service" />
+            <Head title="My Account - Newbie Service" />
 
-            <div className="max-w-md mx-auto px-4 py-8 space-y-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Account</h1>
-                    <p className="text-sm text-gray-500">Manage your orders and settings</p>
+            <div className="max-w-xl mx-auto px-4 py-8">
+                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs text-center mb-6">
+                    <div className="w-14 h-14 bg-purple-50 text-purple-700 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-2.5">
+                        {user.name?.charAt(0) || 'U'}
+                    </div>
+                    <h2 className="text-base font-bold text-slate-900">{user.name}</h2>
+                    <p className="text-xs text-slate-400">{user.email}</p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700/60 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden shadow-sm">
-                    {links.map((link) => {
-                        const Icon = link.icon;
-                        return (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 flex items-center justify-center">
-                                        <Icon className="w-5 h-5" />
-                                    </div>
-                                    <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                        {link.label}
-                                    </span>
-                                </div>
-                                <ChevronRight className="w-4 h-4 text-gray-400" />
-                            </Link>
-                        );
-                    })}
-
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 p-4 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition text-sm font-semibold"
-                    >
-                        <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 flex items-center justify-center">
-                            <LogOut className="w-5 h-5" />
-                        </div>
-                        <span>Sign Out</span>
-                    </button>
+                <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100 shadow-xs overflow-hidden">
+                    <Link href="/dashboard" className="flex items-center justify-between p-4 hover:bg-slate-50 transition text-xs font-semibold text-slate-700">
+                        <span>Dashboard</span>
+                        <span>&rarr;</span>
+                    </Link>
+                    <Link href="/my-orders" className="flex items-center justify-between p-4 hover:bg-slate-50 transition text-xs font-semibold text-slate-700">
+                        <span>My Orders</span>
+                        <span>&rarr;</span>
+                    </Link>
+                    <Link href="/wishlist" className="flex items-center justify-between p-4 hover:bg-slate-50 transition text-xs font-semibold text-slate-700">
+                        <span>Wishlist</span>
+                        <span>&rarr;</span>
+                    </Link>
+                    <Link href="/my-addresses" className="flex items-center justify-between p-4 hover:bg-slate-50 transition text-xs font-semibold text-slate-700">
+                        <span>Saved Addresses</span>
+                        <span>&rarr;</span>
+                    </Link>
+                    <Link href="/profile" className="flex items-center justify-between p-4 hover:bg-slate-50 transition text-xs font-semibold text-slate-700">
+                        <span>Profile Settings</span>
+                        <span>&rarr;</span>
+                    </Link>
+                    <Link href="/apply-to-retailer" className="flex items-center justify-between p-4 hover:bg-slate-50 transition text-xs font-semibold text-slate-700">
+                        <span>Retailer KYC</span>
+                        <span>&rarr;</span>
+                    </Link>
                 </div>
             </div>
         </ShopLayout>
     );
 }
-

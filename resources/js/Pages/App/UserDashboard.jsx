@@ -1,106 +1,133 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import { ShoppingBag, Heart, MapPin, ArrowRight, Clock, Store } from 'lucide-react';
+import { ShoppingBag, Heart, MapPin, Store } from 'lucide-react';
 
 export default function UserDashboard({ totalOrders = 0, totalWishlist = 0, totalAddress = 0, recentOrders = [] }) {
+    const getStatusBadge = (status) => {
+        const val = (status?.value || status || '').toUpperCase();
+        switch (val) {
+            case 'DELIVERED':
+            case 'COMPLETED':
+                return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            case 'CANCELLED':
+                return 'bg-rose-50 text-rose-700 border-rose-200';
+            case 'PROCESSING':
+            case 'SHIPPED':
+                return 'bg-blue-50 text-blue-700 border-blue-200';
+            default:
+                return 'bg-amber-50 text-amber-700 border-amber-200';
+        }
+    };
+
     return (
         <AppLayout title="Dashboard" subtitle="Welcome back to your account dashboard">
             <Head title="My Dashboard" />
 
-            <div className="space-y-8">
+            <div className="space-y-6">
                 {/* Stat Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                     <Link
                         href="/my-orders"
-                        className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/60 shadow-xs hover:border-blue-300 transition"
+                        className="bg-white p-4 rounded-xl border border-slate-100 hover:border-blue-200 transition shadow-xs group"
                     >
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase">Total Orders</span>
-                            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 flex items-center justify-center">
-                                <ShoppingBag className="w-5 h-5" />
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Orders</span>
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <ShoppingBag className="w-4 h-4" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-gray-900 dark:text-white mt-2">{totalOrders}</p>
+                        <p className="text-xl font-extrabold text-slate-900 mt-2">{totalOrders}</p>
                     </Link>
 
                     <Link
                         href="/wishlist"
-                        className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/60 shadow-xs hover:border-pink-300 transition"
+                        className="bg-white p-4 rounded-xl border border-slate-100 hover:border-pink-200 transition shadow-xs group"
                     >
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase">Wishlist Items</span>
-                            <div className="w-9 h-9 rounded-xl bg-pink-50 dark:bg-pink-900/40 text-pink-600 flex items-center justify-center">
-                                <Heart className="w-5 h-5" />
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Wishlist Items</span>
+                            <div className="w-8 h-8 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center">
+                                <Heart className="w-4 h-4" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-gray-900 dark:text-white mt-2">{totalWishlist}</p>
+                        <p className="text-xl font-extrabold text-slate-900 mt-2">{totalWishlist}</p>
                     </Link>
 
                     <Link
                         href="/my-addresses"
-                        className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/60 shadow-xs hover:border-purple-300 transition"
+                        className="bg-white p-4 rounded-xl border border-slate-100 hover:border-purple-200 transition shadow-xs group"
                     >
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500 uppercase">Saved Addresses</span>
-                            <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 flex items-center justify-center">
-                                <MapPin className="w-5 h-5" />
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Saved Addresses</span>
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                <MapPin className="w-4 h-4" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-gray-900 dark:text-white mt-2">{totalAddress}</p>
+                        <p className="text-xl font-extrabold text-slate-900 mt-2">{totalAddress}</p>
                     </Link>
                 </div>
 
                 {/* Retailer Banner */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <Store className="w-5 h-5" />
-                            <h3 className="text-lg font-bold">Sell with Newbie Service</h3>
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Store className="w-4 h-4" />
+                            <h3 className="text-sm font-bold">Sell with Newbie Service</h3>
                         </div>
-                        <p className="text-sm text-blue-100 max-w-lg">
+                        <p className="text-xs text-purple-100 max-w-lg">
                             Apply for a retailer account to supply products and fulfill customer grocery requests.
                         </p>
                     </div>
                     <Link
                         href="/apply-to-retailer"
-                        className="px-5 py-2.5 bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-xl text-sm transition shadow-sm"
+                        className="px-4 py-2 bg-white text-purple-700 hover:bg-purple-50 font-bold rounded-lg text-xs transition shadow-xs shrink-0"
                     >
-                        Apply for KYC
+                        Apply for KYC &rarr;
                     </Link>
                 </div>
 
-                {/* Recent Orders Table */}
-                <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700/60 shadow-sm p-6">
+                {/* Recent Orders */}
+                <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-bold text-gray-900 dark:text-white">Recent Orders</h3>
-                        <Link href="/my-orders" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                            <span>View All</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
+                        <h2 className="text-sm font-bold text-slate-900">Recent Orders</h2>
+                        <Link href="/my-orders" className="text-xs font-semibold text-purple-600 hover:text-purple-700">
+                            View All &rarr;
                         </Link>
                     </div>
 
                     {recentOrders.length === 0 ? (
-                        <p className="text-sm text-gray-500 py-6 text-center">No orders placed yet.</p>
+                        <div className="text-center py-8">
+                            <p className="text-xs text-slate-400">No orders yet.</p>
+                            <Link href="/catalog" className="inline-block mt-2 text-xs font-bold text-purple-600">
+                                Start shopping &rarr;
+                            </Link>
+                        </div>
                     ) : (
-                        <div className="divide-y divide-gray-100 dark:divide-gray-700/60">
+                        <div className="divide-y divide-slate-100">
                             {recentOrders.map((ord) => (
-                                <div key={ord.id} className="py-3.5 flex items-center justify-between">
+                                <div key={ord.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
                                     <div>
-                                        <p className="font-bold text-sm text-gray-900 dark:text-white font-mono">
-                                            #{ord.order_number}
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-0.5">
-                                            {new Date(ord.created_at).toLocaleDateString()} • {ord.status?.value || ord.status}
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono text-xs font-bold text-slate-900">
+                                                #{ord.order_number}
+                                            </span>
+                                            <span className={`px-2 py-0.2 rounded text-[10px] font-bold border ${getStatusBadge(ord.status)}`}>
+                                                {ord.status?.value || ord.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">
+                                            {new Date(ord.created_at).toLocaleDateString()}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="font-bold text-sm text-gray-900 dark:text-white">₹{ord.total_amount}</span>
+                                    <div className="text-right">
+                                        <span className="text-xs font-bold text-slate-900 block">
+                                            ₹{ord.total_amount}
+                                        </span>
                                         <Link
                                             href={`/order-view/${ord.order_number}`}
-                                            className="px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-xs font-semibold rounded-lg transition"
+                                            className="text-[11px] text-purple-600 hover:underline"
                                         >
-                                            View
+                                            View details
                                         </Link>
                                     </div>
                                 </div>
@@ -112,4 +139,3 @@ export default function UserDashboard({ totalOrders = 0, totalWishlist = 0, tota
         </AppLayout>
     );
 }
-
