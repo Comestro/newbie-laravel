@@ -12,6 +12,19 @@ export default function ProductShow({ product }) {
     const [selectedVariantId, setSelectedVariantId] = useState(firstVariant.id);
     const selectedVariant = variants.find((v) => v.id === selectedVariantId) || firstVariant;
 
+    const variantImagesList = (selectedVariant?.images && selectedVariant.images.length > 0)
+        ? selectedVariant.images
+        : (selectedVariant?.image_url ? [{ id: 'default', url: selectedVariant.image_url }] : []);
+
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+    const handleSelectVariant = (id) => {
+        setSelectedVariantId(id);
+        setActiveImageIndex(0);
+    };
+
+    const currentImage = variantImagesList[activeImageIndex]?.url || selectedVariant?.image_url;
+
     const price = Number(selectedVariant.retail_price || 0);
     const mrp = selectedVariant.mrp ? Number(selectedVariant.mrp) : null;
     const hasDiscount = Boolean(mrp && mrp > price);
@@ -38,16 +51,33 @@ export default function ProductShow({ product }) {
                     {/* Image Gallery */}
                     <div className="flex flex-col-reverse sm:flex-row gap-3">
                         {/* Thumbnails */}
-                        {variants.length > 1 && (
+                        {variantImagesList.length > 1 ? (
+                            <div className="flex sm:flex-col gap-2.5 sm:w-16 overflow-x-auto">
+                                {variantImagesList.map((img, idx) => (
+                                    <button
+                                        key={img.id || idx}
+                                        type="button"
+                                        onClick={() => setActiveImageIndex(idx)}
+                                        className={`w-14 sm:w-full aspect-square rounded-xl border p-1 overflow-hidden flex items-center justify-center transition shrink-0 cursor-pointer ${
+                                            activeImageIndex === idx
+                                                ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
+                                                : 'border-slate-100 bg-white hover:border-slate-200'
+                                        }`}
+                                    >
+                                        <img src={img.thumbnail_url || img.url} className="w-full h-full object-cover rounded-lg" alt="" />
+                                    </button>
+                                ))}
+                            </div>
+                        ) : variants.length > 1 ? (
                             <div className="flex sm:flex-col gap-2.5 sm:w-16 overflow-x-auto">
                                 {variants.map((v) => (
                                     <button
                                         key={v.id}
                                         type="button"
-                                        onClick={() => setSelectedVariantId(v.id)}
-                                        className={`w-14 sm:w-full aspect-square rounded-xl border p-1 overflow-hidden flex items-center justify-center transition shrink-0 ${
+                                        onClick={() => handleSelectVariant(v.id)}
+                                        className={`w-14 sm:w-full aspect-square rounded-xl border p-1 overflow-hidden flex items-center justify-center transition shrink-0 cursor-pointer ${
                                             selectedVariantId === v.id
-                                                ? 'border-purple-500 bg-purple-50'
+                                                ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
                                                 : 'border-slate-100 bg-white hover:border-slate-200'
                                         }`}
                                     >
@@ -59,13 +89,13 @@ export default function ProductShow({ product }) {
                                     </button>
                                 ))}
                             </div>
-                        )}
+                        ) : null}
 
                         {/* Main Image */}
                         <div className="flex-1 aspect-square rounded-2xl bg-white border border-slate-100 flex items-center justify-center relative overflow-hidden shadow-xs">
-                            {selectedVariant?.image_url ? (
+                            {currentImage ? (
                                 <img
-                                    src={selectedVariant.image_url}
+                                    src={currentImage}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
                                 />
@@ -127,7 +157,7 @@ export default function ProductShow({ product }) {
                                     <button
                                         key={variant.id}
                                         type="button"
-                                        onClick={() => setSelectedVariantId(variant.id)}
+                                        onClick={() => handleSelectVariant(variant.id)}
                                         className={`border rounded-xl py-2 px-3 flex items-center justify-center text-xs font-semibold uppercase transition ${
                                             selectedVariantId === variant.id
                                                 ? 'border-purple-500 bg-purple-50 text-purple-700'

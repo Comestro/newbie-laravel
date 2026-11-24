@@ -63,7 +63,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
         Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
         Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product:id}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
-        Route::put('/products/{product:id}', [AdminProductController::class, 'update'])->name('products.update');
+        Route::match(['put', 'patch', 'post'], '/products/{product:id}', [AdminProductController::class, 'update'])->name('products.update');
         Route::post('/products/{product:id}/toggle-active', [AdminProductController::class, 'toggleActive'])->name('products.toggle-active');
         Route::delete('/products/{product:id}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 

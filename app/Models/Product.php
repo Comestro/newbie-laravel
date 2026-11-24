@@ -43,4 +43,14 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function primaryImage(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
 }

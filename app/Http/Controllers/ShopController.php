@@ -109,8 +109,11 @@ class ShopController extends Controller
         $product->load([
             'category',
             'variants' => function ($q) {
-                $q->where('is_active', true)->orderBy('retail_price');
-            }
+                $q->where('is_active', true)
+                    ->orderBy('retail_price')
+                    ->with(['images' => fn($iq) => $iq->orderBy('sort_order', 'asc')]);
+            },
+            'images' => fn($iq) => $iq->orderBy('sort_order', 'asc'),
         ]);
 
         $relatedProducts = Product::query()
