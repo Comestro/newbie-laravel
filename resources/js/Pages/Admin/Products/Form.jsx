@@ -1,8 +1,7 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { Plus, Trash2, ArrowLeft, Save, PlusCircle, Edit3, Package, DollarSign, Layers } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Plus, Trash2, ArrowLeft, Save, PlusCircle, Edit3, Package, Layers } from 'lucide-react';
 
 export default function ProductForm({ product = null, categories = [] }) {
     const isEdit = Boolean(product?.id);
@@ -44,6 +43,8 @@ export default function ProductForm({ product = null, categories = [] }) {
         deleted_variant_ids: [],
     });
 
+    const getVariantError = (index, field) => errors[`variants.${index}.${field}`];
+
     const addVariant = () => {
         setData('variants', [
             ...data.variants,
@@ -63,7 +64,6 @@ export default function ProductForm({ product = null, categories = [] }) {
 
     const removeVariant = (index) => {
         if (data.variants.length <= 1) {
-            toast.error('A product must have at least one variant.');
             return;
         }
 
@@ -89,10 +89,6 @@ export default function ProductForm({ product = null, categories = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (data.variants.length === 0) {
-            toast.error('Please add at least one product variant.');
-            return;
-        }
 
         if (isEdit) {
             put(route('admin.products.update', product.id), {
@@ -139,7 +135,11 @@ export default function ProductForm({ product = null, categories = [] }) {
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
                                 placeholder="e.g. Fresh Cow Milk"
-                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                                className={`w-full text-xs px-3 py-2 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                    errors.name
+                                        ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                        : 'border-slate-200/80 focus:border-purple-500 focus:ring-1 focus:ring-purple-500'
+                                }`}
                             />
                             {errors.name && <p className="text-rose-500 text-[10px] mt-1">{errors.name}</p>}
                         </div>
@@ -153,7 +153,11 @@ export default function ProductForm({ product = null, categories = [] }) {
                                 value={data.brand}
                                 onChange={(e) => setData('brand', e.target.value)}
                                 placeholder="e.g. FarmFresh"
-                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                                className={`w-full text-xs px-3 py-2 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                    errors.brand
+                                        ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                        : 'border-slate-200/80 focus:border-purple-500 focus:ring-1 focus:ring-purple-500'
+                                }`}
                             />
                             {errors.brand && <p className="text-rose-500 text-[10px] mt-1">{errors.brand}</p>}
                         </div>
@@ -173,7 +177,11 @@ export default function ProductForm({ product = null, categories = [] }) {
                             <select
                                 value={data.category_id}
                                 onChange={(e) => setData('category_id', e.target.value)}
-                                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                                className={`w-full text-xs px-3 py-2 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                    errors.category_id
+                                        ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                        : 'border-slate-200/80 focus:border-purple-500 focus:ring-1 focus:ring-purple-500'
+                                }`}
                             >
                                 {categories.length === 0 ? (
                                     <option value="">No categories found - please create one</option>
@@ -198,6 +206,7 @@ export default function ProductForm({ product = null, categories = [] }) {
                                 />
                                 <span>Active Product (Visible on Store)</span>
                             </label>
+                            {errors.is_active && <p className="text-rose-500 text-[10px] ml-3">{errors.is_active}</p>}
                         </div>
                     </div>
 
@@ -208,7 +217,11 @@ export default function ProductForm({ product = null, categories = [] }) {
                             onChange={(e) => setData('description', e.target.value)}
                             rows="3"
                             placeholder="Detailed product information, ingredients, nutritional values, storage instructions..."
-                            className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                            className={`w-full text-xs px-3 py-2 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                errors.description
+                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                    : 'border-slate-200/80 focus:border-purple-500 focus:ring-1 focus:ring-purple-500'
+                            }`}
                         />
                         {errors.description && <p className="text-rose-500 text-[10px] mt-1">{errors.description}</p>}
                     </div>
@@ -240,7 +253,7 @@ export default function ProductForm({ product = null, categories = [] }) {
                         <p className="text-rose-500 text-xs font-semibold">{errors.variants}</p>
                     )}
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {data.variants.map((v, index) => (
                             <div
                                 key={v.id || index}
@@ -273,13 +286,20 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.unit_size}
                                             onChange={(e) => updateVariant(index, 'unit_size', e.target.value)}
                                             placeholder="e.g. 500ml, 1kg, Pack of 6"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'unit_size')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'unit_size') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'unit_size')}</p>
+                                        )}
                                     </div>
 
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                            MRP (₹) <span className="text-slate-400 font-normal">(optional)</span>
+                                            MRP (₹) <span className="text-rose-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -288,8 +308,15 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.mrp}
                                             onChange={(e) => updateVariant(index, 'mrp', e.target.value)}
                                             placeholder="e.g. 35.00"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'mrp')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'mrp') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'mrp')}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -303,13 +330,20 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.retail_price}
                                             onChange={(e) => updateVariant(index, 'retail_price', e.target.value)}
                                             placeholder="e.g. 30.00"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'retail_price')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'retail_price') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'retail_price')}</p>
+                                        )}
                                     </div>
 
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                                            Bulk Price (₹) <span className="text-slate-400 font-normal">(Retailer)</span>
+                                            Bulk Price (₹) <span className="text-rose-500">*</span> <span className="text-slate-400 font-normal">(Retailer)</span>
                                         </label>
                                         <input
                                             type="number"
@@ -318,8 +352,15 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.bulk_price}
                                             onChange={(e) => updateVariant(index, 'bulk_price', e.target.value)}
                                             placeholder="e.g. 25.00"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'bulk_price')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'bulk_price') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'bulk_price')}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -332,8 +373,15 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.min_bulk_qty}
                                             onChange={(e) => updateVariant(index, 'min_bulk_qty', e.target.value)}
                                             placeholder="e.g. 10"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'min_bulk_qty')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'min_bulk_qty') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'min_bulk_qty')}</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -348,8 +396,15 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.stock}
                                             onChange={(e) => updateVariant(index, 'stock', e.target.value)}
                                             placeholder="100"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'stock')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'stock') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'stock')}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -361,8 +416,15 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.sku}
                                             onChange={(e) => updateVariant(index, 'sku', e.target.value)}
                                             placeholder="e.g. MILK-500ML"
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 font-mono text-[11px] focus:border-purple-500 outline-none uppercase"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 font-mono text-[11px] outline-none uppercase transition ${
+                                                getVariantError(index, 'sku')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'sku') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'sku')}</p>
+                                        )}
                                     </div>
 
                                     <div>
@@ -374,8 +436,15 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             value={v.image_url}
                                             onChange={(e) => updateVariant(index, 'image_url', e.target.value)}
                                             placeholder="https://images..."
-                                            className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-purple-500 outline-none"
+                                            className={`w-full text-xs px-2.5 py-1.5 rounded-lg border bg-white text-slate-900 outline-none transition ${
+                                                getVariantError(index, 'image_url')
+                                                    ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                                                    : 'border-slate-200 focus:border-purple-500'
+                                            }`}
                                         />
+                                        {getVariantError(index, 'image_url') && (
+                                            <p className="text-rose-500 text-[10px] mt-1">{getVariantError(index, 'image_url')}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -404,4 +473,3 @@ export default function ProductForm({ product = null, categories = [] }) {
         </AdminLayout>
     );
 }
-

@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('variant_name');
             $table->string('unit_size');
             $table->string('sku')->unique();
-            $table->decimal('mrp', 10, 2)->nullable();
+            $table->decimal('mrp', 10, 2);
             $table->decimal('retail_price', 10, 2);
             $table->decimal('bulk_price', 10, 2);
             $table->integer('min_bulk_qty')->default(1);

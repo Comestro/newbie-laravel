@@ -65,6 +65,34 @@ class AdminProductController extends Controller
         ]);
     }
 
+    protected function variantValidationMessages(): array
+    {
+        return [
+            'name.required' => 'Product name is required.',
+            'brand.required' => 'Brand name is required.',
+            'category_id.required' => 'Please select a category.',
+            'variants.required' => 'At least one variant is required.',
+            'variants.min' => 'At least one variant is required.',
+            'variants.*.unit_size.required' => 'Size / unit is required.',
+            'variants.*.mrp.required' => 'MRP is required.',
+            'variants.*.mrp.numeric' => 'MRP must be a valid number.',
+            'variants.*.mrp.min' => 'MRP cannot be negative.',
+            'variants.*.retail_price.required' => 'Retail price is required.',
+            'variants.*.retail_price.numeric' => 'Retail price must be a valid number.',
+            'variants.*.retail_price.min' => 'Retail price cannot be negative.',
+            'variants.*.bulk_price.required' => 'Bulk price is required.',
+            'variants.*.bulk_price.numeric' => 'Bulk price must be a valid number.',
+            'variants.*.bulk_price.min' => 'Bulk price cannot be negative.',
+            'variants.*.min_bulk_qty.integer' => 'Min bulk qty must be an integer.',
+            'variants.*.min_bulk_qty.min' => 'Min bulk qty must be at least 1.',
+            'variants.*.stock.required' => 'Stock quantity is required.',
+            'variants.*.stock.integer' => 'Stock must be an integer.',
+            'variants.*.stock.min' => 'Stock cannot be negative.',
+            'variants.*.sku.max' => 'SKU code must not exceed 100 characters.',
+            'variants.*.image_url.max' => 'Image URL cannot exceed 500 characters.',
+        ];
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -75,14 +103,14 @@ class AdminProductController extends Controller
             'is_active' => 'nullable|boolean',
             'variants' => 'required|array|min:1',
             'variants.*.unit_size' => 'required|string|max:100',
-            'variants.*.mrp' => 'nullable|numeric|min:0',
+            'variants.*.mrp' => 'required|numeric|min:0',
             'variants.*.retail_price' => 'required|numeric|min:0',
-            'variants.*.bulk_price' => 'nullable|numeric|min:0',
+            'variants.*.bulk_price' => 'required|numeric|min:0',
             'variants.*.min_bulk_qty' => 'nullable|integer|min:1',
             'variants.*.stock' => 'required|integer|min:0',
             'variants.*.sku' => 'nullable|string|max:100',
             'variants.*.image_url' => 'nullable|string|max:500',
-        ]);
+        ], $this->variantValidationMessages());
 
         $product = Product::create([
             'name' => $validated['name'],
@@ -145,16 +173,16 @@ class AdminProductController extends Controller
             'variants' => 'required|array|min:1',
             'variants.*.id' => 'nullable|exists:product_variants,id',
             'variants.*.unit_size' => 'required|string|max:100',
-            'variants.*.mrp' => 'nullable|numeric|min:0',
+            'variants.*.mrp' => 'required|numeric|min:0',
             'variants.*.retail_price' => 'required|numeric|min:0',
-            'variants.*.bulk_price' => 'nullable|numeric|min:0',
+            'variants.*.bulk_price' => 'required|numeric|min:0',
             'variants.*.min_bulk_qty' => 'nullable|integer|min:1',
             'variants.*.stock' => 'required|integer|min:0',
             'variants.*.sku' => 'nullable|string|max:100',
             'variants.*.image_url' => 'nullable|string|max:500',
             'deleted_variant_ids' => 'nullable|array',
             'deleted_variant_ids.*' => 'exists:product_variants,id',
-        ]);
+        ], $this->variantValidationMessages());
 
         $product->update([
             'name' => $validated['name'],

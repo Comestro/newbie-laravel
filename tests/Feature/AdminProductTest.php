@@ -59,6 +59,7 @@ class AdminProductTest extends TestCase
             'product_id' => $product->id,
             'variant_name' => 'Pasteurized Milk - 1L',
             'unit_size' => '1L',
+            'mrp' => 65.00,
             'retail_price' => 60,
             'bulk_price' => 52,
             'min_bulk_qty' => 10,
@@ -146,6 +147,31 @@ class AdminProductTest extends TestCase
         ]);
     }
 
+    public function test_mrp_and_bulk_price_are_required_for_variants(): void
+    {
+        $payload = [
+            'name' => 'Validation Test Product',
+            'brand' => 'Brand Test',
+            'category_id' => $this->category->id,
+            'is_active' => true,
+            'variants' => [
+                [
+                    'unit_size' => '1L',
+                    'mrp' => '',
+                    'retail_price' => 50.00,
+                    'bulk_price' => '',
+                    'stock' => 10,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->admin)->post('/admin/products', $payload);
+        $response->assertSessionHasErrors([
+            'variants.0.mrp',
+            'variants.0.bulk_price',
+        ]);
+    }
+
     public function test_admin_can_update_product_and_manage_variants(): void
     {
         $product = Product::create([
@@ -160,6 +186,7 @@ class AdminProductTest extends TestCase
             'product_id' => $product->id,
             'variant_name' => 'Butter - 100g',
             'unit_size' => '100g',
+            'mrp' => 60.00,
             'retail_price' => 55.00,
             'bulk_price' => 48.00,
             'stock' => 40,
@@ -171,6 +198,7 @@ class AdminProductTest extends TestCase
             'product_id' => $product->id,
             'variant_name' => 'Butter - 500g',
             'unit_size' => '500g',
+            'mrp' => 280.00,
             'retail_price' => 260.00,
             'bulk_price' => 240.00,
             'stock' => 20,
@@ -274,6 +302,7 @@ class AdminProductTest extends TestCase
             'product_id' => $product->id,
             'variant_name' => 'Yogurt - 400g',
             'unit_size' => '400g',
+            'mrp' => 50.00,
             'retail_price' => 45.00,
             'bulk_price' => 40.00,
             'stock' => 30,
