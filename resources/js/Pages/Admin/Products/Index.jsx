@@ -127,7 +127,7 @@ export default function Index({ products, categories = [], filters = {} }) {
                         >
                             <option value="">All Statuses</option>
                             <option value="active">Active</option>
-                            <option value="draft">Draft</option>
+                            <option value="inactive">Inactive</option>
                         </select>
 
                         <button
@@ -238,13 +238,13 @@ export default function Index({ products, categories = [], filters = {} }) {
                                                     <button
                                                         type="button"
                                                         onClick={() => handleToggleActive(prod)}
-                                                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition ${
-                                                            prod.is_active
+                                                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition capitalize ${
+                                                            (prod.status ? prod.status === 'active' : prod.is_active)
                                                                 ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                                                                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                                         }`}
                                                     >
-                                                        {prod.is_active ? 'Active' : 'Draft'}
+                                                        {prod.status || (prod.is_active ? 'active' : 'inactive')}
                                                     </button>
                                                 </td>
                                                 <td className="py-3 px-4 text-right">

@@ -14,12 +14,26 @@ class ProductVariant extends Model
 
     protected $casts = [
         'is_default' => 'boolean',
-        'is_active' => 'boolean',
         'mrp' => 'decimal:2',
         'retail_price' => 'decimal:2',
         'bulk_price' => 'decimal:2',
         'weight' => 'decimal:2',
     ];
+
+    public function getIsActiveAttribute(): bool
+    {
+        return ($this->attributes['status'] ?? 'active') === 'active';
+    }
+
+    public function setIsActiveAttribute($value): void
+    {
+        $this->attributes['status'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'active' : 'inactive';
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 
     public function product(): BelongsTo
     {

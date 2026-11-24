@@ -19,10 +19,10 @@ class ShopController extends Controller
         $products = Product::with([
             'category',
             'variants' => function ($query) {
-                $query->where('is_active', true)->orderBy('retail_price');
+                $query->where('status', 'active')->orderBy('retail_price');
             }
         ])
-            ->where('is_active', true)
+            ->where('status', 'active')
             ->when($selectedCategory, function ($query, $cat) {
                 $query->whereHas('category', fn($q) => $q->where('slug', $cat)->orWhere('name', $cat)->orWhere('id', $cat));
             })
@@ -45,10 +45,10 @@ class ShopController extends Controller
         $sort = $request->query('sort', 'newest');
 
         $query = Product::query()
-            ->where('is_active', true)
+            ->where('status', 'active')
             ->with([
                 'category',
-                'variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')
+                'variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')
             ])
             ->when($category, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $category)->orWhere('name', $category)->orWhere('id', $category)))
             ->when($search, function ($q) use ($search) {
@@ -64,7 +64,7 @@ class ShopController extends Controller
                 $query->orderBy(
                     \App\Models\ProductVariant::select('retail_price')
                         ->whereColumn('product_variants.product_id', 'products.id')
-                        ->where('is_active', true)
+                        ->where('status', 'active')
                         ->orderBy('retail_price', 'asc')
                         ->limit(1),
                     'asc'
@@ -74,7 +74,7 @@ class ShopController extends Controller
                 $query->orderBy(
                     \App\Models\ProductVariant::select('retail_price')
                         ->whereColumn('product_variants.product_id', 'products.id')
-                        ->where('is_active', true)
+                        ->where('status', 'active')
                         ->orderBy('retail_price', 'desc')
                         ->limit(1),
                     'desc'
@@ -109,7 +109,7 @@ class ShopController extends Controller
         $product->load([
             'category',
             'variants' => function ($q) {
-                $q->where('is_active', true)
+                $q->where('status', 'active')
                     ->orderBy('retail_price')
                     ->with(['images' => fn($iq) => $iq->orderBy('sort_order', 'asc')]);
             },
@@ -119,8 +119,8 @@ class ShopController extends Controller
         $relatedProducts = Product::query()
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
-            ->where('is_active', true)
-            ->with(['category', 'variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')])
+            ->where('status', 'active')
+            ->with(['category', 'variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')])
             ->take(4)
             ->get();
 

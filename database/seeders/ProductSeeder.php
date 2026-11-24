@@ -24,7 +24,7 @@ class ProductSeeder extends Seeder
             'name' => 'Fresh Cow Milk',
             'description' => 'Pure, organic fresh cow milk delivered daily.',
             'brand' => 'FarmFresh',
-            'is_active' => true,
+            'status' => 'active',
         ]);
 
         ProductVariant::create([
@@ -55,7 +55,7 @@ class ProductSeeder extends Seeder
             'name' => 'Buffalo Milk',
             'description' => 'Rich and creamy buffalo milk.',
             'brand' => 'FarmFresh',
-            'is_active' => true,
+            'status' => 'active',
         ]);
 
         ProductVariant::create([
@@ -77,7 +77,7 @@ class ProductSeeder extends Seeder
             'name' => 'Mineral Water Jar',
             'description' => '20 Litre Mineral Water Jar for home and office.',
             'brand' => 'Bisleri',
-            'is_active' => true,
+            'status' => 'active',
         ]);
 
         ProductVariant::create([
@@ -97,7 +97,7 @@ class ProductSeeder extends Seeder
             'name' => 'Water Bottle Box',
             'description' => 'Box of 1 Litre Water Bottles (12 pcs).',
             'brand' => 'Kinley',
-            'is_active' => true,
+            'status' => 'active',
         ]);
 
         ProductVariant::create([
@@ -119,7 +119,7 @@ class ProductSeeder extends Seeder
             'name' => 'Coca Cola',
             'description' => 'Refreshing soft drink.',
             'brand' => 'Coca Cola',
-            'is_active' => true,
+            'status' => 'active',
         ]);
 
         ProductVariant::create([
@@ -150,7 +150,7 @@ class ProductSeeder extends Seeder
             'name' => 'Mango Juice',
             'description' => 'Real mango pulp juice without preservatives.',
             'brand' => 'Real',
-            'is_active' => true,
+            'status' => 'active',
         ]);
 
         ProductVariant::create([

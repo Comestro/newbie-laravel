@@ -38,9 +38,9 @@ class AdminProductController extends Controller
             })
             ->when($status !== null && $status !== '', function ($query) use ($status) {
                 if ($status === 'active') {
-                    $query->where('is_active', true);
-                } elseif ($status === 'draft') {
-                    $query->where('is_active', false);
+                    $query->where('status', 'active');
+                } elseif ($status === 'inactive' || $status === 'draft') {
+                    $query->where('status', 'inactive');
                 }
             })
             ->latest('id')
@@ -135,8 +135,11 @@ class AdminProductController extends Controller
             'brand' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
+            'status' => 'nullable|string|in:active,inactive',
             'is_active' => 'nullable|boolean',
             'variants' => 'required|array|min:1',
+            'variants.*.status' => 'nullable|string|in:active,inactive',
+            'variants.*.is_active' => 'nullable|boolean',
             'variants.*.unit_size' => 'required|string|max:100',
             'variants.*.mrp' => 'required|numeric|min:0',
             'variants.*.retail_price' => 'required|numeric|min:0',
@@ -153,13 +156,14 @@ class AdminProductController extends Controller
         ], $this->variantValidationMessages());
 
         DB::transaction(function () use ($validated, $request, $imageKitService) {
+            $productStatus = $validated['status'] ?? ($request->has('is_active') ? ($request->boolean('is_active') ? 'active' : 'inactive') : 'active');
             $product = Product::create([
                 'name' => $validated['name'],
                 'slug' => $this->generateUniqueSlug($validated['name']),
                 'description' => $validated['description'] ?? null,
                 'brand' => $validated['brand'],
                 'category_id' => $validated['category_id'],
-                'is_active' => $request->boolean('is_active', true),
+                'status' => $productStatus,
             ]);
 
             foreach ($validated['variants'] as $index => $variantData) {
@@ -171,6 +175,7 @@ class AdminProductController extends Controller
                     ? (float) $variantData['bulk_price']
                     : $retailPrice;
 
+                $variantStatus = $variantData['status'] ?? (isset($variantData['is_active']) ? ($variantData['is_active'] ? 'active' : 'inactive') : 'active');
                 $variant = ProductVariant::create([
                     'product_id' => $product->id,
                     'variant_name' => $product->name . ' - ' . $variantData['unit_size'],
@@ -185,7 +190,7 @@ class AdminProductController extends Controller
                         : $this->generateUniqueSku($product->name, $variantData['unit_size']),
                     'image_url' => $variantData['image_url'] ?? null,
                     'is_default' => $index === 0,
-                    'is_active' => true,
+                    'status' => $variantStatus,
                 ]);
 
                 // Collect uploaded image files
@@ -250,9 +255,12 @@ class AdminProductController extends Controller
             'brand' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
+            'status' => 'nullable|string|in:active,inactive',
             'is_active' => 'nullable|boolean',
             'variants' => 'required|array|min:1',
             'variants.*.id' => 'nullable|exists:product_variants,id',
+            'variants.*.status' => 'nullable|string|in:active,inactive',
+            'variants.*.is_active' => 'nullable|boolean',
             'variants.*.unit_size' => 'required|string|max:100',
             'variants.*.mrp' => 'required|numeric|min:0',
             'variants.*.retail_price' => 'required|numeric|min:0',
@@ -273,13 +281,14 @@ class AdminProductController extends Controller
         ], $this->variantValidationMessages());
 
         DB::transaction(function () use ($validated, $request, $product, $imageKitService) {
+            $productStatus = $validated['status'] ?? ($request->has('is_active') ? ($request->boolean('is_active') ? 'active' : 'inactive') : $product->status);
             $product->update([
                 'name' => $validated['name'],
                 'slug' => $this->generateUniqueSlug($validated['name'], $product->id),
                 'description' => $validated['description'] ?? null,
                 'brand' => $validated['brand'],
                 'category_id' => $validated['category_id'],
-                'is_active' => $request->boolean('is_active', true),
+                'status' => $productStatus,
             ]);
 
             // 1. Delete requested individual images
@@ -327,8 +336,10 @@ class AdminProductController extends Controller
                     ? strtoupper($variantData['sku'])
                     : ($existingVariant?->sku ?? $this->generateUniqueSku($product->name, $variantData['unit_size'], $existingVariant?->id));
 
+                $variantStatus = $variantData['status'] ?? (isset($variantData['is_active']) ? ($variantData['is_active'] ? 'active' : 'inactive') : null);
+
                 if ($existingVariant) {
-                    $existingVariant->update([
+                    $updateFields = [
                         'variant_name' => $product->name . ' - ' . $variantData['unit_size'],
                         'unit_size' => $variantData['unit_size'],
                         'mrp' => $mrp,
@@ -337,7 +348,11 @@ class AdminProductController extends Controller
                         'min_bulk_qty' => !empty($variantData['min_bulk_qty']) ? (int) $variantData['min_bulk_qty'] : 10,
                         'stock' => (int) $variantData['stock'],
                         'sku' => $sku,
-                    ]);
+                    ];
+                    if ($variantStatus !== null) {
+                        $updateFields['status'] = $variantStatus;
+                    }
+                    $existingVariant->update($updateFields);
                     $targetVariant = $existingVariant;
                 } else {
                     $targetVariant = ProductVariant::create([
@@ -352,7 +367,7 @@ class AdminProductController extends Controller
                         'sku' => $sku,
                         'image_url' => null,
                         'is_default' => $index === 0,
-                        'is_active' => true,
+                        'status' => $variantStatus ?? 'active',
                     ]);
                 }
 
@@ -437,9 +452,10 @@ class AdminProductController extends Controller
 
     public function toggleActive(Product $product): RedirectResponse
     {
-        $product->update(['is_active' => !$product->is_active]);
+        $newStatus = $product->status === 'active' ? 'inactive' : 'active';
+        $product->update(['status' => $newStatus]);
 
-        return back()->with('success', "Product status changed to " . ($product->is_active ? 'active' : 'draft') . ".");
+        return back()->with('success', "Product status changed to {$newStatus}.");
     }
 
     public function destroy(Product $product, ImageKitService $imageKitService): RedirectResponse

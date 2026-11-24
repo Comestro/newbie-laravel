@@ -286,9 +286,11 @@ class AdminProductTest extends TestCase
         ]);
 
         $this->actingAs($this->admin)->post("/admin/products/{$product->id}/toggle-active");
+        $this->assertEquals('inactive', $product->fresh()->status);
         $this->assertFalse($product->fresh()->is_active);
 
         $this->actingAs($this->admin)->post("/admin/products/{$product->id}/toggle-active");
+        $this->assertEquals('active', $product->fresh()->status);
         $this->assertTrue($product->fresh()->is_active);
     }
 

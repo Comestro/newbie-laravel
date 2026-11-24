@@ -178,7 +178,7 @@ class CustomerPortalController extends Controller
     public function wishlist(): Response
     {
         $wishlists = Wishlist::where('user_id', Auth::id())
-            ->with(['product.variants' => fn($q) => $q->where('is_active', true)->orderBy('retail_price')])
+            ->with(['product.variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')])
             ->get();
 
         return Inertia::render('App/UserWishlist', [

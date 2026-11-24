@@ -14,9 +14,20 @@ class Product extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    public function getIsActiveAttribute(): bool
+    {
+        return ($this->attributes['status'] ?? 'active') === 'active';
+    }
+
+    public function setIsActiveAttribute($value): void
+    {
+        $this->attributes['status'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'active' : 'inactive';
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 
     public function getRouteKeyName()
     {

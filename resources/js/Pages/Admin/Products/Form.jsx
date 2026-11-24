@@ -19,6 +19,7 @@ export default function ProductForm({ product = null, categories = [] }) {
             image_files: [],
             cover_image_id: null,
             cover_new_file_id: null,
+            status: v.status || 'active',
         }))
         : [
             {
@@ -32,6 +33,7 @@ export default function ProductForm({ product = null, categories = [] }) {
                 image_files: [],
                 cover_image_id: null,
                 cover_new_file_id: null,
+                status: 'active',
             },
         ];
 
@@ -75,7 +77,8 @@ export default function ProductForm({ product = null, categories = [] }) {
         brand: product?.brand || '',
         category_id: product?.category_id || defaultCategoryId,
         description: product?.description || '',
-        is_active: product ? Boolean(product.is_active) : true,
+        status: product?.status || (product?.is_active === false ? 'inactive' : 'active'),
+        is_active: product ? (product.status ? product.status === 'active' : Boolean(product.is_active)) : true,
         variants: initialVariants,
         deleted_variant_ids: [],
         deleted_image_ids: [],
@@ -97,6 +100,7 @@ export default function ProductForm({ product = null, categories = [] }) {
                 image_files: [],
                 cover_image_id: null,
                 cover_new_file_id: null,
+                status: 'active',
             },
         ]);
         setVariantGalleries((prev) => [...prev, { existing: [], newFiles: [] }]);
@@ -390,12 +394,20 @@ export default function ProductForm({ product = null, categories = [] }) {
                             <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                                 <input
                                     type="checkbox"
-                                    checked={data.is_active}
-                                    onChange={(e) => setData('is_active', e.target.checked)}
+                                    checked={data.status === 'active'}
+                                    onChange={(e) => {
+                                        const nextStatus = e.target.checked ? 'active' : 'inactive';
+                                        setData((prev) => ({
+                                            ...prev,
+                                            status: nextStatus,
+                                            is_active: e.target.checked,
+                                        }));
+                                    }}
                                     className="rounded accent-purple-600 h-4 w-4"
                                 />
                                 <span>Active Product (Visible on Store)</span>
                             </label>
+                            {errors.status && <p className="text-rose-500 text-[10px] ml-3">{errors.status}</p>}
                             {errors.is_active && <p className="text-rose-500 text-[10px] ml-3">{errors.is_active}</p>}
                         </div>
                     </div>

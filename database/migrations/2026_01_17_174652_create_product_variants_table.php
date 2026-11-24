@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('weight', 8, 2)->nullable();
             $table->string('image_url')->nullable();
             $table->boolean('is_default')->default(false);
-            $table->boolean('is_active')->default(true);
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }
