@@ -148,6 +148,8 @@ class AdminProductController extends Controller
             'variants.*.image_files.*' => 'image|max:10240',
             'variants.*.image_file' => 'nullable|image|max:10240',
             'variants.*.image_url' => 'nullable|string|max:500',
+            'variants.*.cover_image_id' => 'nullable|integer',
+            'variants.*.cover_new_file_id' => 'nullable|string',
         ], $this->variantValidationMessages());
 
         DB::transaction(function () use ($validated, $request, $imageKitService) {
@@ -201,7 +203,7 @@ class AdminProductController extends Controller
                         continue;
                     }
                     $uploadRes = $imageKitService->upload($file, null, '/products');
-                    if (!$firstImageUrl) {
+                    if (!$firstImageUrl || $imgIdx === 0) {
                         $firstImageUrl = $uploadRes['url'];
                     }
 
@@ -213,7 +215,7 @@ class AdminProductController extends Controller
                         'file_path' => $uploadRes['file_path'] ?? null,
                         'thumbnail_url' => $uploadRes['thumbnail_url'] ?? null,
                         'alt_text' => $variant->variant_name,
-                        'is_primary' => ($index === 0 && $imgIdx === 0),
+                        'is_primary' => ($imgIdx === 0),
                         'sort_order' => $imgIdx,
                     ]);
                 }
@@ -231,7 +233,7 @@ class AdminProductController extends Controller
     {
         $product->load([
             'category:id,name',
-            'variants' => fn($q) => $q->orderBy('id', 'asc')->with(['images' => fn($iq) => $iq->orderBy('sort_order', 'asc')]),
+            'variants' => fn($q) => $q->orderBy('id', 'asc')->with(['images' => fn($iq) => $iq->orderByRaw('is_primary DESC, sort_order ASC')]),
             'images' => fn($iq) => $iq->orderBy('sort_order', 'asc'),
         ]);
 
@@ -262,6 +264,8 @@ class AdminProductController extends Controller
             'variants.*.image_files.*' => 'image|max:10240',
             'variants.*.image_file' => 'nullable|image|max:10240',
             'variants.*.image_url' => 'nullable|string|max:500',
+            'variants.*.cover_image_id' => 'nullable|integer',
+            'variants.*.cover_new_file_id' => 'nullable|string',
             'deleted_variant_ids' => 'nullable|array',
             'deleted_variant_ids.*' => 'exists:product_variants,id',
             'deleted_image_ids' => 'nullable|array',
@@ -361,16 +365,34 @@ class AdminProductController extends Controller
                     $uploadedFiles = [$request->file("variants.{$index}.image_file")];
                 }
 
-                $currentSortOrder = ProductImage::where('product_variant_id', $targetVariant->id)->max('sort_order') ?? -1;
+                // Handle existing cover image selection if specified
+                $hasExplicitExistingCover = !empty($variantData['cover_image_id']);
+                if ($hasExplicitExistingCover) {
+                    ProductImage::where('product_variant_id', $targetVariant->id)
+                        ->update(['is_primary' => false]);
 
-                foreach ($uploadedFiles as $file) {
+                    $coverImg = ProductImage::where('id', $variantData['cover_image_id'])
+                        ->where('product_variant_id', $targetVariant->id)
+                        ->first();
+
+                    if ($coverImg) {
+                        $coverImg->update(['is_primary' => true, 'sort_order' => 0]);
+                        $targetVariant->update(['image_url' => $coverImg->url]);
+                    }
+                }
+
+                $currentSortOrder = ProductImage::where('product_variant_id', $targetVariant->id)->max('sort_order') ?? 0;
+
+                foreach ($uploadedFiles as $fIdx => $file) {
                     if (!$file) {
                         continue;
                     }
                     $currentSortOrder++;
                     $uploadRes = $imageKitService->upload($file, null, '/products');
 
-                    ProductImage::create([
+                    $isNewCover = !$hasExplicitExistingCover && ($fIdx === 0 && (!empty($variantData['cover_new_file_id']) || $targetVariant->image_url === null));
+
+                    $newProductImage = ProductImage::create([
                         'product_id' => $product->id,
                         'product_variant_id' => $targetVariant->id,
                         'url' => $uploadRes['url'],
@@ -378,18 +400,34 @@ class AdminProductController extends Controller
                         'file_path' => $uploadRes['file_path'] ?? null,
                         'thumbnail_url' => $uploadRes['thumbnail_url'] ?? null,
                         'alt_text' => $targetVariant->variant_name,
-                        'is_primary' => ($index === 0 && $currentSortOrder === 0),
-                        'sort_order' => $currentSortOrder,
+                        'is_primary' => $isNewCover,
+                        'sort_order' => $isNewCover ? 0 : $currentSortOrder,
                     ]);
+
+                    if ($isNewCover) {
+                        ProductImage::where('product_variant_id', $targetVariant->id)
+                            ->where('id', '!=', $newProductImage->id)
+                            ->update(['is_primary' => false]);
+                        $targetVariant->update(['image_url' => $uploadRes['url']]);
+                    }
                 }
 
-                // Sync target variant image_url to its first image
-                $firstVariantImg = ProductImage::where('product_variant_id', $targetVariant->id)
-                    ->orderBy('sort_order', 'asc')
+                // Sync cover image and image_url for variant
+                $coverImg = ProductImage::where('product_variant_id', $targetVariant->id)
+                    ->where('is_primary', true)
                     ->first();
 
+                if (!$coverImg) {
+                    $coverImg = ProductImage::where('product_variant_id', $targetVariant->id)
+                        ->orderBy('sort_order', 'asc')
+                        ->first();
+                    if ($coverImg) {
+                        $coverImg->update(['is_primary' => true]);
+                    }
+                }
+
                 $targetVariant->update([
-                    'image_url' => $firstVariantImg?->url ?? $targetVariant->image_url,
+                    'image_url' => $coverImg?->url,
                 ]);
             }
         });

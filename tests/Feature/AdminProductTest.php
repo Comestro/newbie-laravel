@@ -641,5 +641,78 @@ class AdminProductTest extends TestCase
             'brand' => 'Mother Dairy',
         ]);
     }
+
+    public function test_admin_can_set_variant_cover_image(): void
+    {
+        $product = Product::create([
+            'category_id' => $this->category->id,
+            'name' => 'Cashew Butter',
+            'slug' => 'cashew-butter',
+            'brand' => 'NutriFarm',
+            'is_active' => true,
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'variant_name' => 'Cashew Butter - 250g',
+            'unit_size' => '250g',
+            'mrp' => 350.00,
+            'retail_price' => 300.00,
+            'bulk_price' => 280.00,
+            'min_bulk_qty' => 5,
+            'stock' => 50,
+            'sku' => 'CB-250G',
+            'image_url' => 'https://example.com/cashew-1.jpg',
+            'is_default' => true,
+            'is_active' => true,
+        ]);
+
+        $image1 = ProductImage::create([
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'url' => 'https://example.com/cashew-1.jpg',
+            'sort_order' => 0,
+            'is_primary' => true,
+        ]);
+
+        $image2 = ProductImage::create([
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'url' => 'https://example.com/cashew-2.jpg',
+            'sort_order' => 1,
+            'is_primary' => false,
+        ]);
+
+        $payload = [
+            'name' => 'Cashew Butter',
+            'brand' => 'NutriFarm',
+            'category_id' => $this->category->id,
+            'is_active' => true,
+            'variants' => [
+                [
+                    'id' => $variant->id,
+                    'unit_size' => '250g',
+                    'mrp' => 350.00,
+                    'retail_price' => 300.00,
+                    'bulk_price' => 280.00,
+                    'min_bulk_qty' => 5,
+                    'stock' => 50,
+                    'sku' => 'CB-250G',
+                    'cover_image_id' => $image2->id,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->admin)->put("/admin/products/{$product->id}", $payload);
+        $response->assertRedirect('/admin/products');
+
+        $image1->refresh();
+        $image2->refresh();
+        $variant->refresh();
+
+        $this->assertFalse((bool) $image1->is_primary);
+        $this->assertTrue((bool) $image2->is_primary);
+        $this->assertEquals('https://example.com/cashew-2.jpg', $variant->image_url);
+    }
 }
 

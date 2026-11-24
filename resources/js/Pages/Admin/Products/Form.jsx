@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { Plus, Trash2, ArrowLeft, Save, PlusCircle, Edit3, Package, Layers, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Save, PlusCircle, Edit3, Package, Layers, Upload, Image as ImageIcon, X, Star } from 'lucide-react';
 
 export default function ProductForm({ product = null, categories = [] }) {
     const isEdit = Boolean(product?.id);
@@ -17,6 +17,8 @@ export default function ProductForm({ product = null, categories = [] }) {
             min_bulk_qty: v.min_bulk_qty ?? 10,
             stock: v.stock ?? 100,
             image_files: [],
+            cover_image_id: null,
+            cover_new_file_id: null,
         }))
         : [
             {
@@ -28,22 +30,33 @@ export default function ProductForm({ product = null, categories = [] }) {
                 min_bulk_qty: 10,
                 stock: 100,
                 image_files: [],
+                cover_image_id: null,
+                cover_new_file_id: null,
             },
         ];
 
-    // Local gallery state for each variant: { existing: [{id, url, thumbnail_url}], newFiles: [{id, file, preview}] }
+    // Local gallery state for each variant: { existing: [{id, url, thumbnail_url, is_primary}], newFiles: [{id, file, preview, is_cover}] }
     const [variantGalleries, setVariantGalleries] = useState(() => {
         if (!product?.variants) {
             return [{ existing: [], newFiles: [] }];
         }
-        return product.variants.map((v) => ({
-            existing: (v.images || []).map((img) => ({
-                id: img.id,
-                url: img.url,
-                thumbnail_url: img.thumbnail_url || img.url,
-            })),
-            newFiles: [],
-        }));
+        return product.variants.map((v) => {
+            const sortedImages = [...(v.images || [])].sort((a, b) => {
+                if (a.is_primary && !b.is_primary) return -1;
+                if (!a.is_primary && b.is_primary) return 1;
+                return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+            });
+
+            return {
+                existing: sortedImages.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    thumbnail_url: img.thumbnail_url || img.url,
+                    is_primary: Boolean(img.is_primary),
+                })),
+                newFiles: [],
+            };
+        });
     });
 
     useEffect(() => {
@@ -82,6 +95,8 @@ export default function ProductForm({ product = null, categories = [] }) {
                 min_bulk_qty: 10,
                 stock: 100,
                 image_files: [],
+                cover_image_id: null,
+                cover_new_file_id: null,
             },
         ]);
         setVariantGalleries((prev) => [...prev, { existing: [], newFiles: [] }]);
@@ -128,6 +143,7 @@ export default function ProductForm({ product = null, categories = [] }) {
             id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             file,
             preview: URL.createObjectURL(file),
+            is_cover: false,
         }));
 
         setVariantGalleries((prev) => {
@@ -195,6 +211,68 @@ export default function ProductForm({ product = null, categories = [] }) {
                 };
             });
         }
+    };
+
+    const handleSetCover = (variantIndex, targetItem, isExisting) => {
+        setVariantGalleries((prev) => {
+            const next = [...prev];
+            const g = next[variantIndex];
+            if (!g) return prev;
+
+            if (isExisting) {
+                const target = g.existing.find((img) => img.id === targetItem.id);
+                if (!target) return prev;
+                const remaining = g.existing.filter((img) => img.id !== targetItem.id);
+
+                next[variantIndex] = {
+                    ...g,
+                    existing: [{ ...target, is_primary: true }, ...remaining.map((img) => ({ ...img, is_primary: false }))],
+                    newFiles: g.newFiles.map((n) => ({ ...n, is_cover: false })),
+                };
+            } else {
+                const target = g.newFiles.find((n) => n.id === targetItem.id);
+                if (!target) return prev;
+                const remaining = g.newFiles.filter((n) => n.id !== targetItem.id);
+
+                next[variantIndex] = {
+                    ...g,
+                    newFiles: [{ ...target, is_cover: true }, ...remaining.map((n) => ({ ...n, is_cover: false }))],
+                    existing: g.existing.map((img) => ({ ...img, is_primary: false })),
+                };
+            }
+            return next;
+        });
+
+        setData((prev) => {
+            const nextVariants = [...prev.variants];
+            const currentVariant = nextVariants[variantIndex];
+
+            if (isExisting) {
+                nextVariants[variantIndex] = {
+                    ...currentVariant,
+                    cover_image_id: targetItem.id,
+                    cover_new_file_id: null,
+                };
+            } else {
+                const files = currentVariant.image_files || [];
+                const targetFile = targetItem.file;
+                const reorderedFiles = targetFile
+                    ? [targetFile, ...files.filter((f) => f !== targetFile)]
+                    : files;
+
+                nextVariants[variantIndex] = {
+                    ...currentVariant,
+                    cover_image_id: null,
+                    cover_new_file_id: targetItem.id,
+                    image_files: reorderedFiles,
+                };
+            }
+
+            return {
+                ...prev,
+                variants: nextVariants,
+            };
+        });
     };
 
     const handleSubmit = (e) => {
@@ -528,9 +606,6 @@ export default function ProductForm({ product = null, categories = [] }) {
                                             <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
                                                 <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
                                                 <span>Variant Images</span>
-                                                <span className="text-slate-400 font-normal">
-                                                    (Upload multiple images to ImageKit • 1st image is cover)
-                                                </span>
                                             </label>
                                             <span className="text-[10px] text-slate-400 font-medium">
                                                 {totalImages} image{totalImages === 1 ? '' : 's'}
@@ -539,53 +614,86 @@ export default function ProductForm({ product = null, categories = [] }) {
 
                                         <div className="flex flex-wrap items-center gap-2.5">
                                             {/* Existing images */}
-                                            {gallery.existing?.map((img, imgIdx) => (
-                                                <div
-                                                    key={img.id}
-                                                    className="relative group w-18 h-18 rounded-lg border border-slate-200 overflow-hidden bg-slate-100 shadow-2xs shrink-0"
-                                                >
-                                                    <img
-                                                        src={img.thumbnail_url || img.url}
-                                                        alt={`Variant ${index + 1} image ${imgIdx + 1}`}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                    {imgIdx === 0 && (
-                                                        <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
-                                                            Cover
-                                                        </span>
-                                                    )}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveImage(index, img, true)}
-                                                        className="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-700 text-white p-1 rounded-md opacity-90 sm:opacity-0 group-hover:opacity-100 transition shadow-xs cursor-pointer"
-                                                        title="Delete image"
+                                            {gallery.existing?.map((img, imgIdx) => {
+                                                const hasNewCover = gallery.newFiles?.some((n) => n.is_cover);
+                                                const isCover = !hasNewCover && (img.is_primary || (imgIdx === 0 && !gallery.existing.some((x) => x.is_primary)));
+
+                                                return (
+                                                    <div
+                                                        key={img.id}
+                                                        className={`relative group w-18 h-18 rounded-lg border overflow-hidden bg-slate-100 shadow-2xs shrink-0 transition ${
+                                                            isCover ? 'ring-2 ring-purple-600 ring-offset-1 border-purple-500' : 'border-slate-200 hover:border-slate-300'
+                                                        }`}
                                                     >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                                        <img
+                                                            src={img.thumbnail_url || img.url}
+                                                            alt={`Variant ${index + 1} image ${imgIdx + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {isCover ? (
+                                                            <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs flex items-center gap-0.5 pointer-events-none select-none">
+                                                                <Star className="w-2.5 h-2.5 fill-current" />
+                                                                <span>Cover</span>
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleSetCover(index, img, true)}
+                                                                className="absolute bottom-1 left-1 bg-white/95 hover:bg-purple-600 text-slate-700 hover:text-white px-1.5 py-0.5 rounded shadow-xs border border-slate-200 hover:border-purple-600 flex items-center gap-1 text-[9px] font-medium transition cursor-pointer group/btn"
+                                                                title="Set as cover image"
+                                                            >
+                                                                <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-400 group-hover/btn:text-white group-hover/btn:fill-white transition" />
+                                                                <span className="text-[8px] leading-tight font-semibold">Cover</span>
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveImage(index, img, true)}
+                                                            className="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-700 text-white p-1 rounded-md opacity-90 sm:opacity-0 group-hover:opacity-100 transition shadow-xs cursor-pointer"
+                                                            title="Delete image"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
 
                                             {/* Newly selected images pending upload */}
                                             {gallery.newFiles?.map((item, newIdx) => {
-                                                const isCover = (gallery.existing?.length || 0) === 0 && newIdx === 0;
+                                                const hasExistingImages = (gallery.existing?.length || 0) > 0;
+                                                const hasNewCover = gallery.newFiles?.some((n) => n.is_cover);
+                                                const isCover = item.is_cover || (!hasExistingImages && !hasNewCover && newIdx === 0);
+
                                                 return (
                                                     <div
                                                         key={item.id}
-                                                        className="relative group w-18 h-18 rounded-lg border border-purple-200 overflow-hidden bg-purple-50/50 shadow-2xs shrink-0"
+                                                        className={`relative group w-18 h-18 rounded-lg border overflow-hidden bg-purple-50/50 shadow-2xs shrink-0 transition ${
+                                                            isCover ? 'ring-2 ring-purple-600 ring-offset-1 border-purple-500' : 'border-purple-200 hover:border-purple-300'
+                                                        }`}
                                                     >
                                                         <img
                                                             src={item.preview}
                                                             alt="New upload"
                                                             className="w-full h-full object-cover"
                                                         />
+                                                        <span className="absolute top-1 left-1 bg-emerald-600/90 text-white text-[8px] font-bold px-1 py-0.2 rounded shadow-2xs pointer-events-none">
+                                                            New
+                                                        </span>
                                                         {isCover ? (
-                                                            <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
-                                                                Cover
+                                                            <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs flex items-center gap-0.5 pointer-events-none select-none">
+                                                                <Star className="w-2.5 h-2.5 fill-current" />
+                                                                <span>Cover</span>
                                                             </span>
                                                         ) : (
-                                                            <span className="absolute bottom-1 left-1 bg-emerald-600 text-white text-[8px] font-bold px-1 py-0.5 rounded shadow-xs">
-                                                                New
-                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleSetCover(index, item, false)}
+                                                                className="absolute bottom-1 left-1 bg-white/95 hover:bg-purple-600 text-slate-700 hover:text-white px-1.5 py-0.5 rounded shadow-xs border border-purple-200 hover:border-purple-600 flex items-center gap-1 text-[9px] font-medium transition cursor-pointer group/btn"
+                                                                title="Set as cover image"
+                                                            >
+                                                                <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-400 group-hover/btn:text-white group-hover/btn:fill-white transition" />
+                                                                <span className="text-[8px] leading-tight font-semibold">Cover</span>
+                                                            </button>
                                                         )}
                                                         <button
                                                             type="button"
