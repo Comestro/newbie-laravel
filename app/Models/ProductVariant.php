@@ -15,6 +15,7 @@ class ProductVariant extends Model
     protected $casts = [
         'is_default' => 'boolean',
         'is_active' => 'boolean',
+        'mrp' => 'decimal:2',
         'retail_price' => 'decimal:2',
         'bulk_price' => 'decimal:2',
         'weight' => 'decimal:2',

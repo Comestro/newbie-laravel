@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
         Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product:id}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
         Route::put('/products/{product:id}', [AdminProductController::class, 'update'])->name('products.update');
+        Route::post('/products/{product:id}/toggle-active', [AdminProductController::class, 'toggleActive'])->name('products.toggle-active');
         Route::delete('/products/{product:id}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');

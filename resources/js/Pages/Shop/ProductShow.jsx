@@ -13,6 +13,9 @@ export default function ProductShow({ product }) {
     const selectedVariant = variants.find((v) => v.id === selectedVariantId) || firstVariant;
 
     const price = Number(selectedVariant.retail_price || 0);
+    const mrp = selectedVariant.mrp ? Number(selectedVariant.mrp) : null;
+    const hasDiscount = Boolean(mrp && mrp > price);
+    const discountPercent = hasDiscount ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
     const getCategoryEmoji = (cat) => {
         const c = (cat?.name || cat?.value || cat || '').toUpperCase();
@@ -94,12 +97,16 @@ export default function ProductShow({ product }) {
                             <p className="text-2xl font-black text-slate-900">
                                 ₹{price.toLocaleString()}
                             </p>
-                            <p className="text-sm text-slate-400 line-through">
-                                ₹{Math.round(price * 1.15).toLocaleString()}
-                            </p>
-                            <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded-md">
-                                15% OFF
-                            </span>
+                            {hasDiscount && (
+                                <>
+                                    <p className="text-sm text-slate-400 line-through">
+                                        ₹{mrp.toLocaleString()}
+                                    </p>
+                                    <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded-md">
+                                        {discountPercent}% OFF
+                                    </span>
+                                </>
+                            )}
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">Inclusive of all taxes</p>
 
