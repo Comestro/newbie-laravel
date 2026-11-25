@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('retailer_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('shop_name')->nullable();
+            $table->string('shop_name');
             $table->text('shop_address')->nullable();
             $table->string('gst_number')->nullable();
             $table->string('shop_image')->nullable();

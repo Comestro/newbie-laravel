@@ -36,6 +36,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'shop_name',
+        'shop_address',
+        'gst_number',
+        'shop_image',
+        'apply_status',
+        'aadhaar_card',
+        'aadhaar_card_front',
+        'aadhaar_card_back',
+        'kyc_reject_reason',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -64,6 +76,26 @@ class User extends Authenticatable
     public function retailerKyc(): HasOne
     {
         return $this->hasOne(RetailerProfile::class);
+    }
+
+    public function getShopNameAttribute(): ?string
+    {
+        return $this->retailerProfile?->shop_name;
+    }
+
+    public function getShopAddressAttribute(): ?string
+    {
+        return $this->retailerProfile?->shop_address;
+    }
+
+    public function getGstNumberAttribute(): ?string
+    {
+        return $this->retailerProfile?->gst_number;
+    }
+
+    public function getShopImageAttribute(): ?string
+    {
+        return $this->retailerProfile?->shop_image;
     }
 
     public function getApplyStatusAttribute(): ?string

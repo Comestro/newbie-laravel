@@ -175,6 +175,8 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                                                     className={`text-[9px] uppercase font-bold tracking-wide px-1.5 py-0.2 rounded ${
                                                                         address.label === 'Home'
                                                                             ? 'bg-purple-100 text-purple-700'
+                                                                            : address.label === 'Shop'
+                                                                            ? 'bg-emerald-100 text-emerald-700'
                                                                             : 'bg-blue-100 text-blue-700'
                                                                     }`}
                                                                 >
@@ -219,6 +221,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                                 className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                             >
                                                 <option value="Home">Home</option>
+                                                <option value="Shop">Shop</option>
                                                 <option value="Office">Office</option>
                                             </select>
                                         </div>

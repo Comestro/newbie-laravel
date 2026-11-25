@@ -25,6 +25,7 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
             'role' => ['nullable', 'string', 'in:USER,RETAILER'],
+            'shop_name' => ['required_if:role,RETAILER', 'nullable', 'string', 'max:255'],
         ])->validate();
 
         $role = ($input['role'] ?? 'USER') === 'RETAILER' ? UserRole::RETAILER : UserRole::USER;
@@ -39,6 +40,7 @@ class CreateNewUser implements CreatesNewUsers
         if ($role === UserRole::RETAILER) {
             RetailerProfile::create([
                 'user_id' => $user->id,
+                'shop_name' => $input['shop_name'] ?? ($user->name . "'s Store"),
                 'status' => 'PENDING',
             ]);
         }

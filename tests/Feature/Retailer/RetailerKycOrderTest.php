@@ -11,6 +11,8 @@ use App\Models\RetailerProfile;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RetailerKycOrderTest extends TestCase
@@ -28,6 +30,7 @@ class RetailerKycOrderTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Test Retailer',
             'email' => 'newretailer@example.com',
+            'shop_name' => 'Test Retail Store',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'role' => 'RETAILER',
@@ -45,6 +48,20 @@ class RetailerKycOrderTest extends TestCase
         $profile = RetailerProfile::where('user_id', $user->id)->first();
         $this->assertNotNull($profile);
         $this->assertEquals('PENDING', $profile->status);
+        $this->assertEquals('Test Retail Store', $profile->shop_name);
+    }
+
+    public function test_retailer_registration_requires_shop_name(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Test Retailer',
+            'email' => 'newretailer2@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'RETAILER',
+        ]);
+
+        $response->assertSessionHasErrors('shop_name');
     }
 
     public function test_retailer_gets_bulk_price_in_cart(): void
@@ -57,6 +74,7 @@ class RetailerKycOrderTest extends TestCase
         ]);
         RetailerProfile::create([
             'user_id' => $retailer->id,
+            'shop_name' => 'Shop Owner Store',
             'status' => 'PENDING',
         ]);
 
@@ -94,6 +112,7 @@ class RetailerKycOrderTest extends TestCase
         ]);
         RetailerProfile::create([
             'user_id' => $retailer->id,
+            'shop_name' => 'Pending Shop',
             'status' => 'PENDING',
         ]);
 
@@ -138,6 +157,7 @@ class RetailerKycOrderTest extends TestCase
         ]);
         RetailerProfile::create([
             'user_id' => $retailer->id,
+            'shop_name' => 'Rejected Shop',
             'status' => 'REJECTED',
             'rejection_reason' => 'Aadhaar card image is blur and unreadable.',
         ]);
@@ -218,6 +238,7 @@ class RetailerKycOrderTest extends TestCase
         ]);
         $profile = RetailerProfile::create([
             'user_id' => $retailer->id,
+            'shop_name' => 'Approved Store',
             'status' => 'PENDING',
             'aadhaar_card' => '123456789012',
         ]);
@@ -294,5 +315,124 @@ class RetailerKycOrderTest extends TestCase
         $this->assertDatabaseHas('orders', [
             'user_id' => $customer->id,
         ]);
+    }
+
+    public function test_submitting_retailer_kyc_requires_shop_name(): void
+    {
+        $customer = User::create([
+            'name' => 'KYC Applicant',
+            'email' => 'applicant@example.com',
+            'password' => bcrypt('password'),
+            'role' => UserRole::USER,
+        ]);
+
+        $response = $this->actingAs($customer)->post('/apply-to-retailer', [
+            'aadhaar_card' => '123456789012',
+            // shop_name omitted
+        ]);
+
+        $response->assertSessionHasErrors('shop_name');
+    }
+
+    public function test_submitting_retailer_kyc_requires_shop_address(): void
+    {
+        $customer = User::create([
+            'name' => 'KYC Applicant',
+            'email' => 'applicant2@example.com',
+            'password' => bcrypt('password'),
+            'role' => UserRole::USER,
+        ]);
+
+        $response = $this->actingAs($customer)->post('/apply-to-retailer', [
+            'shop_name' => 'Demo Shop',
+            'aadhaar_card' => '123456789012',
+            // shop_address omitted
+        ]);
+
+        $response->assertSessionHasErrors('shop_address');
+    }
+
+    public function test_submitting_retailer_kyc_successfully_saves_all_fields_and_syncs_address(): void
+    {
+        Storage::fake('public');
+
+        $customer = User::create([
+            'name' => 'Store Owner',
+            'email' => 'storeowner@example.com',
+            'password' => bcrypt('password'),
+            'role' => UserRole::USER,
+        ]);
+
+        $response = $this->actingAs($customer)->post('/apply-to-retailer', [
+            'shop_name' => 'Supreme Kirana Store',
+            'shop_address' => 'Shop 10, Crystal Palm Market, Jaipur, Rajasthan 302001',
+            'gst_number' => '08aabcs1429b1z1',
+            'shop_image' => UploadedFile::fake()->image('shop.jpg'),
+            'aadhaar_card' => '123456789012',
+            'aadhaar_front' => UploadedFile::fake()->image('front.jpg'),
+            'aadhaar_back' => UploadedFile::fake()->image('back.jpg'),
+            'sync_delivery_address' => 1,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $profile = RetailerProfile::where('user_id', $customer->id)->first();
+        $this->assertNotNull($profile);
+        $this->assertEquals('Supreme Kirana Store', $profile->shop_name);
+        $this->assertEquals('Shop 10, Crystal Palm Market, Jaipur, Rajasthan 302001', $profile->shop_address);
+        $this->assertEquals('08AABCS1429B1Z1', $profile->gst_number);
+        $this->assertNotNull($profile->shop_image);
+        $this->assertNotNull($profile->aadhaar_card_front);
+        $this->assertNotNull($profile->aadhaar_card_back);
+        $this->assertEquals('PENDING', $profile->status);
+
+        // Verify delivery address was auto-synced
+        $address = Address::where('user_id', $customer->id)->where('label', 'Shop')->first();
+        $this->assertNotNull($address);
+        $this->assertStringContainsString('Shop 10, Crystal Palm Market', $address->line1);
+    }
+
+    public function test_submitting_retailer_kyc_with_structured_address_fields(): void
+    {
+        Storage::fake('public');
+
+        $customer = User::create([
+            'name' => 'Structured Shop Owner',
+            'email' => 'structured@example.com',
+            'password' => bcrypt('password'),
+            'role' => UserRole::USER,
+        ]);
+
+        $response = $this->actingAs($customer)->post('/apply-to-retailer', [
+            'shop_name' => 'Modern Retail Hub',
+            'line1' => 'Shop 24, Gold Souk Mall',
+            'line2' => 'Near Central Park',
+            'city' => 'Jaipur',
+            'state' => 'Rajasthan',
+            'pincode' => '302005',
+            'gst_number' => '08AABCS1429B1Z1',
+            'shop_image' => UploadedFile::fake()->image('shop.jpg'),
+            'aadhaar_card' => '123456789012',
+            'aadhaar_front' => UploadedFile::fake()->image('front.jpg'),
+            'aadhaar_back' => UploadedFile::fake()->image('back.jpg'),
+            'sync_delivery_address' => 1,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $profile = RetailerProfile::where('user_id', $customer->id)->first();
+        $this->assertNotNull($profile);
+        $this->assertEquals('Modern Retail Hub', $profile->shop_name);
+        $this->assertEquals('Shop 24, Gold Souk Mall, Near Central Park, Jaipur, Rajasthan - 302005', $profile->shop_address);
+
+        $address = Address::where('user_id', $customer->id)->where('label', 'Shop')->first();
+        $this->assertNotNull($address);
+        $this->assertEquals('Shop 24, Gold Souk Mall', $address->line1);
+        $this->assertEquals('Near Central Park', $address->line2);
+        $this->assertEquals('Jaipur', $address->city);
+        $this->assertEquals('Rajasthan', $address->state);
+        $this->assertEquals('302005', $address->pincode);
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -199,20 +200,30 @@ class CustomerPortalController extends Controller
     public function applyRetailer(): Response
     {
         return Inertia::render('Customer/ApplyRetailer', [
-            'user' => Auth::user(),
+            'user' => Auth::user()->load('addresses'),
         ]);
     }
 
     public function submitRetailer(Request $request): RedirectResponse
     {
         $user = Auth::user();
+        $existingProfile = RetailerProfile::where('user_id', $user->id)->first();
 
         $request->validate([
-            'shop_name' => 'nullable|string|max:255',
+            'shop_name' => 'required|string|max:255',
+            'line1' => 'required_without:shop_address|nullable|string|max:255',
+            'line2' => 'nullable|string|max:255',
+            'city' => 'required_without:shop_address|nullable|string|max:100',
+            'state' => 'required_without:shop_address|nullable|string|max:100',
+            'pincode' => 'required_without:shop_address|nullable|string|size:6',
+            'shop_address' => 'required_without:line1|nullable|string|max:1000',
+            'gst_number' => 'nullable|string|max:20',
+            'shop_image' => 'nullable|image|max:4096',
             'avatar' => 'nullable|image|max:2048',
             'aadhaar_card' => 'required|string|size:12',
-            'aadhaar_front' => 'required|image|max:2048',
-            'aadhaar_back' => 'required|image|max:2048',
+            'aadhaar_front' => ($existingProfile?->aadhaar_card_front ? 'nullable' : 'required') . '|image|max:4096',
+            'aadhaar_back' => ($existingProfile?->aadhaar_card_back ? 'nullable' : 'required') . '|image|max:4096',
+            'sync_delivery_address' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -223,36 +234,95 @@ class CustomerPortalController extends Controller
             $user->update(['avatar_url' => $avatarPath]);
         }
 
-        $existingProfile = RetailerProfile::where('user_id', $user->id)->first();
-        if ($existingProfile) {
-            if ($existingProfile->aadhaar_card_front && Storage::disk('public')->exists($existingProfile->aadhaar_card_front)) {
-                Storage::disk('public')->delete($existingProfile->aadhaar_card_front);
+        $shopImagePath = $existingProfile?->shop_image;
+        if ($request->hasFile('shop_image')) {
+            if ($existingProfile?->shop_image && Storage::disk('public')->exists($existingProfile->shop_image)) {
+                Storage::disk('public')->delete($existingProfile->shop_image);
             }
-            if ($existingProfile->aadhaar_card_back && Storage::disk('public')->exists($existingProfile->aadhaar_card_back)) {
-                Storage::disk('public')->delete($existingProfile->aadhaar_card_back);
-            }
+            $shopImagePath = $request->file('shop_image')->store('retailer/shop', 'public');
         }
 
-        $frontPath = $request->file('aadhaar_front')->store('retailer/aadhaar', 'public');
-        $backPath = $request->file('aadhaar_back')->store('retailer/aadhaar', 'public');
+        $frontPath = $existingProfile?->aadhaar_card_front;
+        if ($request->hasFile('aadhaar_front')) {
+            if ($existingProfile?->aadhaar_card_front && Storage::disk('public')->exists($existingProfile->aadhaar_card_front)) {
+                Storage::disk('public')->delete($existingProfile->aadhaar_card_front);
+            }
+            $frontPath = $request->file('aadhaar_front')->store('retailer/aadhaar', 'public');
+        }
+
+        $backPath = $existingProfile?->aadhaar_card_back;
+        if ($request->hasFile('aadhaar_back')) {
+            if ($existingProfile?->aadhaar_card_back && Storage::disk('public')->exists($existingProfile->aadhaar_card_back)) {
+                Storage::disk('public')->delete($existingProfile->aadhaar_card_back);
+            }
+            $backPath = $request->file('aadhaar_back')->store('retailer/aadhaar', 'public');
+        }
+
+        if ($request->filled('line1')) {
+            $line1 = trim($request->input('line1'));
+            $line2 = $request->filled('line2') ? trim($request->input('line2')) : null;
+            $city = trim($request->input('city'));
+            $state = trim($request->input('state'));
+            $pincode = trim($request->input('pincode'));
+
+            $shopAddress = $line1 . ($line2 ? ", {$line2}" : '') . ", {$city}, {$state} - {$pincode}";
+        } else {
+            $shopAddress = trim($request->input('shop_address'));
+            $line1 = Str::limit($shopAddress, 100);
+            $line2 = null;
+            $city = 'Jaipur';
+            $state = 'Rajasthan';
+            $pincode = '302001';
+        }
 
         $profileData = [
+            'shop_name' => $request->input('shop_name'),
+            'shop_address' => $shopAddress,
+            'gst_number' => $request->input('gst_number') ? strtoupper(trim($request->input('gst_number'))) : null,
+            'shop_image' => $shopImagePath,
             'aadhaar_card' => $request->input('aadhaar_card'),
             'aadhaar_card_front' => $frontPath,
             'aadhaar_card_back' => $backPath,
             'status' => 'PENDING',
             'rejection_reason' => null,
         ];
-        if ($request->filled('shop_name')) {
-            $profileData['shop_name'] = $request->input('shop_name');
-        }
 
         RetailerProfile::updateOrCreate(
             ['user_id' => $user->id],
             $profileData
         );
 
-        return back()->with('success', 'Your application has been submitted for verification.');
+        // Automatically copy & save this shop address as default delivery address
+        if ($request->filled('line1') || $request->filled('shop_address')) {
+            $existingShopAddress = Address::where('user_id', $user->id)
+                ->where('label', 'Shop')
+                ->first();
+
+            $hasOtherDefault = Address::where('user_id', $user->id)
+                ->where('is_default', true)
+                ->where('id', '!=', $existingShopAddress?->id ?? 0)
+                ->exists();
+
+            $addressData = [
+                'user_id' => $user->id,
+                'label' => 'Shop',
+                'line1' => $line1,
+                'line2' => $line2,
+                'city' => $city,
+                'state' => $state,
+                'pincode' => $pincode,
+                'phone' => $user->phone ?? '9876543210',
+                'is_default' => !$hasOtherDefault,
+            ];
+
+            if (!$existingShopAddress) {
+                Address::create($addressData);
+            } else {
+                $existingShopAddress->update($addressData);
+            }
+        }
+
+        return back()->with('success', 'Your retailer verification details have been submitted successfully.');
     }
 
     public function accounts(): Response

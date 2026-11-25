@@ -60,4 +60,19 @@ class PortalRoutesTest extends TestCase
         $this->actingAs($retailer)->get('/retailer/profile')->assertStatus(200);
         $this->actingAs($retailer)->get('/retailer/kyc')->assertStatus(200);
     }
+
+    public function test_store_address_validates_required_fields(): void
+    {
+        $user = User::where('email', 'user@newbie.com')->first();
+        $response = $this->actingAs($user)->post('/my-addresses', []);
+
+        $response->assertSessionHasErrors([
+            'label',
+            'line1',
+            'city',
+            'state',
+            'pincode',
+            'phone',
+        ]);
+    }
 }

@@ -76,7 +76,7 @@ class RetailerController extends Controller
     public function kyc(): Response
     {
         return Inertia::render('Retailer/Kyc', [
-            'user' => Auth::user(),
+            'user' => Auth::user()->load('addresses'),
         ]);
     }
 }

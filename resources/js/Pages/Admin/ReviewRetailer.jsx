@@ -183,27 +183,44 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                                 </button>
                             </div>
 
-                            <div className="text-xs space-y-1.5 text-slate-600">
-                                <p><strong className="text-slate-900">Email:</strong> {selectedUser.email}</p>
+                            <div className="text-xs space-y-1.5 text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p><strong className="text-slate-900">Shop Name:</strong> {selectedUser.shop_name || 'N/A'}</p>
+                                <p><strong className="text-slate-900">GST Number:</strong> {selectedUser.gst_number || <span className="text-slate-400">Not Provided</span>}</p>
+                                <p><strong className="text-slate-900">Shop Address:</strong> {selectedUser.shop_address || <span className="text-slate-400">Not Provided</span>}</p>
+                                <p><strong className="text-slate-900">Applicant:</strong> {selectedUser.name} ({selectedUser.email})</p>
                                 <p><strong className="text-slate-900">Phone:</strong> {selectedUser.phone || 'N/A'}</p>
                                 <p><strong className="text-slate-900">Aadhaar:</strong> {selectedUser.aadhaar_card}</p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="grid grid-cols-3 gap-2.5 pt-1">
+                                <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Shop Photo</p>
+                                    {selectedUser.shop_image ? (
+                                        <a href={`/storage/${selectedUser.shop_image}`} target="_blank" rel="noreferrer" title="Click to view full image">
+                                            <img src={`/storage/${selectedUser.shop_image}`} alt="Shop" className="h-24 w-full object-cover rounded-lg hover:opacity-90 transition" />
+                                        </a>
+                                    ) : (
+                                        <p className="text-[10px] text-slate-400 py-8">No shop photo</p>
+                                    )}
+                                </div>
                                 <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhaar Front</p>
                                     {selectedUser.aadhaar_front ? (
-                                        <img src={`/storage/${selectedUser.aadhaar_front}`} alt="Front" className="h-28 w-full object-cover rounded-lg" />
+                                        <a href={`/storage/${selectedUser.aadhaar_front}`} target="_blank" rel="noreferrer" title="Click to view full image">
+                                            <img src={`/storage/${selectedUser.aadhaar_front}`} alt="Front" className="h-24 w-full object-cover rounded-lg hover:opacity-90 transition" />
+                                        </a>
                                     ) : (
-                                        <p className="text-xs text-slate-400 py-8">No front image</p>
+                                        <p className="text-[10px] text-slate-400 py-8">No front image</p>
                                     )}
                                 </div>
                                 <div className="border border-slate-100 rounded-xl p-2 text-center bg-slate-50">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Aadhaar Back</p>
                                     {selectedUser.aadhaar_back ? (
-                                        <img src={`/storage/${selectedUser.aadhaar_back}`} alt="Back" className="h-28 w-full object-cover rounded-lg" />
+                                        <a href={`/storage/${selectedUser.aadhaar_back}`} target="_blank" rel="noreferrer" title="Click to view full image">
+                                            <img src={`/storage/${selectedUser.aadhaar_back}`} alt="Back" className="h-24 w-full object-cover rounded-lg hover:opacity-90 transition" />
+                                        </a>
                                     ) : (
-                                        <p className="text-xs text-slate-400 py-8">No back image</p>
+                                        <p className="text-[10px] text-slate-400 py-8">No back image</p>
                                     )}
                                 </div>
                             </div>

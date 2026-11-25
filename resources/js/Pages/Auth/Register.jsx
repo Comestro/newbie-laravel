@@ -7,6 +7,7 @@ export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
+        shop_name: '',
         role: 'USER',
         password: '',
         password_confirmation: '',
@@ -81,6 +82,26 @@ export default function Register() {
                     </div>
                     {errors.name && <p className="text-xs text-rose-600 mt-1">{errors.name}</p>}
                 </div>
+
+                {data.role === 'RETAILER' && (
+                    <div>
+                        <label className="text-xs font-semibold text-slate-700">
+                            Shop / Business Name <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative mt-1">
+                            <input
+                                type="text"
+                                value={data.shop_name}
+                                onChange={(e) => setData('shop_name', e.target.value)}
+                                placeholder="e.g. Sharma Grocery & Provision Store"
+                                className="w-full text-sm pl-9 pr-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
+                                required={data.role === 'RETAILER'}
+                            />
+                            <Store className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        </div>
+                        {errors.shop_name && <p className="text-xs text-rose-600 mt-1">{errors.shop_name}</p>}
+                    </div>
+                )}
 
                 <div>
                     <label className="text-xs font-semibold text-slate-700">Email Address</label>
