@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
+import { ShieldAlert, Clock, AlertCircle } from 'lucide-react';
 
 export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     const { auth } = usePage().props;
+    const isRetailer = Boolean(auth?.user?.is_retailer);
+    const isKycApproved = Boolean(auth?.user?.is_kyc_approved);
+    const canPlaceOrder = !isRetailer || isKycApproved;
+
     const { items, subtotal } = useCart();
     const grandTotal = subtotal + deliveryCharge;
 
@@ -68,6 +73,11 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     };
 
     const handlePlaceOrder = () => {
+        if (!canPlaceOrder) {
+            alert('Retailer KYC approval is required before you can place orders.');
+            return;
+        }
+
         if (!selectedAddressId) {
             alert('Please select or add a delivery address.');
             return;
@@ -82,7 +92,30 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
         <ShopLayout>
             <Head title="Checkout - Newbie Service" />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                {/* Retailer KYC Notice Banner */}
+                {isRetailer && !isKycApproved && (
+                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3 shadow-xs">
+                        <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="font-bold text-xs text-amber-900">Retailer KYC Approval Required</p>
+                            <p className="text-[11px] text-amber-800 mt-0.5">
+                                {auth?.user?.apply_status === 'REJECTED'
+                                    ? `Your KYC application was rejected (${auth?.user?.kyc_reject_reason || 'Please upload valid documents'}). Please re-submit your documents.`
+                                    : auth?.user?.apply_status === 'PENDING'
+                                    ? 'Your KYC documents are currently under review by our admin team. You can view products and add items to cart, but order placement will unlock once verified.'
+                                    : 'As a retailer, you must submit and receive KYC approval before placing orders.'}
+                            </p>
+                            <Link
+                                href="/apply-to-retailer"
+                                className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-purple-700 hover:text-purple-800 underline"
+                            >
+                                {auth?.user?.apply_status ? 'Check / Resubmit KYC Status' : 'Complete KYC Verification'} &rarr;
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     {/* LEFT SECTION */}
                     <div className="lg:col-span-2 space-y-5">
@@ -354,14 +387,14 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                         <button
                             type="button"
                             onClick={handlePlaceOrder}
-                            disabled={!selectedAddressId}
+                            disabled={!selectedAddressId || !canPlaceOrder}
                             className={`w-full mt-5 py-3 rounded-xl font-bold text-xs transition shadow-xs ${
-                                selectedAddressId
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                selectedAddressId && canPlaceOrder
+                                    ? 'bg-purple-600 hover:bg-purple-700 text-white cursor-pointer'
                                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                             }`}
                         >
-                            Place Order &rarr;
+                            {!canPlaceOrder ? 'KYC Approval Required to Place Order' : 'Place Order →'}
                         </button>
                     </div>
                 </div>

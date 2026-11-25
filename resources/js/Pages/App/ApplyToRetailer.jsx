@@ -5,6 +5,7 @@ import { ShieldCheck, AlertCircle, UploadCloud, CheckCircle2, Clock } from 'luci
 
 export default function ApplyToRetailer({ user }) {
     const { data, setData, post, processing, errors } = useForm({
+        shop_name: user?.shop_name || '',
         avatar: null,
         aadhaar_card: user?.aadhaar_card || '',
         aadhaar_front: null,
@@ -67,6 +68,20 @@ export default function ApplyToRetailer({ user }) {
                 {(!isVerified || isRejected) && (
                     <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                    Shop / Business Name <span className="text-slate-400 font-normal">(Optional)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.shop_name}
+                                    onChange={(e) => setData('shop_name', e.target.value)}
+                                    placeholder="e.g. Sharma Grocery Store"
+                                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                />
+                                {errors.shop_name && <p className="text-[10px] text-rose-600 mt-1">{errors.shop_name}</p>}
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Aadhaar Card Number (12 Digits)

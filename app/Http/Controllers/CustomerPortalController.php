@@ -198,6 +198,7 @@ class CustomerPortalController extends Controller
         $user = Auth::user();
 
         $request->validate([
+            'shop_name' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|max:2048',
             'aadhaar_card' => 'required|string|size:12',
             'aadhaar_front' => 'required|image|max:2048',
@@ -225,15 +226,20 @@ class CustomerPortalController extends Controller
         $frontPath = $request->file('aadhaar_front')->store('retailer/aadhaar', 'public');
         $backPath = $request->file('aadhaar_back')->store('retailer/aadhaar', 'public');
 
+        $profileData = [
+            'aadhaar_card' => $request->input('aadhaar_card'),
+            'aadhaar_card_front' => $frontPath,
+            'aadhaar_card_back' => $backPath,
+            'status' => 'PENDING',
+            'rejection_reason' => null,
+        ];
+        if ($request->filled('shop_name')) {
+            $profileData['shop_name'] = $request->input('shop_name');
+        }
+
         RetailerProfile::updateOrCreate(
             ['user_id' => $user->id],
-            [
-                'aadhaar_card' => $request->input('aadhaar_card'),
-                'aadhaar_card_front' => $frontPath,
-                'aadhaar_card_back' => $backPath,
-                'status' => 'PENDING',
-                'rejection_reason' => null,
-            ]
+            $profileData
         );
 
         return back()->with('success', 'Your application has been submitted for verification.');

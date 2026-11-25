@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
 import { CheckCircle2, Clock } from 'lucide-react';
 
 export default function ProductShow({ product }) {
+    const { auth } = usePage().props;
     const { addToCart } = useCart();
     const variants = product.variants || [];
     const firstVariant = variants[0] || {};
@@ -25,7 +26,10 @@ export default function ProductShow({ product }) {
 
     const currentImage = variantImagesList[activeImageIndex]?.url || selectedVariant?.image_url;
 
-    const price = Number(selectedVariant.retail_price || 0);
+    const isRetailer = Boolean(auth?.user?.is_retailer);
+    const retailerPrice = selectedVariant.bulk_price ? Number(selectedVariant.bulk_price) : null;
+    const price = isRetailer && retailerPrice !== null ? retailerPrice : Number(selectedVariant.retail_price || 0);
+
     const mrp = selectedVariant.mrp ? Number(selectedVariant.mrp) : null;
     const hasDiscount = Boolean(mrp && mrp > price);
     const discountPercent = hasDiscount ? Math.round(((mrp - price) / mrp) * 100) : 0;
@@ -127,6 +131,11 @@ export default function ProductShow({ product }) {
                             <p className="text-2xl font-black text-slate-900">
                                 ₹{price.toLocaleString()}
                             </p>
+                            {isRetailer && (
+                                <span className="text-purple-700 font-bold text-xs bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">
+                                    Retailer Price
+                                </span>
+                            )}
                             {hasDiscount && (
                                 <>
                                     <p className="text-sm text-slate-400 line-through">
@@ -176,6 +185,12 @@ export default function ProductShow({ product }) {
                             >
                                 Add to Cart - ₹{price.toLocaleString()}
                             </button>
+
+                            {isRetailer && !auth?.user?.is_kyc_approved && (
+                                <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg mt-3 text-center font-medium border border-amber-200">
+                                    ℹ️ Retailer Account: You can view products and add items to cart. KYC approval is required to place orders.
+                                </p>
+                            )}
 
                             <div className="mt-6 flex items-center justify-center gap-6 text-xs text-slate-500">
                                 <div className="flex items-center gap-1.5">

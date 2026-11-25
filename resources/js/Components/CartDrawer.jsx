@@ -224,6 +224,18 @@ export default function CartDrawer() {
                                 {items.length > 0 && (
                                     /* Footer Action */
                                     <div className="border-t border-slate-100 bg-white px-4 py-3 shadow-xs">
+                                        {auth?.user?.is_retailer && !auth?.user?.is_kyc_approved && (
+                                            <div className="mb-2.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] leading-tight flex items-center justify-between">
+                                                <span>⚠️ Retailer KYC pending — order placement is locked until approved.</span>
+                                                <Link
+                                                    href="/apply-to-retailer"
+                                                    onClick={closeCart}
+                                                    className="font-bold underline text-purple-700 ml-1.5 shrink-0"
+                                                >
+                                                    KYC &rarr;
+                                                </Link>
+                                            </div>
+                                        )}
                                         <Link
                                             href={auth?.user ? '/checkout' : '/login'}
                                             onClick={closeCart}

@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
 import { Heart, Search } from 'lucide-react';
 
 function CatalogProductCard({ product }) {
+    const { auth } = usePage().props;
+    const isRetailer = Boolean(auth?.user?.is_retailer);
+    const getVariantPrice = (v) => (isRetailer && v?.bulk_price !== undefined && v?.bulk_price !== null ? Number(v.bulk_price) : Number(v?.retail_price || 0));
+
     const { addToCart } = useCart();
     const variants = product.variants || [];
     const firstVariant = variants[0] || {};
 
     const [selectedVariantId, setSelectedVariantId] = useState(firstVariant.id);
-    const [price, setPrice] = useState(firstVariant.retail_price || 0);
+    const [price, setPrice] = useState(getVariantPrice(firstVariant));
     const [unit, setUnit] = useState(firstVariant.unit_size || '');
     const [image, setImage] = useState(firstVariant.image_url || '');
 
     const handleSelectVariant = (v) => {
         setSelectedVariantId(v.id);
-        setPrice(v.retail_price);
+        setPrice(getVariantPrice(v));
         setUnit(v.unit_size);
         if (v.image_url) {
             setImage(v.image_url);

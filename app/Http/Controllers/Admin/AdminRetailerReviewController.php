@@ -55,6 +55,7 @@ class AdminRetailerReviewController extends Controller
             'status' => 'VERIFIED',
             'approved_at' => now(),
             'approved_by' => auth()->id(),
+            'rejection_reason' => null,
         ]);
 
         return back()->with('success', "{$user->name} has been approved as Retailer.");

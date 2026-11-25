@@ -13,6 +13,11 @@ class OrderController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        if ($user && $user->isRetailer() && !$user->isKycApproved()) {
+            return redirect()->route('checkout')->with('error', 'Retailer KYC approval is required before you can place orders.');
+        }
+
         $request->validate([
             'address_id' => 'required|exists:addresses,id',
         ]);

@@ -21,6 +21,11 @@ class CartController extends Controller
         $variant = ProductVariant::with('product')->findOrFail($variantId);
         $cart = session('cart', []);
 
+        $isRetailer = auth()->check() && auth()->user()->isRetailer();
+        $itemPrice = $isRetailer && $variant->bulk_price !== null
+            ? (float) $variant->bulk_price
+            : (float) $variant->retail_price;
+
         if (isset($cart[$variantId])) {
             $cart[$variantId]['quantity'] += $quantity;
         } else {
@@ -28,7 +33,7 @@ class CartController extends Controller
                 'id' => $variant->id,
                 'product_id' => $variant->product->id,
                 'name' => $variant->product->name . ' - ' . $variant->variant_name,
-                'price' => (float) $variant->retail_price,
+                'price' => $itemPrice,
                 'unit_size' => $variant->unit_size,
                 'image_url' => $variant->image_url,
                 'quantity' => $quantity,

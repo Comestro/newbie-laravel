@@ -110,4 +110,19 @@ class User extends Authenticatable
     {
         return $this->role === UserRole::RETAILER;
     }
+
+    public function isKycApproved(): bool
+    {
+        $status = $this->retailerProfile?->status;
+        return $status === 'VERIFIED' || $status === 'APPROVED';
+    }
+
+    public function canPlaceOrder(): bool
+    {
+        if ($this->isRetailer()) {
+            return $this->isKycApproved();
+        }
+
+        return true;
+    }
 }
