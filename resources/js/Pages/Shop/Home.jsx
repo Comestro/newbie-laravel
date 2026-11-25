@@ -14,18 +14,24 @@ function ProductCard({ product, categoryName }) {
     const firstVariant = variants[0] || {};
 
     const [selectedVariantId, setSelectedVariantId] = useState(firstVariant.id);
+    const [selectedVariant, setSelectedVariant] = useState(firstVariant);
     const [price, setPrice] = useState(getVariantPrice(firstVariant));
     const [unit, setUnit] = useState(firstVariant.unit_size || '');
     const [image, setImage] = useState(firstVariant.image_url || '');
 
     const handleSelectVariant = (v) => {
         setSelectedVariantId(v.id);
+        setSelectedVariant(v);
         setPrice(getVariantPrice(v));
         setUnit(v.unit_size);
         if (v.image_url) {
             setImage(v.image_url);
         }
     };
+
+    const mrp = selectedVariant?.mrp ? Number(selectedVariant.mrp) : null;
+    const hasDiscount = Boolean(mrp && mrp > price);
+    const discountPercent = hasDiscount ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
     const toggleWishlist = (e) => {
         e.preventDefault();
@@ -35,37 +41,41 @@ function ProductCard({ product, categoryName }) {
 
     const getEmojiPlaceholder = (cat) => {
         const c = (cat || '').toUpperCase();
-        if (c === 'MILK') return '🥛';
-        if (c === 'WATER') return '💧';
-        return '🍹';
+        if (c.includes('MILK') || c.includes('DAIRY')) return '🥛';
+        if (c.includes('WATER')) return '💧';
+        if (c.includes('BEVERAGE') || c.includes('JUICE') || c.includes('DRINK')) return '🍹';
+        return '📦';
     };
 
     return (
-        <div className="min-w-48 w-[190px] bg-white rounded-2xl p-3 border border-slate-100 hover:border-purple-200 transition-all duration-200 relative group shrink-0 shadow-xs flex flex-col justify-between">
+        <div className="min-w-48 w-[195px] bg-white rounded-2xl p-3 border border-slate-100 hover:border-purple-200 transition-all duration-200 relative group shrink-0 shadow-xs flex flex-col justify-between">
             {/* Discount Badge */}
-            <div className="absolute top-2.5 left-2.5 z-10">
-                <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-xs">
-                    13% OFF
-                </span>
-            </div>
+            {hasDiscount && discountPercent > 0 && (
+                <div className="absolute top-2.5 left-2.5 z-10">
+                    <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-xs">
+                        {discountPercent}% OFF
+                    </span>
+                </div>
+            )}
 
             {/* Wishlist Button */}
             <button
                 type="button"
                 onClick={toggleWishlist}
-                className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/90 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow-xs"
+                className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/90 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow-xs cursor-pointer"
             >
                 <Heart className="w-3.5 h-3.5" />
             </button>
 
             <div>
                 {/* Image Area */}
-                <div className="h-32 w-full flex items-center justify-center mb-2.5 rounded-xl bg-slate-50 overflow-hidden">
+                <div className="h-32 w-full flex items-center justify-center mb-2.5 rounded-xl bg-slate-50 overflow-hidden relative">
                     {image ? (
                         <img
                             src={image}
                             alt={product.name}
                             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                            onError={() => setImage('')}
                         />
                     ) : (
                         <span className="text-4xl filter grayscale opacity-60">
@@ -90,18 +100,25 @@ function ProductCard({ product, categoryName }) {
             <div className="mt-2.5 pt-2 border-t border-slate-50">
                 <div className="flex items-center justify-between">
                     <div>
-                        <span className="text-[10px] text-slate-400 line-through block leading-none">
-                            ₹{Math.round(Number(price) * 1.2)}
-                        </span>
-                        <span className="text-sm font-bold text-slate-900 leading-tight">
-                            ₹{price}
-                        </span>
+                        {hasDiscount && (
+                            <span className="text-[10px] text-slate-400 line-through block leading-none">
+                                ₹{mrp}
+                            </span>
+                        )}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-slate-900 leading-tight">
+                                ₹{price}
+                            </span>
+                        </div>
                     </div>
 
                     <button
                         type="button"
-                        onClick={() => addToCart(selectedVariantId, 1)}
-                        className="px-3.5 py-1 rounded-lg border border-purple-200 bg-purple-50/70 hover:bg-purple-600 text-purple-700 hover:text-white font-bold text-[11px] uppercase transition shadow-xs"
+                        onClick={() => {
+                            const minQty = isRetailer ? Math.max(1, parseInt(selectedVariant.min_bulk_qty, 10) || 1) : 1;
+                            addToCart(selectedVariantId, minQty);
+                        }}
+                        className="px-3.5 py-1 rounded-lg border border-purple-200 bg-purple-50/70 hover:bg-purple-600 text-purple-700 hover:text-white font-bold text-[11px] uppercase transition shadow-xs cursor-pointer"
                     >
                         ADD
                     </button>

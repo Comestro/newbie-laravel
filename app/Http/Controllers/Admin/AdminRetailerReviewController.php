@@ -70,6 +70,10 @@ class AdminRetailerReviewController extends Controller
             'reject_reason' => 'required|string|min:5',
         ]);
 
+        $user->update([
+            'role' => UserRole::USER,
+        ]);
+
         RetailerProfile::where('user_id', $user->id)->update([
             'status' => 'REJECTED',
             'rejection_reason' => $request->input('reject_reason'),

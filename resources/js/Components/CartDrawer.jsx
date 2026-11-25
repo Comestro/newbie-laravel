@@ -4,6 +4,7 @@ import { useCart } from '../Context/CartContext';
 
 export default function CartDrawer() {
     const { auth } = usePage().props;
+    const isRetailer = Boolean(auth?.user?.is_retailer || auth?.user?.role === 'retailer');
     const {
         isCartOpen,
         closeCart,
@@ -112,13 +113,20 @@ export default function CartDrawer() {
                                                                 </div>
 
                                                                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
-                                                                    <span className="text-[11px] text-slate-400">Quantity</span>
+                                                                    <div>
+                                                                        <span className="text-[11px] text-slate-400">Quantity</span>
+                                                                        {isRetailer && item.min_bulk_qty > 1 && (
+                                                                            <span className="block text-[9px] text-purple-600 font-medium">
+                                                                                Min bulk: {item.min_bulk_qty} units
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                     {/* Stepper Button */}
                                                                     <div className="bg-purple-600 text-white rounded-lg flex items-center">
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => updateQuantity(item.id, -1)}
-                                                                            className="px-2 py-0.5 text-xs font-bold hover:bg-purple-700 rounded-l-lg transition"
+                                                                            className="px-2 py-0.5 text-xs font-bold hover:bg-purple-700 rounded-l-lg transition cursor-pointer"
                                                                         >
                                                                             -
                                                                         </button>
@@ -126,7 +134,7 @@ export default function CartDrawer() {
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => updateQuantity(item.id, 1)}
-                                                                            className="px-2 py-0.5 text-xs font-bold hover:bg-purple-700 rounded-r-lg transition"
+                                                                            className="px-2 py-0.5 text-xs font-bold hover:bg-purple-700 rounded-r-lg transition cursor-pointer"
                                                                         >
                                                                             +
                                                                         </button>

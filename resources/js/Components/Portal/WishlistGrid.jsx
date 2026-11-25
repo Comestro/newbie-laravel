@@ -95,7 +95,10 @@ export default function WishlistGrid({ wishlist = [] }) {
                             {defaultVariant && (
                                 <button
                                     type="button"
-                                    onClick={() => addToCart(defaultVariant.id, 1)}
+                                    onClick={() => {
+                                        const minQty = isRetailer ? Math.max(1, parseInt(defaultVariant.min_bulk_qty, 10) || 1) : 1;
+                                        addToCart(defaultVariant.id, minQty);
+                                    }}
                                     className="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white transition cursor-pointer"
                                     title="Add to cart"
                                 >

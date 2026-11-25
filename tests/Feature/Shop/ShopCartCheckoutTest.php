@@ -83,5 +83,34 @@ class ShopCartCheckoutTest extends TestCase
             'product_id' => $product->id,
         ]);
     }
+
+    public function test_retailer_adds_product_to_cart_enforces_min_bulk_qty_and_bulk_price(): void
+    {
+        $retailer = User::where('email', 'retailer@newbie.com')->first();
+        $variant = ProductVariant::where('min_bulk_qty', '>', 1)->first();
+        $this->assertNotNull($variant);
+
+        // 1. Retailer adds to cart with quantity 1 (or default)
+        $response = $this->actingAs($retailer)->post('/cart/add', [
+            'variant_id' => $variant->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertSessionHas('cart');
+        $cart = session('cart');
+
+        // Quantity should automatically be min_bulk_qty for retailer
+        $this->assertEquals($variant->min_bulk_qty, $cart[$variant->id]['quantity']);
+        // Price should be bulk_price
+        $this->assertEquals((float) $variant->bulk_price, $cart[$variant->id]['price']);
+
+        // 2. Decrementing below min_bulk_qty should remove item from cart
+        $this->actingAs($retailer)->post('/cart/update', [
+            'variant_id' => $variant->id,
+            'change' => -1,
+        ]);
+        $updatedCart = session('cart');
+        $this->assertArrayNotHasKey($variant->id, $updatedCart);
+    }
 }
 

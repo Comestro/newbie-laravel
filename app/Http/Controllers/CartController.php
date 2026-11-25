@@ -16,12 +16,19 @@ class CartController extends Controller
         ]);
 
         $variantId = $request->input('variant_id');
-        $quantity = (int) $request->input('quantity', 1);
-
         $variant = ProductVariant::with('product')->findOrFail($variantId);
         $cart = session('cart', []);
 
         $isRetailer = auth()->check() && auth()->user()->isRetailer();
+        $minBulkQty = max(1, (int) ($variant->min_bulk_qty ?? 1));
+
+        $quantity = (int) $request->input('quantity', 1);
+
+        // If retailer is adding fresh to cart or quantity is lower than minimum bulk qty, enforce min_bulk_qty
+        if ($isRetailer && !isset($cart[$variantId]) && $quantity < $minBulkQty) {
+            $quantity = $minBulkQty;
+        }
+
         $itemPrice = $isRetailer && $variant->bulk_price !== null
             ? (float) $variant->bulk_price
             : (float) $variant->retail_price;
@@ -38,6 +45,7 @@ class CartController extends Controller
                 'image_url' => $variant->image_url,
                 'quantity' => $quantity,
                 'brand' => $variant->product->brand,
+                'min_bulk_qty' => $minBulkQty,
             ];
         }
 
@@ -61,7 +69,12 @@ class CartController extends Controller
         if (isset($cart[$variantId])) {
             $cart[$variantId]['quantity'] += $change;
 
-            if ($cart[$variantId]['quantity'] <= 0) {
+            $isRetailer = auth()->check() && auth()->user()->isRetailer();
+            $minBulkQty = $isRetailer && isset($cart[$variantId]['min_bulk_qty'])
+                ? (int) $cart[$variantId]['min_bulk_qty']
+                : 1;
+
+            if ($cart[$variantId]['quantity'] < $minBulkQty || $cart[$variantId]['quantity'] <= 0) {
                 unset($cart[$variantId]);
             }
 

@@ -177,8 +177,26 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs">
                         <div className="bg-white rounded-2xl border border-slate-100 max-w-lg w-full p-6 shadow-sm space-y-4">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h3 className="font-bold text-sm text-slate-900">Review KYC: {selectedUser.name}</h3>
-                                <button type="button" onClick={() => setSelectedUser(null)} className="text-slate-400 hover:text-slate-600 text-lg">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-bold text-sm text-slate-900">Review KYC: {selectedUser.name}</h3>
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                        selectedUser.apply_status === 'VERIFIED'
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                            : selectedUser.apply_status === 'REJECTED'
+                                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    }`}>
+                                        {selectedUser.apply_status || 'PENDING'}
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedUser(null);
+                                        setShowRejectForm(false);
+                                    }}
+                                    className="text-slate-400 hover:text-slate-600 text-lg"
+                                >
                                     &times;
                                 </button>
                             </div>
@@ -227,37 +245,91 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'PENDING
 
                             {showRejectForm ? (
                                 <form onSubmit={handleReject} className="space-y-2 pt-2 border-t border-slate-100">
-                                    <label className="block text-xs font-semibold text-slate-700">Reason for rejection</label>
+                                    <label className="block text-xs font-semibold text-slate-700">
+                                        {selectedUser.apply_status === 'VERIFIED' ? 'Reason for revoking approval' : 'Reason for rejection'}
+                                    </label>
                                     <textarea
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
                                         rows={2}
-                                        placeholder="e.g. Aadhaar card photo is blurry or invalid..."
-                                        className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white"
-                                        required
+                                        placeholder="e.g. Incomplete or invalid documents..."
+                                        className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
                                     />
                                     <div className="flex gap-2">
-                                        <button type="submit" className="px-3 py-1.5 bg-rose-600 text-white font-semibold text-xs rounded-lg">
-                                            Confirm Rejection
+                                        <button type="submit" className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-lg transition cursor-pointer">
+                                            {selectedUser.apply_status === 'VERIFIED' ? 'Confirm Revoke' : 'Confirm Rejection'}
                                         </button>
-                                        <button type="button" onClick={() => setShowRejectForm(false)} className="px-3 py-1.5 border border-slate-200 text-xs rounded-lg">
+                                        <button type="button" onClick={() => setShowRejectForm(false)} className="px-3 py-1.5 border border-slate-200 text-slate-600 text-xs rounded-lg hover:bg-slate-50 transition cursor-pointer">
                                             Cancel
                                         </button>
                                     </div>
                                 </form>
+                            ) : selectedUser.apply_status === 'VERIFIED' ? (
+                                <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2 text-emerald-700 text-xs font-semibold">
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                        <span>Retailer account is approved and verified</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowRejectForm(true)}
+                                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-lg transition cursor-pointer"
+                                        >
+                                            Revoke Approval
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedUser(null);
+                                                setShowRejectForm(false);
+                                            }}
+                                            className="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition cursor-pointer"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : selectedUser.apply_status === 'REJECTED' ? (
+                                <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                                    {selectedUser.rejection_reason && (
+                                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">
+                                            <strong>Rejection Reason:</strong> {selectedUser.rejection_reason}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleApprove(selectedUser.id)}
+                                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition cursor-pointer"
+                                        >
+                                            Re-approve Retailer
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedUser(null);
+                                                setShowRejectForm(false);
+                                            }}
+                                            className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition cursor-pointer"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="flex gap-2 pt-3 border-t border-slate-100">
                                     <button
                                         type="button"
                                         onClick={() => handleApprove(selectedUser.id)}
-                                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition"
+                                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition cursor-pointer"
                                     >
                                         Approve Retailer
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowRejectForm(true)}
-                                        className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-lg transition"
+                                        className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-lg transition cursor-pointer"
                                     >
                                         Reject with Reason
                                     </button>

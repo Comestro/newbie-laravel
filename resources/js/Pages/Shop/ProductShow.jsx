@@ -178,13 +178,18 @@ export default function ProductShow({ product }) {
                                 ))}
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={() => addToCart(selectedVariantId, 1)}
-                                className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-bold text-sm transition shadow-xs"
-                            >
-                                Add to Cart - ₹{price.toLocaleString()}
-                            </button>
+                            {(() => {
+                                const minQty = isRetailer ? Math.max(1, parseInt(selectedVariant?.min_bulk_qty, 10) || 1) : 1;
+                                return (
+                                    <button
+                                        type="button"
+                                        onClick={() => addToCart(selectedVariantId, minQty)}
+                                        className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-bold text-sm transition shadow-xs cursor-pointer"
+                                    >
+                                        Add to Cart {isRetailer && minQty > 1 ? `(${minQty} units) ` : ''}- ₹{(price * minQty).toLocaleString()}
+                                    </button>
+                                );
+                            })()}
 
                             {isRetailer && !auth?.user?.is_kyc_approved && (
                                 <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg mt-3 text-center font-medium border border-amber-200">
