@@ -113,7 +113,7 @@ class User extends Authenticatable
 
     public function isKycApproved(): bool
     {
-        $status = $this->retailerProfile?->status;
+        $status = strtoupper((string) ($this->retailerProfile?->status ?? ''));
         return $status === 'VERIFIED' || $status === 'APPROVED';
     }
 

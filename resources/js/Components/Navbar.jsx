@@ -82,22 +82,23 @@ export default function Navbar() {
                                         href="/admin/dashboard"
                                         className="text-xs font-semibold px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 hover:bg-purple-100 transition"
                                     >
-                                        Admin
+                                        Admin Panel
                                     </Link>
                                 ) : auth.user.is_retailer ? (
                                     <Link
                                         href="/retailer/dashboard"
-                                        className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition"
+                                        className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition flex items-center gap-1.5"
                                     >
-                                        Retailer
+                                        Retailer Hub
                                     </Link>
-                                ) : null}
-                                <Link
-                                    href="/dashboard"
-                                    className="text-sm font-medium text-slate-700 hover:text-purple-600 transition"
-                                >
-                                    Dashboard
-                                </Link>
+                                ) : (
+                                    <Link
+                                        href="/dashboard"
+                                        className="text-sm font-medium text-slate-700 hover:text-purple-600 transition"
+                                    >
+                                        Dashboard
+                                    </Link>
+                                )}
                             </div>
                         ) : (
                             <Link

@@ -7,11 +7,13 @@ import {
     MapPin,
     User,
     ShieldCheck,
+    Store,
     LogOut
 } from 'lucide-react';
 
 export default function UserSidebar() {
-    const { url } = usePage();
+    const { url, props } = usePage();
+    const isRetailer = Boolean(props.auth?.user?.is_retailer);
 
     const isActive = (path) => (path === '/dashboard' ? url === '/dashboard' : url.startsWith(path));
 
@@ -21,6 +23,17 @@ export default function UserSidebar() {
     };
 
     const links = [
+        ...(isRetailer
+            ? [
+                  {
+                      label: 'Retailer Hub',
+                      href: '/retailer/dashboard',
+                      icon: Store,
+                      activeColor: 'bg-emerald-50 text-emerald-700 font-semibold',
+                      iconColor: 'text-emerald-600',
+                  },
+              ]
+            : []),
         {
             label: 'Dashboard',
             href: '/dashboard',
@@ -50,7 +63,7 @@ export default function UserSidebar() {
             iconColor: 'text-blue-600',
         },
         {
-            label: 'Kyc Document',
+            label: isRetailer ? 'KYC Document' : 'Apply for Retailer',
             href: '/apply-to-retailer',
             icon: ShieldCheck,
             activeColor: 'bg-purple-50 text-purple-700 font-semibold',

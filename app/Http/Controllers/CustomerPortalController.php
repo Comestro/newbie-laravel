@@ -16,9 +16,19 @@ use Inertia\Response;
 
 class CustomerPortalController extends Controller
 {
-    public function dashboard(): Response
+    public function dashboard(): Response|\Illuminate\Http\RedirectResponse
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+
+        if ($user?->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user?->isRetailer()) {
+            return redirect()->route('retailer.dashboard');
+        }
+
+        $userId = $user->id;
         $totalOrders = Order::where('user_id', $userId)->count();
         $totalWishlist = Wishlist::where('user_id', $userId)->count();
         $totalAddress = Address::where('user_id', $userId)->count();

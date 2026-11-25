@@ -169,6 +169,43 @@ class RetailerKycOrderTest extends TestCase
         $this->assertEquals(0, Order::where('user_id', $retailer->id)->count());
     }
 
+    public function test_retailer_cannot_place_order_when_kyc_is_unsubmitted(): void
+    {
+        $retailer = User::create([
+            'name' => 'Unsubmitted KYC Shop',
+            'email' => 'unsubmitted@example.com',
+            'password' => bcrypt('password'),
+            'role' => UserRole::RETAILER,
+        ]);
+        // Note: No RetailerProfile record created
+
+        $address = Address::create([
+            'user_id' => $retailer->id,
+            'label' => 'Shop',
+            'line1' => 'Market Square',
+            'city' => 'Jaipur',
+            'state' => 'Rajasthan',
+            'pincode' => '302001',
+            'phone' => '9876543210',
+            'is_default' => true,
+        ]);
+
+        $variant = ProductVariant::first();
+
+        $this->actingAs($retailer)->post('/cart/add', [
+            'variant_id' => $variant->id,
+            'quantity' => 1,
+        ]);
+
+        $response = $this->actingAs($retailer)->post('/checkout', [
+            'address_id' => $address->id,
+        ]);
+
+        $response->assertRedirect('/checkout');
+        $response->assertSessionHas('error', 'Retailer KYC approval is required before you can place orders.');
+        $this->assertEquals(0, Order::where('user_id', $retailer->id)->count());
+    }
+
     public function test_admin_can_approve_retailer_and_retailer_can_place_order(): void
     {
         $admin = User::where('email', 'admin@newbie.com')->first();

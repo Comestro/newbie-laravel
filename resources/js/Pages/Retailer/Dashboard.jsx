@@ -135,10 +135,10 @@ export default function Dashboard({ user = null, totalAssignedOrders = 0, fulfil
 
                 {/* Orders List */}
                 <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
-                    <h2 className="text-sm font-bold text-slate-900 mb-3">Assigned Orders</h2>
+                    <h2 className="text-sm font-bold text-slate-900 mb-3">Wholesale Orders</h2>
                     {recentOrders.length === 0 ? (
                         <div className="text-center py-10">
-                            <p className="text-xs text-slate-400">No pending orders assigned to your retail hub.</p>
+                            <p className="text-xs text-slate-400">No wholesale orders placed yet.</p>
                         </div>
                     ) : (
                         <div className="divide-y divide-slate-100">
@@ -149,7 +149,7 @@ export default function Dashboard({ user = null, totalAssignedOrders = 0, fulfil
                                             #{ord.order_number}
                                         </span>
                                         <p className="text-[11px] text-slate-400 mt-0.5">
-                                            {ord.customer_name} &bull; ₹{ord.total_amount}
+                                            ₹{ord.total_amount} &bull; {new Date(ord.created_at).toLocaleDateString()}
                                         </p>
                                     </div>
                                     <span className="text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">

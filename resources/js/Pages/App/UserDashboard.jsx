@@ -1,9 +1,12 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { ShoppingBag, Heart, MapPin, Store } from 'lucide-react';
 
 export default function UserDashboard({ totalOrders = 0, totalWishlist = 0, totalAddress = 0, recentOrders = [] }) {
+    const { auth } = usePage().props;
+    const isRetailerOrAdmin = Boolean(auth?.user?.is_retailer || auth?.user?.is_admin);
+
     const getStatusBadge = (status) => {
         const val = (status?.value || status || '').toUpperCase();
         switch (val) {
@@ -67,24 +70,26 @@ export default function UserDashboard({ totalOrders = 0, totalWishlist = 0, tota
                     </Link>
                 </div>
 
-                {/* Retailer Banner */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <Store className="w-4 h-4" />
-                            <h3 className="text-sm font-bold">Sell with Newbie Service</h3>
+                {/* Retailer Banner - Only show to customers who are not yet retailers */}
+                {!isRetailerOrAdmin && (
+                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Store className="w-4 h-4" />
+                                <h3 className="text-sm font-bold">Sell with Newbie Service</h3>
+                            </div>
+                            <p className="text-xs text-purple-100 max-w-lg">
+                                Apply for a retailer account to supply products and fulfill customer grocery requests.
+                            </p>
                         </div>
-                        <p className="text-xs text-purple-100 max-w-lg">
-                            Apply for a retailer account to supply products and fulfill customer grocery requests.
-                        </p>
+                        <Link
+                            href="/apply-to-retailer"
+                            className="px-4 py-2 bg-white text-purple-700 hover:bg-purple-50 font-bold rounded-lg text-xs transition shadow-xs shrink-0"
+                        >
+                            Apply for KYC &rarr;
+                        </Link>
                     </div>
-                    <Link
-                        href="/apply-to-retailer"
-                        className="px-4 py-2 bg-white text-purple-700 hover:bg-purple-50 font-bold rounded-lg text-xs transition shadow-xs shrink-0"
-                    >
-                        Apply for KYC &rarr;
-                    </Link>
-                </div>
+                )}
 
                 {/* Recent Orders */}
                 <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs">
