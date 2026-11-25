@@ -94,6 +94,11 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
     ->name('retailer.')
     ->group(function () {
         Route::get('/dashboard', [RetailerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/orders', [RetailerController::class, 'orders'])->name('orders');
+        Route::get('/addresses', [RetailerController::class, 'addresses'])->name('addresses');
+        Route::get('/wishlist', [RetailerController::class, 'wishlist'])->name('wishlist');
+        Route::get('/profile', [RetailerController::class, 'profile'])->name('profile');
+        Route::get('/kyc', [RetailerController::class, 'kyc'])->name('kyc');
     });
 
 

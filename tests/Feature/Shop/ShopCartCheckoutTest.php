@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Shop;
 
 use App\Models\Address;
 use App\Models\Product;
@@ -10,7 +10,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class InertiaFullFlowTest extends TestCase
+class ShopCartCheckoutTest extends TestCase
 {
     use RefreshDatabase;
 

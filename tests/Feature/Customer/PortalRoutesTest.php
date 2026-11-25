@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Customer;
 
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class InertiaRoutesTest extends TestCase
+class PortalRoutesTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -54,5 +54,10 @@ class InertiaRoutesTest extends TestCase
     {
         $retailer = User::where('email', 'retailer@newbie.com')->first();
         $this->actingAs($retailer)->get('/retailer/dashboard')->assertStatus(200);
+        $this->actingAs($retailer)->get('/retailer/orders')->assertStatus(200);
+        $this->actingAs($retailer)->get('/retailer/addresses')->assertStatus(200);
+        $this->actingAs($retailer)->get('/retailer/wishlist')->assertStatus(200);
+        $this->actingAs($retailer)->get('/retailer/profile')->assertStatus(200);
+        $this->actingAs($retailer)->get('/retailer/kyc')->assertStatus(200);
     }
 }

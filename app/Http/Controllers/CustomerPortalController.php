@@ -34,7 +34,7 @@ class CustomerPortalController extends Controller
         $totalAddress = Address::where('user_id', $userId)->count();
         $recentOrders = Order::where('user_id', $userId)->latest()->take(5)->get();
 
-        return Inertia::render('App/UserDashboard', [
+        return Inertia::render('Customer/Dashboard', [
             'totalOrders' => $totalOrders,
             'totalWishlist' => $totalWishlist,
             'totalAddress' => $totalAddress,
@@ -49,7 +49,7 @@ class CustomerPortalController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('App/UserMyOrder', [
+        return Inertia::render('Customer/Orders', [
             'orders' => $orders,
         ]);
     }
@@ -61,7 +61,7 @@ class CustomerPortalController extends Controller
             ->with(['items.variant.product', 'address'])
             ->firstOrFail();
 
-        return Inertia::render('App/UserOrderView', [
+        return Inertia::render('Customer/OrderShow', [
             'order' => $order,
         ]);
     }
@@ -72,7 +72,7 @@ class CustomerPortalController extends Controller
             ->orderByDesc('is_default')
             ->get();
 
-        return Inertia::render('App/UserAddress', [
+        return Inertia::render('Customer/Addresses', [
             'addresses' => $addresses,
         ]);
     }
@@ -156,7 +156,7 @@ class CustomerPortalController extends Controller
 
     public function profile(): Response
     {
-        return Inertia::render('App/UserProfile', [
+        return Inertia::render('Customer/Profile', [
             'user' => Auth::user(),
         ]);
     }
@@ -191,14 +191,14 @@ class CustomerPortalController extends Controller
             ->with(['product.variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')])
             ->get();
 
-        return Inertia::render('App/UserWishlist', [
+        return Inertia::render('Customer/Wishlist', [
             'wishlists' => $wishlists,
         ]);
     }
 
     public function applyRetailer(): Response
     {
-        return Inertia::render('App/ApplyToRetailer', [
+        return Inertia::render('Customer/ApplyRetailer', [
             'user' => Auth::user(),
         ]);
     }
@@ -257,7 +257,7 @@ class CustomerPortalController extends Controller
 
     public function accounts(): Response
     {
-        return Inertia::render('App/UserAccounts');
+        return Inertia::render('Customer/Accounts');
     }
 }
 
