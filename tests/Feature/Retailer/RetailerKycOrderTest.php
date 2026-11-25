@@ -346,10 +346,10 @@ class RetailerKycOrderTest extends TestCase
         $response = $this->actingAs($customer)->post('/apply-to-retailer', [
             'shop_name' => 'Demo Shop',
             'aadhaar_card' => '123456789012',
-            // shop_address omitted
+            // address omitted
         ]);
 
-        $response->assertSessionHasErrors('shop_address');
+        $response->assertSessionHasErrors(['line1', 'city', 'state', 'pincode']);
     }
 
     public function test_submitting_retailer_kyc_successfully_saves_all_fields_and_syncs_address(): void
@@ -365,7 +365,10 @@ class RetailerKycOrderTest extends TestCase
 
         $response = $this->actingAs($customer)->post('/apply-to-retailer', [
             'shop_name' => 'Supreme Kirana Store',
-            'shop_address' => 'Shop 10, Crystal Palm Market, Jaipur, Rajasthan 302001',
+            'line1' => 'Shop 10, Crystal Palm Market',
+            'city' => 'Jaipur',
+            'state' => 'Rajasthan',
+            'pincode' => '302001',
             'gst_number' => '08aabcs1429b1z1',
             'shop_image' => UploadedFile::fake()->image('shop.jpg'),
             'aadhaar_card' => '123456789012',
@@ -380,7 +383,7 @@ class RetailerKycOrderTest extends TestCase
         $profile = RetailerProfile::where('user_id', $customer->id)->first();
         $this->assertNotNull($profile);
         $this->assertEquals('Supreme Kirana Store', $profile->shop_name);
-        $this->assertEquals('Shop 10, Crystal Palm Market, Jaipur, Rajasthan 302001', $profile->shop_address);
+        $this->assertEquals('Shop 10, Crystal Palm Market, Jaipur, Rajasthan - 302001', $profile->shop_address);
         $this->assertEquals('08AABCS1429B1Z1', $profile->gst_number);
         $this->assertNotNull($profile->shop_image);
         $this->assertNotNull($profile->aadhaar_card_front);

@@ -75,4 +75,33 @@ class PortalRoutesTest extends TestCase
             'phone',
         ]);
     }
+
+    public function test_user_cannot_update_profile_with_numeric_name_or_invalid_phone(): void
+    {
+        $user = User::where('email', 'user@newbie.com')->first();
+        $response = $this->actingAs($user)->post('/profile', [
+            'name' => '87943',
+            'email' => 'user@newbie.com',
+            'phone' => '787878787878',
+        ]);
+
+        $response->assertSessionHasErrors(['name', 'phone']);
+    }
+
+    public function test_user_can_update_profile_with_valid_details(): void
+    {
+        $user = User::where('email', 'user@newbie.com')->first();
+        $response = $this->actingAs($user)->post('/profile', [
+            'name' => 'Ramesh Kumar',
+            'email' => 'user@newbie.com',
+            'phone' => '9876543210',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $user->refresh();
+        $this->assertEquals('Ramesh Kumar', $user->name);
+        $this->assertEquals('9876543210', $user->phone);
+    }
 }

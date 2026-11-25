@@ -167,15 +167,21 @@ class CustomerPortalController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:100',
+                'regex:/^[\pL\s\.\'\-]+$/u',
+            ],
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:6',
+            'phone' => ['nullable', 'string', 'regex:/^[6-9]\d{9}$/'],
+            'password' => 'nullable|string|min:6|max:100',
         ]);
 
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
-        $user->phone = $validated['phone'] ?? null;
+        $user->name = trim($validated['name']);
+        $user->email = trim($validated['email']);
+        $user->phone = !empty($validated['phone']) ? trim($validated['phone']) : null;
 
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
@@ -209,14 +215,13 @@ class CustomerPortalController extends Controller
         $user = Auth::user();
         $existingProfile = RetailerProfile::where('user_id', $user->id)->first();
 
-        $request->validate([
+        $validated = $request->validate([
             'shop_name' => 'required|string|max:255',
-            'line1' => 'required_without:shop_address|nullable|string|max:255',
+            'line1' => 'required|string|max:255',
             'line2' => 'nullable|string|max:255',
-            'city' => 'required_without:shop_address|nullable|string|max:100',
-            'state' => 'required_without:shop_address|nullable|string|max:100',
-            'pincode' => 'required_without:shop_address|nullable|string|size:6',
-            'shop_address' => 'required_without:line1|nullable|string|max:1000',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'pincode' => 'required|string|size:6',
             'gst_number' => 'nullable|string|max:20',
             'shop_image' => 'nullable|image|max:4096',
             'avatar' => 'nullable|image|max:2048',
@@ -258,29 +263,20 @@ class CustomerPortalController extends Controller
             $backPath = $request->file('aadhaar_back')->store('retailer/aadhaar', 'public');
         }
 
-        if ($request->filled('line1')) {
-            $line1 = trim($request->input('line1'));
-            $line2 = $request->filled('line2') ? trim($request->input('line2')) : null;
-            $city = trim($request->input('city'));
-            $state = trim($request->input('state'));
-            $pincode = trim($request->input('pincode'));
+        $line1 = trim($validated['line1']);
+        $line2 = !empty($validated['line2']) ? trim($validated['line2']) : null;
+        $city = trim($validated['city']);
+        $state = trim($validated['state']);
+        $pincode = trim($validated['pincode']);
 
-            $shopAddress = $line1 . ($line2 ? ", {$line2}" : '') . ", {$city}, {$state} - {$pincode}";
-        } else {
-            $shopAddress = trim($request->input('shop_address'));
-            $line1 = Str::limit($shopAddress, 100);
-            $line2 = null;
-            $city = 'Jaipur';
-            $state = 'Rajasthan';
-            $pincode = '302001';
-        }
+        $shopAddress = $line1 . ($line2 ? ", {$line2}" : '') . ", {$city}, {$state} - {$pincode}";
 
         $profileData = [
-            'shop_name' => $request->input('shop_name'),
+            'shop_name' => $validated['shop_name'],
             'shop_address' => $shopAddress,
-            'gst_number' => $request->input('gst_number') ? strtoupper(trim($request->input('gst_number'))) : null,
+            'gst_number' => !empty($validated['gst_number']) ? strtoupper(trim($validated['gst_number'])) : null,
             'shop_image' => $shopImagePath,
-            'aadhaar_card' => $request->input('aadhaar_card'),
+            'aadhaar_card' => $validated['aadhaar_card'],
             'aadhaar_card_front' => $frontPath,
             'aadhaar_card_back' => $backPath,
             'status' => 'PENDING',
@@ -293,33 +289,31 @@ class CustomerPortalController extends Controller
         );
 
         // Automatically copy & save this shop address as default delivery address
-        if ($request->filled('line1') || $request->filled('shop_address')) {
-            $existingShopAddress = Address::where('user_id', $user->id)
-                ->where('label', 'Shop')
-                ->first();
+        $existingShopAddress = Address::where('user_id', $user->id)
+            ->where('label', 'Shop')
+            ->first();
 
-            $hasOtherDefault = Address::where('user_id', $user->id)
-                ->where('is_default', true)
-                ->where('id', '!=', $existingShopAddress?->id ?? 0)
-                ->exists();
+        $hasOtherDefault = Address::where('user_id', $user->id)
+            ->where('is_default', true)
+            ->where('id', '!=', $existingShopAddress?->id ?? 0)
+            ->exists();
 
-            $addressData = [
-                'user_id' => $user->id,
-                'label' => 'Shop',
-                'line1' => $line1,
-                'line2' => $line2,
-                'city' => $city,
-                'state' => $state,
-                'pincode' => $pincode,
-                'phone' => $user->phone ?? '9876543210',
-                'is_default' => !$hasOtherDefault,
-            ];
+        $addressData = [
+            'user_id' => $user->id,
+            'label' => 'Shop',
+            'line1' => $line1,
+            'line2' => $line2,
+            'city' => $city,
+            'state' => $state,
+            'pincode' => $pincode,
+            'phone' => $user->phone ?? '9876543210',
+            'is_default' => !$hasOtherDefault,
+        ];
 
-            if (!$existingShopAddress) {
-                Address::create($addressData);
-            } else {
-                $existingShopAddress->update($addressData);
-            }
+        if (!$existingShopAddress) {
+            Address::create($addressData);
+        } else {
+            $existingShopAddress->update($addressData);
         }
 
         return back()->with('success', 'Your retailer verification details have been submitted successfully.');
