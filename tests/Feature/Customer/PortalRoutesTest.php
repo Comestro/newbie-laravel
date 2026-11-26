@@ -29,7 +29,6 @@ class PortalRoutesTest extends TestCase
     public function test_user_can_access_customer_portal(): void
     {
         $user = User::where('email', 'user@newbie.com')->first();
-        $this->actingAs($user)->get('/dashboard')->assertStatus(200);
         $this->actingAs($user)->get('/my-orders')->assertStatus(200);
         $this->actingAs($user)->get('/my-addresses')->assertStatus(200);
         $this->actingAs($user)->get('/wishlist')->assertStatus(200);
@@ -50,10 +49,9 @@ class PortalRoutesTest extends TestCase
         $this->actingAs($admin)->get('/admin/categories/create')->assertStatus(200);
     }
 
-    public function test_retailer_can_access_retailer_dashboard(): void
+    public function test_retailer_can_access_retailer_portal(): void
     {
         $retailer = User::where('email', 'retailer@newbie.com')->first();
-        $this->actingAs($retailer)->get('/retailer/dashboard')->assertStatus(200);
         $this->actingAs($retailer)->get('/retailer/orders')->assertStatus(200);
         $this->actingAs($retailer)->get('/retailer/addresses')->assertStatus(200);
         $this->actingAs($retailer)->get('/retailer/wishlist')->assertStatus(200);

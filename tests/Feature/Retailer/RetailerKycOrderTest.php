@@ -36,7 +36,7 @@ class RetailerKycOrderTest extends TestCase
             'role' => 'RETAILER',
         ]);
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/');
 
         $user = User::where('email', 'newretailer@example.com')->first();
         $this->assertNotNull($user);

@@ -14,36 +14,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Inertia\Response;
+use Inertia\Response; 
 
 class CustomerPortalController extends Controller
 {
-    public function dashboard(): Response|\Illuminate\Http\RedirectResponse
-    {
-        $user = Auth::user();
-
-        if ($user?->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($user?->isRetailer()) {
-            return redirect()->route('retailer.dashboard');
-        }
-
-        $userId = $user->id;
-        $totalOrders = Order::where('user_id', $userId)->count();
-        $totalWishlist = Wishlist::where('user_id', $userId)->count();
-        $totalAddress = Address::where('user_id', $userId)->count();
-        $recentOrders = Order::where('user_id', $userId)->latest()->take(5)->get();
-
-        return Inertia::render('Customer/Dashboard', [
-            'totalOrders' => $totalOrders,
-            'totalWishlist' => $totalWishlist,
-            'totalAddress' => $totalAddress,
-            'recentOrders' => $recentOrders,
-        ]);
-    }
-
     public function orders(): Response
     {
         $orders = Order::where('user_id', Auth::id())

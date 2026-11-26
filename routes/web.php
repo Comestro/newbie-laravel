@@ -36,7 +36,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.place-order');
     Route::get('/order-success/{order}', [ShopController::class, 'orderSuccess'])->name('ordersuccess');
 
-    Route::get('/dashboard', [CustomerPortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/my-orders', [CustomerPortalController::class, 'orders'])->name('myorders');
     Route::get('/order-view/{order}', [CustomerPortalController::class, 'orderView'])->name('orderview');
     Route::get('/my-addresses', [CustomerPortalController::class, 'addresses'])->name('myaddresses');
@@ -94,7 +93,6 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
     ->prefix('retailer')
     ->name('retailer.')
     ->group(function () {
-        Route::get('/dashboard', [RetailerController::class, 'dashboard'])->name('dashboard');
         Route::get('/orders', [RetailerController::class, 'orders'])->name('orders');
         Route::get('/addresses', [RetailerController::class, 'addresses'])->name('addresses');
         Route::get('/wishlist', [RetailerController::class, 'wishlist'])->name('wishlist');

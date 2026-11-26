@@ -16,11 +16,9 @@ class LoginResponse implements LoginResponseContract
     {
         $user = $request->user();
 
-        $redirectRoute = match (true) {
-            $user->isAdmin() => route('admin.dashboard'),
-            $user->isRetailer() => route('retailer.dashboard'),
-            default => route('dashboard'),
-        };
+        $redirectRoute = $user->isAdmin()
+            ? route('admin.dashboard')
+            : route('home');
 
         return $request->wantsJson()
             ? response()->json(['two_factor' => false])
