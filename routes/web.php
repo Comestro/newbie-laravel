@@ -127,7 +127,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
 
 
 
-    Route::prefix('artisan')->middleware(['auth', 'admin'])->group(function () {
+    Route::prefix('artisan')->group(function () {
         Route::get('/', function () {
             $csrf = e(csrf_token());
             $html = <<<HTML

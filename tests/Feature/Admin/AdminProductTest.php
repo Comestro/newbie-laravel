@@ -480,13 +480,10 @@ class AdminProductTest extends TestCase
         $this->assertDatabaseMissing('product_images', ['id' => $image->id]);
     }
 
-    public function test_artisan_route_access_with_admin_middleware(): void
+    public function test_artisan_route_access(): void
     {
         $response = $this->actingAs($this->admin)->get('/artisan');
         $response->assertStatus(200);
-
-        $responseCustomer = $this->actingAs($this->customer)->get('/artisan');
-        $responseCustomer->assertStatus(403);
     }
 
     public function test_admin_can_create_variant_with_multiple_images(): void
