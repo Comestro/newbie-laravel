@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\LoyaltyTransaction;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -134,6 +135,18 @@ class AdminOrderController extends Controller
             if ($previousStatus !== OrderStatus::CANCELLED && $newStatus === OrderStatus::CANCELLED) {
                 foreach ($order->items()->with('variant')->get() as $item) {
                     $item->variant?->increment('stock', $item->quantity);
+                }
+
+                if ($order->points_used > 0 && $order->user) {
+                    $order->user->increment('loyalty_points', $order->points_used);
+                    LoyaltyTransaction::create([
+                        'user_id' => $order->user_id,
+                        'type' => 'ORDER_REFUND',
+                        'points' => $order->points_used,
+                        'amount' => $order->discount,
+                        'description' => "Refunded from cancelled Order #{$order->order_number}",
+                        'order_id' => $order->id,
+                    ]);
                 }
             } elseif ($previousStatus === OrderStatus::CANCELLED && $newStatus !== OrderStatus::CANCELLED) {
                 foreach ($order->items()->with('variant')->get() as $item) {

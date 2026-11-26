@@ -71,6 +71,7 @@ class RetailerKycOrderTest extends TestCase
             'email' => 'shopowner@example.com',
             'password' => bcrypt('password'),
             'role' => UserRole::RETAILER,
+            'is_member' => true,
         ]);
         RetailerProfile::create([
             'user_id' => $retailer->id,
@@ -109,6 +110,7 @@ class RetailerKycOrderTest extends TestCase
             'email' => 'pendingkyc@example.com',
             'password' => bcrypt('password'),
             'role' => UserRole::RETAILER,
+            'is_member' => true,
         ]);
         RetailerProfile::create([
             'user_id' => $retailer->id,
@@ -154,6 +156,7 @@ class RetailerKycOrderTest extends TestCase
             'email' => 'rejected@example.com',
             'password' => bcrypt('password'),
             'role' => UserRole::RETAILER,
+            'is_member' => true,
         ]);
         RetailerProfile::create([
             'user_id' => $retailer->id,
@@ -196,6 +199,7 @@ class RetailerKycOrderTest extends TestCase
             'email' => 'unsubmitted@example.com',
             'password' => bcrypt('password'),
             'role' => UserRole::RETAILER,
+            'is_member' => true,
         ]);
         // Note: No RetailerProfile record created
 
@@ -235,6 +239,7 @@ class RetailerKycOrderTest extends TestCase
             'email' => 'approved@example.com',
             'password' => bcrypt('password'),
             'role' => UserRole::RETAILER,
+            'is_member' => true,
         ]);
         $profile = RetailerProfile::create([
             'user_id' => $retailer->id,

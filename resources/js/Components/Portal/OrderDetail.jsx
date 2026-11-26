@@ -85,6 +85,12 @@ export default function OrderDetail({ order, backUrl = '/my-orders' }) {
                         <span>Subtotal</span>
                         <span>₹{Number(order.subtotal || order.total_amount).toLocaleString()}</span>
                     </div>
+                    {order.discount > 0 && (
+                        <div className="flex justify-between text-emerald-600">
+                            <span>Loyalty Discount {order.points_used > 0 ? `(${order.points_used.toLocaleString()} pts)` : ''}</span>
+                            <span>-₹{Number(order.discount).toLocaleString()}</span>
+                        </div>
+                    )}
                     {order.delivery_fee > 0 && (
                         <div className="flex justify-between text-slate-500">
                             <span>Delivery Fee</span>

@@ -24,6 +24,9 @@ return new class extends Migration
             $table->timestamp('two_factor_confirmed_at')->nullable();
             $table->string('role')->default('USER');
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_member')->default(false);
+            $table->integer('loyalty_points')->default(0);
+            $table->timestamp('membership_paid_at')->nullable();
             $table->string('avatar_url')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();

@@ -51,6 +51,9 @@ class HandleInertiaRequests extends Middleware
                     'apply_status' => $user->apply_status,
                     'is_kyc_approved' => $user->isKycApproved(),
                     'can_place_order' => $user->canPlaceOrder(),
+                    'is_member' => (bool) $user->is_member,
+                    'loyalty_points' => (int) $user->loyalty_points,
+                    'needs_membership' => $user->needsMembershipToOrder(),
                     'kyc_reject_reason' => $user->kyc_reject_reason,
                     'avatar_url' => $user->avatar_url ? asset('storage/' . $user->avatar_url) : null,
                     'email_verified_at' => $user->email_verified_at,
@@ -63,6 +66,14 @@ class HandleInertiaRequests extends Middleware
             'categories' => fn () => \Illuminate\Support\Facades\Schema::hasTable('categories')
                 ? \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug'])
                 : [],
+            'loyaltyConfig' => fn () => \Illuminate\Support\Facades\Schema::hasTable('settings')
+                ? \App\Models\Setting::getLoyaltyConfig()
+                : [
+                    'membership_fee' => 49,
+                    'membership_bonus_points' => 5000,
+                    'points_per_rupee' => 100,
+                    'require_membership_for_order' => true,
+                ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success') ?? $request->session()->get('status'),
                 'error' => fn () => $request->session()->get('error'),

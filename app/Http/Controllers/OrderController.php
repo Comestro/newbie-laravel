@@ -6,10 +6,13 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Address;
+use App\Models\LoyaltyTransaction;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\ProductVariant;
+use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,12 +26,16 @@ class OrderController extends Controller
     public function createRazorpayOrder(Request $request): JsonResponse
     {
         $user = Auth::user();
+        if ($user?->needsMembershipToOrder()) {
+            return response()->json(['message' => 'Membership plan is required before placing orders.'], 403);
+        }
         if ($user && !$user->canPlaceOrder()) {
             return response()->json(['message' => 'Retailer KYC approval is required before you can place orders.'], 403);
         }
 
         $request->validate([
             'address_id' => 'required|exists:addresses,id',
+            'points_to_use' => 'nullable|integer|min:0',
         ]);
 
         $cart = session('cart', []);
@@ -46,11 +53,12 @@ class OrderController extends Controller
             }
         }
 
-        $itemsTotal = collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
-        $deliveryCharge = 15;
-        $grandTotal = $itemsTotal + $deliveryCharge;
-        $amountInPaise = (int) round($grandTotal * 100);
+        $pricing = $this->calculateOrderPricing($cart, $user, (int) $request->input('points_to_use', 0));
+        if ($pricing['payable_total'] <= 0) {
+            return response()->json(['free' => true, 'payable' => 0]);
+        }
 
+        $amountInPaise = (int) round($pricing['payable_total'] * 100);
         $key = config('services.razorpay.key');
         $secret = config('services.razorpay.secret');
 
@@ -78,6 +86,9 @@ class OrderController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = Auth::user();
+        if ($user?->needsMembershipToOrder()) {
+            return redirect()->route('checkout')->with('error', 'Membership plan is required before you can place orders.');
+        }
         if ($user && !$user->canPlaceOrder()) {
             return redirect()->route('checkout')->with('error', 'Retailer KYC approval is required before you can place orders.');
         }
@@ -85,24 +96,11 @@ class OrderController extends Controller
         $request->validate([
             'address_id' => 'required|exists:addresses,id',
             'payment_method' => 'nullable|in:COD,ONLINE',
-            'razorpay_order_id' => 'required_if:payment_method,ONLINE|nullable|string',
-            'razorpay_payment_id' => 'required_if:payment_method,ONLINE|nullable|string',
-            'razorpay_signature' => 'required_if:payment_method,ONLINE|nullable|string',
+            'points_to_use' => 'nullable|integer|min:0',
+            'razorpay_order_id' => 'nullable|string',
+            'razorpay_payment_id' => 'nullable|string',
+            'razorpay_signature' => 'nullable|string',
         ]);
-
-        $paymentMethod = $request->input('payment_method', PaymentMethod::COD->value);
-
-        if ($paymentMethod === PaymentMethod::ONLINE->value) {
-            $expectedSignature = hash_hmac(
-                'sha256',
-                $request->input('razorpay_order_id') . '|' . $request->input('razorpay_payment_id'),
-                config('services.razorpay.secret')
-            );
-
-            if (!hash_equals($expectedSignature, (string) $request->input('razorpay_signature'))) {
-                return redirect()->route('checkout')->with('error', 'Payment verification failed. Please try again.');
-            }
-        }
 
         $cart = session('cart', []);
         if (empty($cart)) {
@@ -112,12 +110,31 @@ class OrderController extends Controller
         $address = Address::where('user_id', Auth::id())
             ->findOrFail($request->input('address_id'));
 
-        $itemsTotal = collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
-        $deliveryCharge = 15;
-        $grandTotal = $itemsTotal + $deliveryCharge;
+        $paymentMethod = $request->input('payment_method', PaymentMethod::COD->value);
 
         try {
-            $order = DB::transaction(function () use ($cart, $address, $itemsTotal, $deliveryCharge, $grandTotal, $paymentMethod, $request) {
+            $order = DB::transaction(function () use ($cart, $address, $paymentMethod, $request) {
+                $lockedUser = User::where('id', Auth::id())->lockForUpdate()->firstOrFail();
+                $pricing = $this->calculateOrderPricing($cart, $lockedUser, (int) $request->input('points_to_use', 0));
+
+                $isOnline = $paymentMethod === PaymentMethod::ONLINE->value && $pricing['payable_total'] > 0;
+
+                if ($isOnline) {
+                    $expectedSignature = hash_hmac(
+                        'sha256',
+                        $request->input('razorpay_order_id') . '|' . $request->input('razorpay_payment_id'),
+                        config('services.razorpay.secret')
+                    );
+
+                    if (
+                        !$request->filled('razorpay_order_id') ||
+                        !$request->filled('razorpay_payment_id') ||
+                        !hash_equals($expectedSignature, (string) $request->input('razorpay_signature'))
+                    ) {
+                        throw new \RuntimeException('Payment verification failed. Please try again.');
+                    }
+                }
+
                 $variants = ProductVariant::whereIn('id', collect($cart)->pluck('id'))
                     ->lockForUpdate()
                     ->get()
@@ -130,35 +147,50 @@ class OrderController extends Controller
                     }
                 }
 
-                $isOnline = $paymentMethod === PaymentMethod::ONLINE->value;
+                $isPaid = $isOnline || $pricing['payable_total'] <= 0;
+                $orderNumber = $this->generateOrderNumber();
 
                 $order = Order::create([
-                    'user_id' => Auth::id(),
+                    'user_id' => $lockedUser->id,
                     'address_id' => $address->id,
-                    'total_amount' => $grandTotal,
-                    'subtotal' => $itemsTotal,
-                    'discount' => 0,
-                    'delivery_fee' => $deliveryCharge,
-                    'order_number' => $this->generateOrderNumber(),
+                    'total_amount' => $pricing['payable_total'],
+                    'subtotal' => $pricing['items_total'],
+                    'discount' => $pricing['discount'],
+                    'points_used' => $pricing['points_used'],
+                    'delivery_fee' => $pricing['delivery_fee'],
+                    'order_number' => $orderNumber,
                     'address' => $address->toArray(),
                     'status' => OrderStatus::PENDING,
-                    'payment_status' => $isOnline ? PaymentStatus::PAID : PaymentStatus::PENDING,
+                    'payment_status' => $isPaid ? PaymentStatus::PAID : PaymentStatus::PENDING,
                     'payment_method' => $isOnline ? PaymentMethod::ONLINE : PaymentMethod::COD,
                 ]);
 
                 Payment::create([
                     'order_id' => $order->id,
-                    'user_id' => Auth::id(),
-                    'gateway' => $isOnline ? 'razorpay' : 'cod',
+                    'user_id' => $lockedUser->id,
+                    'gateway' => $isOnline ? 'razorpay' : ($pricing['payable_total'] <= 0 ? 'loyalty' : 'cod'),
                     'method' => $isOnline ? PaymentMethod::ONLINE : PaymentMethod::COD,
-                    'status' => $isOnline ? PaymentStatus::PAID : PaymentStatus::PENDING,
-                    'amount' => $grandTotal,
+                    'status' => $isPaid ? PaymentStatus::PAID : PaymentStatus::PENDING,
+                    'amount' => $pricing['payable_total'],
                     'currency' => 'INR',
                     'gateway_order_id' => $isOnline ? $request->input('razorpay_order_id') : null,
                     'gateway_payment_id' => $isOnline ? $request->input('razorpay_payment_id') : null,
                     'gateway_signature' => $isOnline ? $request->input('razorpay_signature') : null,
-                    'paid_at' => $isOnline ? now() : null,
+                    'paid_at' => $isPaid ? now() : null,
                 ]);
+
+                if ($pricing['points_used'] > 0) {
+                    $lockedUser->decrement('loyalty_points', $pricing['points_used']);
+
+                    LoyaltyTransaction::create([
+                        'user_id' => $lockedUser->id,
+                        'type' => 'ORDER_REDEEM',
+                        'points' => -$pricing['points_used'],
+                        'amount' => $pricing['discount'],
+                        'description' => "Redeemed on Order #{$orderNumber}",
+                        'order_id' => $order->id,
+                    ]);
+                }
 
                 foreach ($cart as $item) {
                     OrderItem::create([
@@ -184,6 +216,31 @@ class OrderController extends Controller
         session()->forget('cart');
 
         return redirect()->route('ordersuccess', ['order' => $order->order_number]);
+    }
+
+    private function calculateOrderPricing(array $cart, User $user, int $requestedPoints): array
+    {
+        $itemsTotal = (float) collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
+        $deliveryFee = 15.0;
+        $rawTotal = $itemsTotal + $deliveryFee;
+
+        $config = Setting::getLoyaltyConfig();
+        $pointsPerRupee = $config['points_per_rupee'];
+
+        $maxPointsForOrder = (int) floor($rawTotal * $pointsPerRupee);
+        $maxUsablePoints = min((int) $user->loyalty_points, $maxPointsForOrder);
+        $pointsUsed = max(0, min($requestedPoints, $maxUsablePoints));
+
+        $discount = round($pointsUsed / $pointsPerRupee, 2);
+        $payableTotal = max(0, round($rawTotal - $discount, 2));
+
+        return [
+            'items_total' => $itemsTotal,
+            'delivery_fee' => $deliveryFee,
+            'points_used' => $pointsUsed,
+            'discount' => $discount,
+            'payable_total' => $payableTotal,
+        ];
     }
 
     private function generateOrderNumber(): string
