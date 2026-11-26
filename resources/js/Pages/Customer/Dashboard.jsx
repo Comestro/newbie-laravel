@@ -1,11 +1,9 @@
 import React from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import CustomerLayout from '../../Layouts/CustomerLayout';
-import { ShoppingBag, Heart, MapPin, Store } from 'lucide-react';
+import { ShoppingBag, Heart, MapPin } from 'lucide-react';
 
 export default function Dashboard({ totalOrders = 0, totalWishlist = 0, totalAddress = 0, recentOrders = [] }) {
-    const { auth } = usePage().props;
-    const isRetailerOrAdmin = Boolean(auth?.user?.is_retailer || auth?.user?.is_admin);
 
     const getStatusBadge = (status) => {
         const val = (status?.value || status || '').toUpperCase();
@@ -69,27 +67,6 @@ export default function Dashboard({ totalOrders = 0, totalWishlist = 0, totalAdd
                         <p className="text-xl font-extrabold text-slate-900 mt-2">{totalAddress}</p>
                     </Link>
                 </div>
-
-                {/* Retailer Promo Banner - Only for normal customers */}
-                {!isRetailerOrAdmin && (
-                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <Store className="w-4 h-4" />
-                                <h3 className="text-sm font-bold">Sell with Newbie Service</h3>
-                            </div>
-                            <p className="text-xs text-purple-100 max-w-lg">
-                                Apply for a retailer account to supply products and fulfill customer grocery requests at wholesale pricing.
-                            </p>
-                        </div>
-                        <Link
-                            href="/apply-to-retailer"
-                            className="px-4 py-2 bg-white text-purple-700 hover:bg-purple-50 font-bold rounded-xl text-xs transition shadow-xs shrink-0 cursor-pointer"
-                        >
-                            Apply for KYC &rarr;
-                        </Link>
-                    </div>
-                )}
 
                 {/* Recent Orders */}
                 <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
