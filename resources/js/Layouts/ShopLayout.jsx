@@ -3,6 +3,7 @@ import { CartProvider } from '../Context/CartContext';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
 import CartDrawer from '../Components/CartDrawer';
+import BottomCartButton from '../Components/BottomCartButton';
 import MobileBottomNav from '../Components/MobileBottomNav';
 import FlashMessages from '../Components/FlashMessages';
 
@@ -13,6 +14,7 @@ export default function ShopLayout({ children }) {
                 <FlashMessages />
                 <Navbar />
                 <CartDrawer />
+                <BottomCartButton />
                 <main className="flex-1">
                     {children}
                 </main>

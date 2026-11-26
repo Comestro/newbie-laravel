@@ -54,7 +54,6 @@ export function useCartState() {
         router.post('/cart/add', { variant_id: variantId, quantity }, {
             preserveScroll: true,
             onSuccess: () => {
-                cartDrawerStore.setOpen(true);
                 toast.success('Added to cart!');
             },
         });

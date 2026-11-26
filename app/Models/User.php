@@ -149,6 +149,11 @@ class User extends Authenticatable
         return $status === 'VERIFIED' || $status === 'APPROVED';
     }
 
+    public function wishlists(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
     public function canPlaceOrder(): bool
     {
         if ($this->isRetailer()) {

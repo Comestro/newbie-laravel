@@ -51,7 +51,7 @@ class CartController extends Controller
 
         session(['cart' => $cart]);
 
-        return back()->with('success', 'Item added to cart.');
+        return back();
     }
 
     public function update(Request $request): RedirectResponse

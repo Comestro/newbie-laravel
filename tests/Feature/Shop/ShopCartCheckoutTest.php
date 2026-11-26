@@ -84,6 +84,45 @@ class ShopCartCheckoutTest extends TestCase
         ]);
     }
 
+    public function test_customer_and_retailer_wishlist_pages_render_with_relations(): void
+    {
+        $customer = User::where('email', 'user@newbie.com')->first();
+        $product = Product::first();
+
+        // 1. Customer wishlists product
+        $this->actingAs($customer)->post("/wishlist/{$product->id}/toggle");
+        $this->assertDatabaseHas('wishlists', [
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+        ]);
+
+        // Customer views /wishlist
+        $res = $this->actingAs($customer)->get('/wishlist');
+        $res->assertStatus(200);
+        $res->assertInertia(fn ($page) => $page
+            ->component('Customer/Wishlist')
+            ->has('wishlists', 1)
+            ->where('wishlistProductIds', [$product->id])
+        );
+
+        // 2. Retailer wishlists product
+        $retailer = User::where('email', 'retailer@newbie.com')->first();
+        $this->actingAs($retailer)->post("/wishlist/{$product->id}/toggle");
+        $this->assertDatabaseHas('wishlists', [
+            'user_id' => $retailer->id,
+            'product_id' => $product->id,
+        ]);
+
+        // Retailer views /retailer/wishlist
+        $resRetailer = $this->actingAs($retailer)->get('/retailer/wishlist');
+        $resRetailer->assertStatus(200);
+        $resRetailer->assertInertia(fn ($page) => $page
+            ->component('Retailer/Wishlist')
+            ->has('wishlists', 1)
+            ->where('wishlistProductIds', [$product->id])
+        );
+    }
+
     public function test_retailer_adds_product_to_cart_enforces_min_bulk_qty_and_bulk_price(): void
     {
         $retailer = User::where('email', 'retailer@newbie.com')->first();

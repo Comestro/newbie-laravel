@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2, Clock, Heart } from 'lucide-react';
 
 export default function ProductShow({ product }) {
-    const { auth } = usePage().props;
+    const { auth, wishlistProductIds = [] } = usePage().props;
+    const isWishlisted = Array.isArray(wishlistProductIds) && wishlistProductIds.includes(product.id);
     const { addToCart } = useCart();
     const variants = product.variants || [];
     const firstVariant = variants[0] || {};
@@ -114,6 +115,22 @@ export default function ProductShow({ product }) {
                                     In Stock
                                 </span>
                             </div>
+
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    router.post(`/wishlist/${product.id}/toggle`, {}, { preserveScroll: true });
+                                }}
+                                className={`absolute top-3.5 right-3.5 z-10 w-9 h-9 rounded-full border flex items-center justify-center transition shadow-xs cursor-pointer ${
+                                    isWishlisted
+                                        ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100'
+                                        : 'bg-white/95 border-slate-100 text-slate-400 hover:text-rose-500 hover:border-slate-200'
+                                }`}
+                                title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                            >
+                                <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
+                            </button>
                         </div>
                     </div>
 
