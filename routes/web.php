@@ -33,6 +33,7 @@ Route::delete('/wishlist/{product:id}', [WishlistController::class, 'destroy'])-
 // Authenticated Customer Portal & Checkout
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [ShopController::class, 'checkout'])->name('checkout');
+    Route::post('/checkout/razorpay-order', [OrderController::class, 'createRazorpayOrder'])->name('checkout.razorpay-order');
     Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.place-order');
     Route::get('/order-success/{order}', [ShopController::class, 'orderSuccess'])->name('ordersuccess');
 

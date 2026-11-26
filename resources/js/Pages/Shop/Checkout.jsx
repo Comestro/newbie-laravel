@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
-import { ShieldAlert, Clock, AlertCircle } from 'lucide-react';
+import { ShieldAlert, Clock, AlertCircle, CreditCard, Banknote } from 'lucide-react';
 
 export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     const { auth } = usePage().props;
@@ -15,6 +17,8 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
 
     const defaultAddress = addresses.find((a) => a.is_default) || addresses[0];
     const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || null);
+    const [paymentMethod, setPaymentMethod] = useState('COD');
+    const [placingOrder, setPlacingOrder] = useState(false);
     const [showAddressForm, setShowAddressForm] = useState(addresses.length === 0);
     const [editingAddressId, setEditingAddressId] = useState(null);
 
@@ -72,20 +76,95 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
         }
     };
 
-    const handlePlaceOrder = () => {
+    const loadRazorpayScript = () => {
+        if (window.Razorpay) return Promise.resolve(true);
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handlePlaceOrder = async () => {
         if (!canPlaceOrder) {
-            alert('Retailer KYC approval is required before you can place orders.');
+            toast.error('Retailer KYC approval is required before you can place orders.');
             return;
         }
 
         if (!selectedAddressId) {
-            alert('Please select or add a delivery address.');
+            toast.error('Please select or add a delivery address.');
             return;
         }
 
-        router.post('/checkout', {
-            address_id: selectedAddressId,
-        });
+        if (paymentMethod === 'COD') {
+            setPlacingOrder(true);
+            router.post('/checkout', {
+                address_id: selectedAddressId,
+                payment_method: 'COD',
+            }, {
+                onFinish: () => setPlacingOrder(false),
+            });
+            return;
+        }
+
+        setPlacingOrder(true);
+        try {
+            const loaded = await loadRazorpayScript();
+            if (!loaded) {
+                toast.error('Unable to load Razorpay SDK. Check your internet connection.');
+                setPlacingOrder(false);
+                return;
+            }
+
+            const { data: orderData } = await axios.post('/checkout/razorpay-order', {
+                address_id: selectedAddressId,
+            });
+
+            const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+
+            const rzp = new window.Razorpay({
+                key: orderData.key,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: 'Newbie Service',
+                description: 'Order Payment',
+                order_id: orderData.order_id,
+                prefill: {
+                    name: auth?.user?.name || '',
+                    email: auth?.user?.email || '',
+                    contact: selectedAddress?.phone || auth?.user?.phone || '',
+                },
+                theme: {
+                    color: '#9333ea',
+                },
+                modal: {
+                    ondismiss: () => setPlacingOrder(false),
+                },
+                handler: (response) => {
+                    router.post('/checkout', {
+                        address_id: selectedAddressId,
+                        payment_method: 'ONLINE',
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                    }, {
+                        onFinish: () => setPlacingOrder(false),
+                    });
+                },
+            });
+
+            rzp.on('payment.failed', (res) => {
+                toast.error(res?.error?.description || 'Payment failed. Please try again.');
+                setPlacingOrder(false);
+            });
+
+            rzp.open();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Unable to start payment. Please try again.');
+            setPlacingOrder(false);
+        }
     };
 
     return (
@@ -357,11 +436,55 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                         </div>
 
                         {/* Payment Method */}
-                        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
+                        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-2.5">
                             <h2 className="text-base font-bold text-slate-900 mb-3">Payment Method</h2>
-                            <label className="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl cursor-pointer bg-slate-50/50">
-                                <input type="radio" checked readOnly className="accent-purple-600" />
-                                <span className="font-semibold text-xs text-slate-900">Cash on Delivery (Standard)</span>
+
+                            <label
+                                onClick={() => setPaymentMethod('COD')}
+                                className={`flex items-center justify-between gap-3 p-3.5 border rounded-xl cursor-pointer transition ${
+                                    paymentMethod === 'COD'
+                                        ? 'border-purple-500 bg-purple-50/40'
+                                        : 'border-slate-200/80 hover:border-slate-300 bg-white'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        name="payment_method"
+                                        checked={paymentMethod === 'COD'}
+                                        onChange={() => setPaymentMethod('COD')}
+                                        className="accent-purple-600"
+                                    />
+                                    <div>
+                                        <span className="font-semibold text-xs text-slate-900 block">Cash on Delivery</span>
+                                        <span className="text-[11px] text-slate-400">Pay with cash when your order arrives</span>
+                                    </div>
+                                </div>
+                                <Banknote className="w-4 h-4 text-slate-500" />
+                            </label>
+
+                            <label
+                                onClick={() => setPaymentMethod('ONLINE')}
+                                className={`flex items-center justify-between gap-3 p-3.5 border rounded-xl cursor-pointer transition ${
+                                    paymentMethod === 'ONLINE'
+                                        ? 'border-purple-500 bg-purple-50/40'
+                                        : 'border-slate-200/80 hover:border-slate-300 bg-white'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        name="payment_method"
+                                        checked={paymentMethod === 'ONLINE'}
+                                        onChange={() => setPaymentMethod('ONLINE')}
+                                        className="accent-purple-600"
+                                    />
+                                    <div>
+                                        <span className="font-semibold text-xs text-slate-900 block">Pay Online (Razorpay)</span>
+                                        <span className="text-[11px] text-slate-400">UPI, Debit / Credit Card, NetBanking</span>
+                                    </div>
+                                </div>
+                                <CreditCard className="w-4 h-4 text-purple-600" />
                             </label>
                         </div>
                     </div>
@@ -390,14 +513,20 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                         <button
                             type="button"
                             onClick={handlePlaceOrder}
-                            disabled={!selectedAddressId || !canPlaceOrder}
+                            disabled={!selectedAddressId || !canPlaceOrder || placingOrder}
                             className={`w-full mt-5 py-3 rounded-xl font-bold text-xs transition shadow-xs ${
-                                selectedAddressId && canPlaceOrder
+                                selectedAddressId && canPlaceOrder && !placingOrder
                                     ? 'bg-purple-600 hover:bg-purple-700 text-white cursor-pointer'
                                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                             }`}
                         >
-                            {!canPlaceOrder ? 'KYC Approval Required to Place Order' : 'Place Order →'}
+                            {!canPlaceOrder
+                                ? 'KYC Approval Required to Place Order'
+                                : placingOrder
+                                ? 'Processing...'
+                                : paymentMethod === 'ONLINE'
+                                ? `Pay ₹${grandTotal.toLocaleString()} & Place Order →`
+                                : 'Place Order →'}
                         </button>
                     </div>
                 </div>

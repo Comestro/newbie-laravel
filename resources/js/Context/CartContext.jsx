@@ -53,8 +53,10 @@ export function useCartState() {
     const addToCart = (variantId, quantity = 1) => {
         router.post('/cart/add', { variant_id: variantId, quantity }, {
             preserveScroll: true,
-            onSuccess: () => {
-                toast.success('Added to cart!');
+            onSuccess: (page) => {
+                if (!page?.props?.flash?.error) {
+                    toast.success('Added to cart!');
+                }
             },
         });
     };

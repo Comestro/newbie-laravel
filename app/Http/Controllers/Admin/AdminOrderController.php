@@ -43,7 +43,7 @@ class AdminOrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['items.variant.product', 'address', 'user']);
+        $order->load(['items.variant.product', 'address', 'user', 'payments']);
 
         return Inertia::render('Admin/Orders/Show', [
             'order' => $order,
@@ -66,15 +66,28 @@ class AdminOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($order, $validated) {
-            $existingItems = $order->items()->get()->keyBy('id');
+            $existingItems = $order->items()->with('variant')->get()->keyBy('id');
             $submittedIds = collect($validated['items'])->pluck('id')->all();
 
+            // Restore stock for removed items
+            foreach ($existingItems->whereNotIn('id', $submittedIds) as $removedItem) {
+                $removedItem->variant?->increment('stock', $removedItem->quantity);
+            }
             $order->items()->whereNotIn('id', $submittedIds)->delete();
 
+            // Adjust stock for updated quantities
             foreach ($validated['items'] as $itemData) {
                 $item = $existingItems->get($itemData['id']);
                 if ($item) {
                     $qty = (int) $itemData['quantity'];
+                    $diff = $qty - $item->quantity;
+
+                    if ($diff > 0 && $item->variant) {
+                        $item->variant->decrement('stock', min($diff, $item->variant->stock));
+                    } elseif ($diff < 0 && $item->variant) {
+                        $item->variant->increment('stock', abs($diff));
+                    }
+
                     $item->update([
                         'quantity' => $qty,
                         'total' => $item->price * $qty,
@@ -106,6 +119,7 @@ class AdminOrderController extends Controller
         ]);
 
         $newStatus = OrderStatus::from($request->input('status'));
+        $previousStatus = $order->status;
         $data = ['status' => $newStatus];
 
         match ($newStatus) {
@@ -116,7 +130,21 @@ class AdminOrderController extends Controller
             default => null,
         };
 
-        $order->update($data);
+        DB::transaction(function () use ($order, $data, $previousStatus, $newStatus) {
+            if ($previousStatus !== OrderStatus::CANCELLED && $newStatus === OrderStatus::CANCELLED) {
+                foreach ($order->items()->with('variant')->get() as $item) {
+                    $item->variant?->increment('stock', $item->quantity);
+                }
+            } elseif ($previousStatus === OrderStatus::CANCELLED && $newStatus !== OrderStatus::CANCELLED) {
+                foreach ($order->items()->with('variant')->get() as $item) {
+                    if ($item->variant) {
+                        $item->variant->decrement('stock', min($item->quantity, $item->variant->stock));
+                    }
+                }
+            }
+
+            $order->update($data);
+        });
 
         return back()->with('success', 'Order status updated successfully.');
     }
@@ -127,7 +155,15 @@ class AdminOrderController extends Controller
             'payment_status' => 'required',
         ]);
 
-        $order->update(['payment_status' => $request->input('payment_status')]);
+        $newPaymentStatus = $request->input('payment_status');
+        $order->update(['payment_status' => $newPaymentStatus]);
+
+        if ($latestPayment = $order->latestPayment) {
+            $latestPayment->update([
+                'status' => $newPaymentStatus,
+                'paid_at' => $newPaymentStatus === PaymentStatus::PAID->value ? ($latestPayment->paid_at ?? now()) : $latestPayment->paid_at,
+            ]);
+        }
 
         return back()->with('success', 'Payment status updated successfully.');
     }

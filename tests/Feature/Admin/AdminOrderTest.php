@@ -128,5 +128,55 @@ class AdminOrderTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_order_placement_edit_and_cancellation_update_variant_stock(): void
+    {
+        $variant = ProductVariant::with('product')->first();
+        $initialStock = $variant->stock;
+
+        $address = \App\Models\Address::create([
+            'user_id' => $this->customer->id,
+            'label' => 'Home',
+            'line1' => '123 Main St',
+            'city' => 'Patna',
+            'state' => 'Bihar',
+            'pincode' => '800001',
+            'phone' => '9876543210',
+        ]);
+
+        // 1. Place order for 4 units -> stock decreases by 4
+        $this->actingAs($this->customer)
+            ->withSession([
+                'cart' => [
+                    $variant->id => [
+                        'id' => $variant->id,
+                        'product_id' => $variant->product_id,
+                        'name' => $variant->product->name,
+                        'unit_size' => $variant->unit_size,
+                        'price' => $variant->retail_price,
+                        'quantity' => 4,
+                    ],
+                ],
+            ])
+            ->post(route('checkout.place-order'), ['address_id' => $address->id])
+            ->assertRedirect();
+
+        $this->assertEquals($initialStock - 4, $variant->fresh()->stock);
+
+        $order = Order::latest('id')->first();
+        $item = $order->items->first();
+
+        // 2. Admin reduces qty from 4 to 2 -> stock restores by 2
+        $this->actingAs($this->admin)->put(route('admin.orders.update', $order), [
+            'items' => [['id' => $item->id, 'quantity' => 2]],
+        ]);
+        $this->assertEquals($initialStock - 2, $variant->fresh()->stock);
+
+        // 3. Admin cancels order -> remaining 2 units restored to initialStock
+        $this->actingAs($this->admin)->post(route('admin.orders.status', $order), [
+            'status' => OrderStatus::CANCELLED->value,
+        ]);
+        $this->assertEquals($initialStock, $variant->fresh()->stock);
+    }
 }
 

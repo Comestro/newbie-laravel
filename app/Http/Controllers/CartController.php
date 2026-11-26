@@ -29,12 +29,24 @@ class CartController extends Controller
             $quantity = $minBulkQty;
         }
 
+        $availableStock = (int) $variant->stock;
+        $newQuantity = (isset($cart[$variantId]) ? $cart[$variantId]['quantity'] : 0) + $quantity;
+
+        if ($availableStock <= 0) {
+            return back()->with('error', 'This product is out of stock.');
+        }
+
+        if ($newQuantity > $availableStock) {
+            return back()->with('error', "Only {$availableStock} unit(s) available in stock.");
+        }
+
         $itemPrice = $isRetailer && $variant->bulk_price !== null
             ? (float) $variant->bulk_price
             : (float) $variant->retail_price;
 
         if (isset($cart[$variantId])) {
-            $cart[$variantId]['quantity'] += $quantity;
+            $cart[$variantId]['quantity'] = $newQuantity;
+            $cart[$variantId]['stock'] = $availableStock;
         } else {
             $cart[$variantId] = [
                 'id' => $variant->id,
@@ -44,6 +56,7 @@ class CartController extends Controller
                 'unit_size' => $variant->unit_size,
                 'image_url' => $variant->image_url,
                 'quantity' => $quantity,
+                'stock' => $availableStock,
                 'brand' => $variant->product->brand,
                 'min_bulk_qty' => $minBulkQty,
             ];
@@ -67,7 +80,18 @@ class CartController extends Controller
         $cart = session('cart', []);
 
         if (isset($cart[$variantId])) {
-            $cart[$variantId]['quantity'] += $change;
+            $variant = ProductVariant::find($variantId);
+            $availableStock = (int) ($variant?->stock ?? 0);
+            $newQuantity = $cart[$variantId]['quantity'] + $change;
+
+            if ($change > 0 && $newQuantity > $availableStock) {
+                $cart[$variantId]['stock'] = $availableStock;
+                session(['cart' => $cart]);
+                return back()->with('error', $availableStock <= 0 ? 'This product is out of stock.' : "Only {$availableStock} unit(s) available in stock.");
+            }
+
+            $cart[$variantId]['quantity'] = $newQuantity;
+            $cart[$variantId]['stock'] = $availableStock;
 
             $isRetailer = auth()->check() && auth()->user()->isRetailer();
             $minBulkQty = $isRetailer && isset($cart[$variantId]['min_bulk_qty'])
