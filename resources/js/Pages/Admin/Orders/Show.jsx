@@ -232,14 +232,20 @@ export default function Show({ order, statuses = [], paymentStatuses = [] }) {
                             <span>Subtotal</span>
                             <span>₹{(isEditing ? liveSubtotal : Number(order.subtotal ?? order.total_amount)).toFixed(2)}</span>
                         </div>
-                        {discount > 0 && (
+                        {Number(order.coupon_discount) > 0 && (
+                            <div className="flex justify-between text-emerald-600">
+                                <span>Coupon Discount ({order.coupon_code})</span>
+                                <span>-₹{Number(order.coupon_discount).toFixed(2)}</span>
+                            </div>
+                        )}
+                        {(discount - Number(order.coupon_discount || 0)) > 0 && (
                             <div className="flex justify-between text-emerald-600">
                                 <span>
                                     {order.points_used > 0
                                         ? `Loyalty Discount (${Number(order.points_used).toLocaleString()} pts)`
                                         : 'Discount'}
                                 </span>
-                                <span>-₹{discount.toFixed(2)}</span>
+                                <span>-₹{(discount - Number(order.coupon_discount || 0)).toFixed(2)}</span>
                             </div>
                         )}
                         <div className="flex justify-between text-slate-500">

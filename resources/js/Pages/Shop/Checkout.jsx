@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
 import { openRazorpayCheckout } from '../../utils/razorpay';
-import { ShieldAlert, Clock, AlertCircle, CreditCard, Banknote, Coins, Crown } from 'lucide-react';
+import { ShieldAlert, Clock, AlertCircle, CreditCard, Banknote, Coins, Crown, Ticket, X } from 'lucide-react';
 
 export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     const { auth, loyaltyConfig = {} } = usePage().props;
@@ -17,9 +17,16 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     const { items, subtotal } = useCart();
     const rawTotal = subtotal + deliveryCharge;
 
+    const [couponInput, setCouponInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+    const couponDiscount = appliedCoupon ? Number(appliedCoupon.discount || 0) : 0;
+    const afterCouponTotal = Math.max(0, rawTotal - couponDiscount);
+
     const userPoints = Number(auth?.user?.loyalty_points || 0);
     const pointsPerRupee = Math.max(1, Number(loyaltyConfig?.points_per_rupee || 100));
-    const maxUsablePoints = Math.min(userPoints, Math.floor(rawTotal * pointsPerRupee));
+    const maxUsablePoints = Math.min(userPoints, Math.floor(afterCouponTotal * pointsPerRupee));
 
     const [usePoints, setUsePoints] = useState(false);
     const [pointsToUse, setPointsToUse] = useState(maxUsablePoints);
@@ -28,7 +35,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
         ? Math.max(0, Math.min(Number(pointsToUse) || 0, maxUsablePoints))
         : 0;
     const pointsDiscount = Number((activePointsUsed / pointsPerRupee).toFixed(2));
-    const grandTotal = Math.max(0, Number((rawTotal - pointsDiscount).toFixed(2)));
+    const grandTotal = Math.max(0, Number((afterCouponTotal - pointsDiscount).toFixed(2)));
 
     const defaultAddress = addresses.find((a) => a.is_default) || addresses[0];
     const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || null);
@@ -102,6 +109,26 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
         });
     };
 
+    const handleApplyCoupon = async (e) => {
+        e.preventDefault();
+        if (!couponInput.trim()) return;
+        setApplyingCoupon(true);
+        try {
+            const { data } = await axios.post('/checkout/coupon', { code: couponInput.trim() });
+            setAppliedCoupon(data);
+            toast.success(data.message || `Coupon ${data.code} applied!`);
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Invalid coupon code.');
+        } finally {
+            setApplyingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponInput('');
+    };
+
     const handlePlaceOrder = async () => {
         if (needsMembership) {
             toast.error('Please activate your membership plan before placing an order.');
@@ -122,8 +149,9 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
             setPlacingOrder(true);
             router.post('/checkout', {
                 address_id: selectedAddressId,
-                payment_method: grandTotal <= 0 ? 'COD' : 'COD',
+                payment_method: 'COD',
                 points_to_use: activePointsUsed,
+                coupon_code: appliedCoupon?.code || null,
             }, {
                 onFinish: () => setPlacingOrder(false),
             });
@@ -135,6 +163,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
             const { data: orderData } = await axios.post('/checkout/razorpay-order', {
                 address_id: selectedAddressId,
                 points_to_use: activePointsUsed,
+                coupon_code: appliedCoupon?.code || null,
             });
 
             if (orderData.free) {
@@ -142,6 +171,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                     address_id: selectedAddressId,
                     payment_method: 'COD',
                     points_to_use: activePointsUsed,
+                    coupon_code: appliedCoupon?.code || null,
                 }, {
                     onFinish: () => setPlacingOrder(false),
                 });
@@ -168,6 +198,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                         address_id: selectedAddressId,
                         payment_method: 'ONLINE',
                         points_to_use: activePointsUsed,
+                        coupon_code: appliedCoupon?.code || null,
                         ...response,
                     }, {
                         onFinish: () => setPlacingOrder(false),
@@ -468,6 +499,50 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                             </ul>
                         </div>
 
+                        {/* Apply Coupon */}
+                        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Ticket className="w-4 h-4 text-purple-600" />
+                                <h2 className="text-base font-bold text-slate-900">Apply Coupon</h2>
+                            </div>
+
+                            {appliedCoupon ? (
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                                    <div>
+                                        <span className="font-mono font-bold text-xs text-emerald-800">{appliedCoupon.code}</span>
+                                        <span className="text-xs text-emerald-700 ml-2">
+                                            (-₹{Number(appliedCoupon.discount).toFixed(2)} saved)
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveCoupon}
+                                        className="p-1 text-emerald-700 hover:bg-emerald-100 rounded-lg cursor-pointer"
+                                        aria-label="Remove coupon"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={couponInput}
+                                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                        placeholder="Enter promo code (e.g. SAVE20)"
+                                        className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono uppercase text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={applyingCoupon || !couponInput.trim()}
+                                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                                    >
+                                        {applyingCoupon ? 'Applying...' : 'Apply'}
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+
                         {/* Loyalty Points Redemption */}
                         {userPoints > 0 && (
                             <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-3">
@@ -586,6 +661,13 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                 <span>Delivery Fee</span>
                                 <span className="font-semibold text-slate-900">₹{deliveryCharge}</span>
                             </div>
+
+                            {couponDiscount > 0 && (
+                                <div className="flex justify-between text-emerald-600">
+                                    <span>Coupon ({appliedCoupon.code})</span>
+                                    <span className="font-semibold">-₹{couponDiscount.toFixed(2)}</span>
+                                </div>
+                            )}
 
                             {pointsDiscount > 0 && (
                                 <div className="flex justify-between text-emerald-600">

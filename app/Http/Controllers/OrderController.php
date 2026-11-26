@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Address;
+use App\Models\Coupon;
 use App\Models\LoyaltyTransaction;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -23,6 +24,38 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    public function applyCoupon(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string|max:50',
+        ]);
+
+        $cart = session('cart', []);
+        if (empty($cart)) {
+            return response()->json(['message' => 'Your cart is empty.'], 422);
+        }
+
+        $code = strtoupper(trim($request->input('code')));
+        $coupon = Coupon::where('code', $code)->first();
+
+        if (!$coupon) {
+            return response()->json(['message' => 'Invalid coupon code.'], 422);
+        }
+
+        $itemsTotal = (float) collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
+        if ($error = $coupon->isValidForAmount($itemsTotal)) {
+            return response()->json(['message' => $error], 422);
+        }
+
+        return response()->json([
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value' => (float) $coupon->value,
+            'discount' => $coupon->calculateDiscount($itemsTotal),
+            'message' => "Coupon {$coupon->code} applied!",
+        ]);
+    }
+
     public function createRazorpayOrder(Request $request): JsonResponse
     {
         $user = Auth::user();
@@ -36,6 +69,7 @@ class OrderController extends Controller
         $request->validate([
             'address_id' => 'required|exists:addresses,id',
             'points_to_use' => 'nullable|integer|min:0',
+            'coupon_code' => 'nullable|string|max:50',
         ]);
 
         $cart = session('cart', []);
@@ -53,7 +87,17 @@ class OrderController extends Controller
             }
         }
 
-        $pricing = $this->calculateOrderPricing($cart, $user, (int) $request->input('points_to_use', 0));
+        try {
+            $pricing = $this->calculateOrderPricing(
+                $cart,
+                $user,
+                (int) $request->input('points_to_use', 0),
+                $request->input('coupon_code')
+            );
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         if ($pricing['payable_total'] <= 0) {
             return response()->json(['free' => true, 'payable' => 0]);
         }
@@ -97,6 +141,7 @@ class OrderController extends Controller
             'address_id' => 'required|exists:addresses,id',
             'payment_method' => 'nullable|in:COD,ONLINE',
             'points_to_use' => 'nullable|integer|min:0',
+            'coupon_code' => 'nullable|string|max:50',
             'razorpay_order_id' => 'nullable|string',
             'razorpay_payment_id' => 'nullable|string',
             'razorpay_signature' => 'nullable|string',
@@ -115,7 +160,13 @@ class OrderController extends Controller
         try {
             $order = DB::transaction(function () use ($cart, $address, $paymentMethod, $request) {
                 $lockedUser = User::where('id', Auth::id())->lockForUpdate()->firstOrFail();
-                $pricing = $this->calculateOrderPricing($cart, $lockedUser, (int) $request->input('points_to_use', 0));
+                $pricing = $this->calculateOrderPricing(
+                    $cart,
+                    $lockedUser,
+                    (int) $request->input('points_to_use', 0),
+                    $request->input('coupon_code'),
+                    true
+                );
 
                 $isOnline = $paymentMethod === PaymentMethod::ONLINE->value && $pricing['payable_total'] > 0;
 
@@ -155,7 +206,9 @@ class OrderController extends Controller
                     'address_id' => $address->id,
                     'total_amount' => $pricing['payable_total'],
                     'subtotal' => $pricing['items_total'],
-                    'discount' => $pricing['discount'],
+                    'discount' => $pricing['total_discount'],
+                    'coupon_code' => $pricing['coupon']?->code,
+                    'coupon_discount' => $pricing['coupon_discount'],
                     'points_used' => $pricing['points_used'],
                     'delivery_fee' => $pricing['delivery_fee'],
                     'order_number' => $orderNumber,
@@ -179,6 +232,10 @@ class OrderController extends Controller
                     'paid_at' => $isPaid ? now() : null,
                 ]);
 
+                if ($pricing['coupon']) {
+                    $pricing['coupon']->increment('used_count');
+                }
+
                 if ($pricing['points_used'] > 0) {
                     $lockedUser->decrement('loyalty_points', $pricing['points_used']);
 
@@ -186,7 +243,7 @@ class OrderController extends Controller
                         'user_id' => $lockedUser->id,
                         'type' => 'ORDER_REDEEM',
                         'points' => -$pricing['points_used'],
-                        'amount' => $pricing['discount'],
+                        'amount' => $pricing['points_discount'],
                         'description' => "Redeemed on Order #{$orderNumber}",
                         'order_id' => $order->id,
                     ]);
@@ -218,27 +275,51 @@ class OrderController extends Controller
         return redirect()->route('ordersuccess', ['order' => $order->order_number]);
     }
 
-    private function calculateOrderPricing(array $cart, User $user, int $requestedPoints): array
+    private function calculateOrderPricing(array $cart, User $user, int $requestedPoints, ?string $couponCode = null, bool $lockCoupon = false): array
     {
         $itemsTotal = (float) collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
         $deliveryFee = 15.0;
-        $rawTotal = $itemsTotal + $deliveryFee;
+
+        $coupon = null;
+        $couponDiscount = 0.0;
+
+        if ($couponCode && trim($couponCode) !== '') {
+            $query = Coupon::where('code', strtoupper(trim($couponCode)));
+            if ($lockCoupon) {
+                $query->lockForUpdate();
+            }
+            $coupon = $query->first();
+
+            if (!$coupon) {
+                throw new \RuntimeException('Invalid coupon code.');
+            }
+            if ($error = $coupon->isValidForAmount($itemsTotal)) {
+                throw new \RuntimeException($error);
+            }
+
+            $couponDiscount = $coupon->calculateDiscount($itemsTotal);
+        }
+
+        $afterCouponTotal = max(0, ($itemsTotal + $deliveryFee) - $couponDiscount);
 
         $config = Setting::getLoyaltyConfig();
         $pointsPerRupee = $config['points_per_rupee'];
 
-        $maxPointsForOrder = (int) floor($rawTotal * $pointsPerRupee);
+        $maxPointsForOrder = (int) floor($afterCouponTotal * $pointsPerRupee);
         $maxUsablePoints = min((int) $user->loyalty_points, $maxPointsForOrder);
         $pointsUsed = max(0, min($requestedPoints, $maxUsablePoints));
 
-        $discount = round($pointsUsed / $pointsPerRupee, 2);
-        $payableTotal = max(0, round($rawTotal - $discount, 2));
+        $pointsDiscount = round($pointsUsed / $pointsPerRupee, 2);
+        $payableTotal = max(0, round($afterCouponTotal - $pointsDiscount, 2));
 
         return [
             'items_total' => $itemsTotal,
             'delivery_fee' => $deliveryFee,
+            'coupon' => $coupon,
+            'coupon_discount' => $couponDiscount,
             'points_used' => $pointsUsed,
-            'discount' => $discount,
+            'points_discount' => $pointsDiscount,
+            'total_discount' => round($couponDiscount + $pointsDiscount, 2),
             'payable_total' => $payableTotal,
         ];
     }

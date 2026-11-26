@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminCouponController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
@@ -35,6 +36,7 @@ Route::delete('/wishlist/{product:id}', [WishlistController::class, 'destroy'])-
 // Authenticated Customer Portal & Checkout
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [ShopController::class, 'checkout'])->name('checkout');
+    Route::post('/checkout/coupon', [OrderController::class, 'applyCoupon'])->name('checkout.coupon');
     Route::post('/checkout/razorpay-order', [OrderController::class, 'createRazorpayOrder'])->name('checkout.razorpay-order');
     Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.place-order');
     Route::get('/order-success/{order}', [ShopController::class, 'orderSuccess'])->name('ordersuccess');
@@ -95,6 +97,14 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
 
         Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers');
         Route::post('/customers/{user}/toggle-active', [AdminCustomerController::class, 'toggleActive'])->name('customers.toggle-active');
+
+        Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');
+        Route::get('/coupons/create', [AdminCouponController::class, 'create'])->name('coupons.create');
+        Route::post('/coupons', [AdminCouponController::class, 'store'])->name('coupons.store');
+        Route::get('/coupons/{coupon}/edit', [AdminCouponController::class, 'edit'])->name('coupons.edit');
+        Route::put('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
+        Route::post('/coupons/{coupon}/toggle-active', [AdminCouponController::class, 'toggleActive'])->name('coupons.toggle-active');
+        Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
 
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
         Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');

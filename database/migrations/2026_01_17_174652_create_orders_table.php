@@ -15,6 +15,8 @@ return new class extends Migration {
             $table->decimal('total_amount', 10, 2);
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);
+            $table->string('coupon_code')->nullable();
+            $table->decimal('coupon_discount', 10, 2)->default(0);
             $table->integer('points_used')->default(0);
             $table->decimal('delivery_fee', 10, 2)->default(0);
             $table->string('status')->default('PENDING');

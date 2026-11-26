@@ -28,6 +28,7 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
+        'coupon_discount' => 'decimal:2',
         'delivery_fee' => 'decimal:2',
         'address' => 'array',
 
