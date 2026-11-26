@@ -136,7 +136,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LearnSyntax - Artisan Tools</title>
+    <title>Newbie Service - Artisan Tools</title>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px 20px; margin: 0; }
         .container { max-width: 680px; margin: 0 auto; background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
@@ -157,7 +157,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
 </head>
 <body>
     <div class="container">
-        <h1>🛠️ LearnSyntax - Artisan Utilities</h1>
+        <h1>🛠️ Newbie Service - Artisan Utilities</h1>
         <p>Click any action below to safely execute the Artisan command directly from the browser.</p>
         <div class="btn-grid">
             <form method="POST" action="/artisan/migrate"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn">🚀 php artisan migrate</button></form>
@@ -168,7 +168,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
             <form method="POST" action="/artisan/config-clear"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn">⚙️ config:clear</button></form>
             <form method="POST" action="/artisan/storage-link"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn btn-success">🔗 storage:link</button></form>
         </div>
-        <div class="footer">LearnSyntax Development Environment (Admin Only)</div>
+        <div class="footer">Newbie Service Environment (Admin Only)</div>
     </div>
 </body>
 </html>
@@ -178,6 +178,11 @@ HTML;
         });
 
         Route::post('/migrate', function () {
+            $staleMigration = database_path('migrations/2025_09_22_145432_add_two_factor_columns_to_users_table.php');
+            if (file_exists($staleMigration)) {
+                @unlink($staleMigration);
+            }
+
             Artisan::call('migrate', ['--force' => true]);
             $output = Artisan::output();
 
@@ -185,6 +190,11 @@ HTML;
         });
 
         Route::post('/migrate-fresh-seed', function () {
+            $staleMigration = database_path('migrations/2025_09_22_145432_add_two_factor_columns_to_users_table.php');
+            if (file_exists($staleMigration)) {
+                @unlink($staleMigration);
+            }
+
             Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
             $output = Artisan::output();
 
