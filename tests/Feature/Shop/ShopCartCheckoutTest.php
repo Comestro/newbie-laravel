@@ -123,6 +123,44 @@ class ShopCartCheckoutTest extends TestCase
         );
     }
 
+    public function test_guest_can_toggle_wishlist_and_view_wishlist_page(): void
+    {
+        $product = Product::first();
+
+        // 1. Guest toggles product into wishlist
+        $response = $this->post("/wishlist/{$product->id}/toggle");
+        $response->assertSessionHas('wishlist', [$product->id]);
+
+        // 2. Guest visiting /wishlist is redirected to login
+        $pageRes = $this->get('/wishlist');
+        $pageRes->assertRedirect('/login');
+
+        // 3. Guest toggles again -> removed from session
+        $removeRes = $this->post("/wishlist/{$product->id}/toggle");
+        $removeRes->assertSessionHas('wishlist', []);
+    }
+
+    public function test_guest_wishlist_migrates_to_database_on_login(): void
+    {
+        $user = User::where('email', 'user@newbie.com')->first();
+        $product = Product::first();
+
+        // Guest has wishlist in session
+        $this->withSession(['wishlist' => [$product->id]]);
+
+        // User logs in
+        $response = $this->post('/login', [
+            'email' => 'user@newbie.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('wishlists', [
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
     public function test_retailer_adds_product_to_cart_enforces_min_bulk_qty_and_bulk_price(): void
     {
         $retailer = User::where('email', 'retailer@newbie.com')->first();

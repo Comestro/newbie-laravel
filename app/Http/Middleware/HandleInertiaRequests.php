@@ -58,8 +58,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'cart' => session('cart', []),
             'wishlistProductIds' => fn () => $request->user()
-                ? \App\Models\Wishlist::where('user_id', $request->user()->id)->pluck('product_id')->toArray()
-                : [],
+                ? $request->user()->wishlists()->pluck('product_id')->toArray()
+                : (array) $request->session()->get('wishlist', []),
             'categories' => fn () => \Illuminate\Support\Facades\Schema::hasTable('categories')
                 ? \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug'])
                 : [],

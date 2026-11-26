@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Address;
 use App\Models\Order;
-use App\Models\Wishlist;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,10 +57,11 @@ class RetailerController extends Controller
 
     public function wishlist(): Response
     {
-        $wishlists = Wishlist::where('user_id', Auth::id())
+        $wishlists = Product::whereIn('id', Auth::user()->wishlists()->pluck('product_id'))
+            ->where('status', 'active')
             ->with([
-                'product.category',
-                'product.variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')
+                'category',
+                'variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')
             ])
             ->get();
 

@@ -25,11 +25,10 @@ export default function WishlistGrid({ wishlist = [] }) {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {wishlist.map((item) => {
-                if (!item) return null;
-                const product = item.product || item;
-                if (!product || !product.id) return null;
+                const product = item?.product || item;
+                if (!product?.id) return null;
 
-                return <ProductCard key={item.id || product.id} product={product} />;
+                return <ProductCard key={product.id} product={product} />;
             })}
         </div>
     );

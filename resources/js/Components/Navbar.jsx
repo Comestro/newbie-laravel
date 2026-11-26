@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useCart } from '../Context/CartContext';
+import { Heart } from 'lucide-react';
 
 export default function Navbar() {
-    const { auth } = usePage().props;
+    const { auth, wishlistProductIds = [] } = usePage().props;
     const { itemCount, openCart } = useCart();
     const [searchQuery, setSearchQuery] = useState('');
+    const wishlistCount = Array.isArray(wishlistProductIds) ? wishlistProductIds.length : 0;
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -56,6 +58,20 @@ export default function Navbar() {
                                 placeholder="Search 'milk'..."
                             />
                         </form>
+
+                        {/* Wishlist */}
+                        <Link
+                            href="/wishlist"
+                            className="relative p-2 text-slate-600 hover:text-rose-500 hover:bg-slate-50 rounded-lg transition"
+                            aria-label="Wishlist"
+                        >
+                            <Heart className="w-5 h-5" />
+                            {wishlistCount > 0 && (
+                                <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center leading-none">
+                                    {wishlistCount}
+                                </span>
+                            )}
+                        </Link>
 
                         {/* Cart */}
                         <button

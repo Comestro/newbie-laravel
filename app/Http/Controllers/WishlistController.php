@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Wishlist;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WishlistController extends Controller
@@ -13,32 +11,38 @@ class WishlistController extends Controller
     public function toggle(Product $product): RedirectResponse
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            $wishlist = (array) session('wishlist', []);
+
+            if (in_array($product->id, $wishlist)) {
+                $wishlist = array_values(array_diff($wishlist, [$product->id]));
+                $message = 'Removed from wishlist';
+            } else {
+                $wishlist[] = $product->id;
+                $message = 'Added to wishlist';
+            }
+
+            session(['wishlist' => $wishlist]);
+
+            return back()->with('success', $message);
         }
 
-        $existing = Wishlist::where('user_id', Auth::id())
-            ->where('product_id', $product->id)
-            ->first();
+        $deleted = Auth::user()->wishlists()->where('product_id', $product->id)->delete();
 
-        if ($existing) {
-            $existing->delete();
-            $message = 'Removed from wishlist';
-        } else {
-            Wishlist::create([
-                'user_id' => Auth::id(),
-                'product_id' => $product->id,
-            ]);
-            $message = 'Added to wishlist';
+        if (! $deleted) {
+            Auth::user()->wishlists()->create(['product_id' => $product->id]);
         }
 
-        return back()->with('success', $message);
+        return back()->with('success', $deleted ? 'Removed from wishlist' : 'Added to wishlist');
     }
 
     public function destroy(Product $product): RedirectResponse
     {
-        Wishlist::where('user_id', Auth::id())
-            ->where('product_id', $product->id)
-            ->delete();
+        if (!Auth::check()) {
+            $wishlist = array_values(array_diff((array) session('wishlist', []), [$product->id]));
+            session(['wishlist' => $wishlist]);
+        } else {
+            Auth::user()->wishlists()->where('product_id', $product->id)->delete();
+        }
 
         return back()->with('success', 'Removed from wishlist');
     }
