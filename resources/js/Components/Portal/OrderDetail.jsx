@@ -48,6 +48,16 @@ export default function OrderDetail({ order, backUrl = '/my-orders' }) {
                 </div>
             </div>
 
+            {/* Admin Note */}
+            {order.admin_notes && (
+                <div className="bg-amber-50/80 rounded-2xl border border-amber-200/80 p-4 text-xs text-amber-900">
+                    <span className="font-bold uppercase tracking-wider text-[10px] text-amber-700 block mb-0.5">
+                        Note from Store
+                    </span>
+                    <p className="leading-relaxed">{order.admin_notes}</p>
+                </div>
+            )}
+
             {/* Items */}
             <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs">
                 <h3 className="font-bold text-sm text-slate-900 mb-3 flex items-center gap-2">
