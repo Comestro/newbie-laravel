@@ -5,7 +5,7 @@ import CartDrawer from '../Components/CartDrawer';
 import BottomCartButton from '../Components/BottomCartButton';
 import { Menu, X } from 'lucide-react';
 
-export default function PanelLayout({ children, sidebar, title, subtitle, action, showCart = false }) {
+export default function PanelLayout({ children, sidebar, title, subtitle, action, headerRight = null, showCart = false }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const content = (
@@ -59,7 +59,12 @@ export default function PanelLayout({ children, sidebar, title, subtitle, action
                                     {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
                                 </div>
                             </div>
-                            {action && <div>{action}</div>}
+                            {(action || headerRight) && (
+                                <div className="flex items-center gap-3">
+                                    {action}
+                                    {headerRight}
+                                </div>
+                            )}
                         </div>
                     </header>
                 )}

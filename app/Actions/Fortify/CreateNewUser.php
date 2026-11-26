@@ -7,6 +7,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Enums\UserRole;
 use App\Models\RetailerProfile;
 use App\Models\User;
+use App\Notifications\NewUserRegisteredNotification;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
@@ -37,13 +38,18 @@ class CreateNewUser implements CreatesNewUsers
             'role' => $role,
         ]);
 
+        $shopName = null;
         if ($role === UserRole::RETAILER) {
+            $shopName = $input['shop_name'] ?? ($user->name . "'s Store");
+
             RetailerProfile::create([
                 'user_id' => $user->id,
-                'shop_name' => $input['shop_name'] ?? ($user->name . "'s Store"),
+                'shop_name' => $shopName,
                 'status' => 'PENDING',
             ]);
         }
+
+        NewUserRegisteredNotification::notifyAdmins($user, $shopName);
 
         return $user;
     }

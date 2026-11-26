@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminCouponController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminRetailerReviewController;
@@ -108,6 +109,9 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
 
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
         Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+
+        Route::post('/notifications/{id}/read', [AdminNotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     });
 
 // Retailer Routes

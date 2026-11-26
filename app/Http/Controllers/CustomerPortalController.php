@@ -6,7 +6,9 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\RetailerProfile;
+use App\Models\User;
 use App\Models\Wishlist;
+use App\Notifications\NewUserRegisteredNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -266,6 +268,8 @@ class CustomerPortalController extends Controller
             ['user_id' => $user->id],
             $profileData
         );
+
+        NewUserRegisteredNotification::notifyAdmins($user, $validated['shop_name']);
 
         // Automatically copy & save this shop address as default delivery address
         $existingShopAddress = Address::where('user_id', $user->id)
