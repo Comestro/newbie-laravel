@@ -3,6 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { useCart } from '../Context/CartContext';
 import {
     ChevronDown,
+    Coins,
     Heart,
     LayoutDashboard,
     Layers,
@@ -68,6 +69,7 @@ export default function Navbar() {
 
         if (user.is_retailer) {
             return [
+                { label: 'Membership & Points', href: '/loyalty', icon: Coins, badge: `${user.loyalty_points ?? 0} pts` },
                 { label: 'Wholesale Orders', href: '/retailer/orders', icon: Package },
                 { label: 'Delivery Addresses', href: '/retailer/addresses', icon: MapPin },
                 { label: 'KYC & Verification', href: '/retailer/kyc', icon: ShieldCheck },
@@ -77,6 +79,7 @@ export default function Navbar() {
         }
 
         return [
+            { label: 'Membership & Points', href: '/loyalty', icon: Coins, badge: `${user.loyalty_points ?? 0} pts` },
             { label: 'My Orders', href: '/my-orders', icon: ShoppingBag },
             { label: 'Wishlist', href: '/wishlist', icon: Heart },
             { label: 'Saved Addresses', href: '/my-addresses', icon: MapPin },
@@ -218,14 +221,21 @@ export default function Navbar() {
                                                         key={item.href}
                                                         href={item.href}
                                                         onClick={() => setMenuOpen(false)}
-                                                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                                                        className={`flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
                                                             active
                                                                 ? 'bg-purple-50 text-purple-700'
                                                                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                                         }`}
                                                     >
-                                                        <Icon className={`w-4 h-4 ${active ? 'text-purple-600' : 'text-slate-400'}`} />
-                                                        <span>{item.label}</span>
+                                                        <span className="flex items-center gap-2.5">
+                                                            <Icon className={`w-4 h-4 ${active ? 'text-purple-600' : 'text-slate-400'}`} />
+                                                            <span>{item.label}</span>
+                                                        </span>
+                                                        {item.badge && (
+                                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
                                                     </Link>
                                                 );
                                             })}

@@ -234,7 +234,11 @@ export default function Show({ order, statuses = [], paymentStatuses = [] }) {
                         </div>
                         {discount > 0 && (
                             <div className="flex justify-between text-emerald-600">
-                                <span>Discount</span>
+                                <span>
+                                    {order.points_used > 0
+                                        ? `Loyalty Discount (${Number(order.points_used).toLocaleString()} pts)`
+                                        : 'Discount'}
+                                </span>
                                 <span>-₹{discount.toFixed(2)}</span>
                             </div>
                         )}

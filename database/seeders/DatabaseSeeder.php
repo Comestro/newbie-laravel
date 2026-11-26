@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'retailer@newbie.com',
             'password' => Hash::make('password'),
             'role' => UserRole::RETAILER,
+            'is_member' => true,
+            'loyalty_points' => 5000,
+            'membership_paid_at' => now(),
         ]);
 
         \App\Models\RetailerProfile::create([
@@ -44,6 +47,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'user@newbie.com',
             'password' => Hash::make('password'),
             'role' => UserRole::USER,
+            'is_member' => true,
+            'loyalty_points' => 5000,
+            'membership_paid_at' => now(),
         ]);
 
         $this->call([

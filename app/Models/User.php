@@ -25,6 +25,9 @@ class User extends Authenticatable
         'mobile',
         'role',
         'is_active',
+        'is_member',
+        'loyalty_points',
+        'membership_paid_at',
         'avatar_url',
         'last_login_at',
     ];
@@ -55,6 +58,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'is_member' => 'boolean',
+            'loyalty_points' => 'integer',
+            'membership_paid_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
     }
@@ -154,8 +160,27 @@ class User extends Authenticatable
         return $this->hasMany(Wishlist::class);
     }
 
+    public function loyaltyTransactions(): HasMany
+    {
+        return $this->hasMany(LoyaltyTransaction::class);
+    }
+
+    public function needsMembershipToOrder(): bool
+    {
+        if ($this->isAdmin()) {
+            return false;
+        }
+
+        $config = Setting::getLoyaltyConfig();
+        return $config['require_membership_for_order'] && !$this->is_member;
+    }
+
     public function canPlaceOrder(): bool
     {
+        if ($this->needsMembershipToOrder()) {
+            return false;
+        }
+
         if ($this->isRetailer()) {
             return $this->isKycApproved();
         }

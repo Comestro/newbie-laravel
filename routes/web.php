@@ -6,8 +6,10 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminRetailerReviewController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerPortalController;
+use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RetailerController;
 use App\Http\Controllers\ShopController;
@@ -50,6 +52,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/apply-to-retailer', [CustomerPortalController::class, 'applyRetailer'])->name('applytoretailer');
     Route::post('/apply-to-retailer', [CustomerPortalController::class, 'submitRetailer'])->name('applytoretailer.submit');
     Route::get('/accounts', [CustomerPortalController::class, 'accounts'])->name('accounts');
+
+    Route::get('/loyalty', [LoyaltyController::class, 'index'])->name('loyalty.index');
+    Route::post('/loyalty/membership/razorpay-order', [LoyaltyController::class, 'createMembershipOrder'])->name('loyalty.membership.order');
+    Route::post('/loyalty/membership/verify', [LoyaltyController::class, 'verifyMembership'])->name('loyalty.membership.verify');
+    Route::post('/loyalty/topup/razorpay-order', [LoyaltyController::class, 'createTopupOrder'])->name('loyalty.topup.order');
+    Route::post('/loyalty/topup/verify', [LoyaltyController::class, 'verifyTopup'])->name('loyalty.topup.verify');
 });
 
 // Admin Routes
@@ -87,6 +95,9 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
 
         Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers');
         Route::post('/customers/{user}/toggle-active', [AdminCustomerController::class, 'toggleActive'])->name('customers.toggle-active');
+
+        Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
+        Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     });
 
 // Retailer Routes

@@ -6,6 +6,7 @@ import {
     ShoppingBag,
     Users,
     ShieldCheck,
+    Settings,
 } from 'lucide-react';
 import PanelSidebar from './Portal/PanelSidebar';
 
@@ -17,6 +18,7 @@ export default function AdminSidebar() {
         { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
         { label: 'Customers', href: '/admin/customers', icon: Users },
         { label: 'Retailer KYC', href: '/admin/review-retailer', icon: ShieldCheck },
+        { label: 'Loyalty Settings', href: '/admin/settings', icon: Settings },
     ];
 
     return (

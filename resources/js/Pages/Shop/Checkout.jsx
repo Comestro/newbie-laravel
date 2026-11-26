@@ -4,16 +4,31 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ShopLayout from '../../Layouts/ShopLayout';
 import { useCart } from '../../Context/CartContext';
-import { ShieldAlert, Clock, AlertCircle, CreditCard, Banknote } from 'lucide-react';
+import { openRazorpayCheckout } from '../../utils/razorpay';
+import { ShieldAlert, Clock, AlertCircle, CreditCard, Banknote, Coins, Crown } from 'lucide-react';
 
 export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
-    const { auth } = usePage().props;
+    const { auth, loyaltyConfig = {} } = usePage().props;
     const isRetailer = Boolean(auth?.user?.is_retailer);
     const isKycApproved = Boolean(auth?.user?.is_kyc_approved);
-    const canPlaceOrder = !isRetailer || isKycApproved;
+    const needsMembership = Boolean(auth?.user?.needs_membership);
+    const canPlaceOrder = (!isRetailer || isKycApproved) && !needsMembership;
 
     const { items, subtotal } = useCart();
-    const grandTotal = subtotal + deliveryCharge;
+    const rawTotal = subtotal + deliveryCharge;
+
+    const userPoints = Number(auth?.user?.loyalty_points || 0);
+    const pointsPerRupee = Math.max(1, Number(loyaltyConfig?.points_per_rupee || 100));
+    const maxUsablePoints = Math.min(userPoints, Math.floor(rawTotal * pointsPerRupee));
+
+    const [usePoints, setUsePoints] = useState(false);
+    const [pointsToUse, setPointsToUse] = useState(maxUsablePoints);
+
+    const activePointsUsed = usePoints
+        ? Math.max(0, Math.min(Number(pointsToUse) || 0, maxUsablePoints))
+        : 0;
+    const pointsDiscount = Number((activePointsUsed / pointsPerRupee).toFixed(2));
+    const grandTotal = Math.max(0, Number((rawTotal - pointsDiscount).toFixed(2)));
 
     const defaultAddress = addresses.find((a) => a.is_default) || addresses[0];
     const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || null);
@@ -88,6 +103,11 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     };
 
     const handlePlaceOrder = async () => {
+        if (needsMembership) {
+            toast.error('Please activate your membership plan before placing an order.');
+            return;
+        }
+
         if (!canPlaceOrder) {
             toast.error('Retailer KYC approval is required before you can place orders.');
             return;
@@ -98,11 +118,12 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
             return;
         }
 
-        if (paymentMethod === 'COD') {
+        if (paymentMethod === 'COD' || grandTotal <= 0) {
             setPlacingOrder(true);
             router.post('/checkout', {
                 address_id: selectedAddressId,
-                payment_method: 'COD',
+                payment_method: grandTotal <= 0 ? 'COD' : 'COD',
+                points_to_use: activePointsUsed,
             }, {
                 onFinish: () => setPlacingOrder(false),
             });
@@ -111,56 +132,48 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
 
         setPlacingOrder(true);
         try {
-            const loaded = await loadRazorpayScript();
-            if (!loaded) {
-                toast.error('Unable to load Razorpay SDK. Check your internet connection.');
-                setPlacingOrder(false);
+            const { data: orderData } = await axios.post('/checkout/razorpay-order', {
+                address_id: selectedAddressId,
+                points_to_use: activePointsUsed,
+            });
+
+            if (orderData.free) {
+                router.post('/checkout', {
+                    address_id: selectedAddressId,
+                    payment_method: 'COD',
+                    points_to_use: activePointsUsed,
+                }, {
+                    onFinish: () => setPlacingOrder(false),
+                });
                 return;
             }
 
-            const { data: orderData } = await axios.post('/checkout/razorpay-order', {
-                address_id: selectedAddressId,
-            });
-
             const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
-            const rzp = new window.Razorpay({
-                key: orderData.key,
-                amount: orderData.amount,
-                currency: orderData.currency,
-                name: 'Newbie Service',
+            await openRazorpayCheckout({
+                orderData,
                 description: 'Order Payment',
-                order_id: orderData.order_id,
                 prefill: {
                     name: auth?.user?.name || '',
                     email: auth?.user?.email || '',
                     contact: selectedAddress?.phone || auth?.user?.phone || '',
                 },
-                theme: {
-                    color: '#9333ea',
+                onDismiss: () => setPlacingOrder(false),
+                onFailure: (msg) => {
+                    toast.error(msg);
+                    setPlacingOrder(false);
                 },
-                modal: {
-                    ondismiss: () => setPlacingOrder(false),
-                },
-                handler: (response) => {
+                onSuccess: (response) => {
                     router.post('/checkout', {
                         address_id: selectedAddressId,
                         payment_method: 'ONLINE',
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
+                        points_to_use: activePointsUsed,
+                        ...response,
                     }, {
                         onFinish: () => setPlacingOrder(false),
                     });
                 },
             });
-
-            rzp.on('payment.failed', (res) => {
-                toast.error(res?.error?.description || 'Payment failed. Please try again.');
-                setPlacingOrder(false);
-            });
-
-            rzp.open();
         } catch (err) {
             toast.error(err?.response?.data?.message || 'Unable to start payment. Please try again.');
             setPlacingOrder(false);
@@ -172,6 +185,26 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
             <Head title="Checkout - Newbie Service" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                {/* Membership Required Notice Banner */}
+                {needsMembership && (
+                    <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 flex items-start gap-3 shadow-xs">
+                        <Crown className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="font-bold text-xs text-purple-950">Membership Plan Required</p>
+                            <p className="text-[11px] text-purple-800 mt-0.5">
+                                Activate your membership for <span className="font-bold">₹{loyaltyConfig.membership_fee ?? 49}</span> to place orders and receive{' '}
+                                <span className="font-bold">{Number(loyaltyConfig.membership_bonus_points ?? 5000).toLocaleString()} loyalty points</span> instantly.
+                            </p>
+                            <Link
+                                href="/loyalty"
+                                className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition"
+                            >
+                                Activate Membership &rarr;
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
                 {/* Retailer KYC Notice Banner */}
                 {isRetailer && !isKycApproved && (
                     <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3 shadow-xs">
@@ -435,6 +468,56 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                             </ul>
                         </div>
 
+                        {/* Loyalty Points Redemption */}
+                        {userPoints > 0 && (
+                            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Coins className="w-4 h-4 text-amber-500" />
+                                        <h2 className="text-base font-bold text-slate-900">Use Loyalty Points</h2>
+                                    </div>
+                                    <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full">
+                                        Available: {userPoints.toLocaleString()} pts (₹{(userPoints / pointsPerRupee).toFixed(2)})
+                                    </span>
+                                </div>
+
+                                <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/70 cursor-pointer">
+                                    <div className="flex items-center gap-2.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={usePoints}
+                                            onChange={(e) => {
+                                                setUsePoints(e.target.checked);
+                                                if (e.target.checked) setPointsToUse(maxUsablePoints);
+                                            }}
+                                            className="rounded accent-purple-600"
+                                        />
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            Redeem points on this order ({pointsPerRupee} pts = ₹1)
+                                        </span>
+                                    </div>
+                                    {usePoints && (
+                                        <span className="text-xs font-bold text-emerald-600">-₹{pointsDiscount.toFixed(2)}</span>
+                                    )}
+                                </label>
+
+                                {usePoints && (
+                                    <div className="flex items-center gap-3">
+                                        <label className="text-xs text-slate-500 font-medium">Points to apply:</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={maxUsablePoints}
+                                            value={pointsToUse}
+                                            onChange={(e) => setPointsToUse(Math.max(0, Math.min(Number(e.target.value) || 0, maxUsablePoints)))}
+                                            className="w-32 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-900"
+                                        />
+                                        <span className="text-[11px] text-slate-400">Max: {maxUsablePoints.toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Payment Method */}
                         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-2.5">
                             <h2 className="text-base font-bold text-slate-900 mb-3">Payment Method</h2>
@@ -504,6 +587,13 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                 <span className="font-semibold text-slate-900">₹{deliveryCharge}</span>
                             </div>
 
+                            {pointsDiscount > 0 && (
+                                <div className="flex justify-between text-emerald-600">
+                                    <span>Loyalty Discount ({activePointsUsed.toLocaleString()} pts)</span>
+                                    <span className="font-semibold">-₹{pointsDiscount.toFixed(2)}</span>
+                                </div>
+                            )}
+
                             <div className="border-t border-slate-100 pt-3 flex justify-between text-sm font-bold text-slate-900">
                                 <span>Grand Total</span>
                                 <span>₹{grandTotal.toLocaleString()}</span>
@@ -520,10 +610,14 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                             }`}
                         >
-                            {!canPlaceOrder
+                            {needsMembership
+                                ? 'Membership Required to Place Order'
+                                : !canPlaceOrder
                                 ? 'KYC Approval Required to Place Order'
                                 : placingOrder
                                 ? 'Processing...'
+                                : grandTotal <= 0
+                                ? 'Place Order (Paid with Points) →'
                                 : paymentMethod === 'ONLINE'
                                 ? `Pay ₹${grandTotal.toLocaleString()} & Place Order →`
                                 : 'Place Order →'}
