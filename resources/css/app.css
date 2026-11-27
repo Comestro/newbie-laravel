@@ -9,3 +9,12 @@
     --color-primary-600: #2563eb;
     --color-primary-700: #1d4ed8;
 }
+
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}

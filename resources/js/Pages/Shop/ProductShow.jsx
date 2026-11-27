@@ -25,7 +25,8 @@ export default function ProductShow({ product }) {
         setActiveImageIndex(0);
     };
 
-    const currentImage = variantImagesList[activeImageIndex]?.url || selectedVariant?.image_url;
+    const activeImageObj = variantImagesList[activeImageIndex];
+    const currentImage = activeImageObj?.url || selectedVariant?.image_url;
 
     const isRetailer = Boolean(auth?.user?.is_retailer);
     const retailerPrice = selectedVariant.bulk_price ? Number(selectedVariant.bulk_price) : null;
@@ -55,8 +56,8 @@ export default function ProductShow({ product }) {
                 <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 items-start">
                     {/* Image Gallery */}
                     <div className="flex flex-col-reverse sm:flex-row gap-3">
-                        {/* Thumbnails */}
-                        {variantImagesList.length > 1 ? (
+                        {/* Thumbnails — only when selected variant has multiple images */}
+                        {variantImagesList.length > 1 && (
                             <div className="flex sm:flex-col gap-2.5 sm:w-16 overflow-x-auto">
                                 {variantImagesList.map((img, idx) => (
                                     <button
@@ -69,40 +70,25 @@ export default function ProductShow({ product }) {
                                                 : 'border-slate-100 bg-white hover:border-slate-200'
                                         }`}
                                     >
-                                        <img src={img.thumbnail_url || img.url} className="w-full h-full object-cover rounded-lg" alt="" />
+                                        <img src={img.thumbnail_url || img.url} className="w-full h-full object-contain rounded-lg" alt="" />
                                     </button>
                                 ))}
                             </div>
-                        ) : variants.length > 1 ? (
-                            <div className="flex sm:flex-col gap-2.5 sm:w-16 overflow-x-auto">
-                                {variants.map((v) => (
-                                    <button
-                                        key={v.id}
-                                        type="button"
-                                        onClick={() => handleSelectVariant(v.id)}
-                                        className={`w-14 sm:w-full aspect-square rounded-xl border p-1 overflow-hidden flex items-center justify-center transition shrink-0 cursor-pointer ${
-                                            selectedVariantId === v.id
-                                                ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
-                                                : 'border-slate-100 bg-white hover:border-slate-200'
-                                        }`}
-                                    >
-                                        {v.image_url ? (
-                                            <img src={v.image_url} className="w-full h-full object-cover rounded-lg" alt="" />
-                                        ) : (
-                                            <span className="text-base">{getCategoryEmoji(product.category)}</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
+                        )}
 
                         {/* Main Image */}
                         <div className="flex-1 aspect-square rounded-2xl bg-white border border-slate-100 flex items-center justify-center relative overflow-hidden shadow-xs">
                             {currentImage ? (
                                 <img
+                                    key={currentImage}
                                     src={currentImage}
                                     alt={product.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-contain p-4"
+                                    onError={(e) => {
+                                        if (activeImageObj?.thumbnail_url && e.currentTarget.src !== activeImageObj.thumbnail_url) {
+                                            e.currentTarget.src = activeImageObj.thumbnail_url;
+                                        }
+                                    }}
                                 />
                             ) : (
                                 <span className="text-8xl filter opacity-80">

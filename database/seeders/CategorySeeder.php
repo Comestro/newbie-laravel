@@ -12,27 +12,34 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = [
-            [
-                'name' => 'Milk',
-                'slug' => 'milk',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Water',
-                'slug' => 'water',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Beverages',
-                'slug' => 'beverages',
-                'is_active' => true,
-            ],
+        // Main category: Dairy
+        $dairy = Category::firstOrCreate(
+            ['slug' => 'dairy'],
+            ['name' => 'Dairy', 'is_active' => true]
+        );
+
+        $dairySubcategories = [
+            ['name' => 'Milk', 'slug' => 'milk'],
+            ['name' => 'Curd / Dahi', 'slug' => 'curd-dahi'],
+            ['name' => 'Paneer', 'slug' => 'paneer'],
+            ['name' => 'Lassi & Beverages', 'slug' => 'lassi-and-beverages'],
         ];
 
-        foreach ($categories as $category) {
-            Category::firstOrCreate(['slug' => $category['slug']], $category);
+        foreach ($dairySubcategories as $sub) {
+            Category::updateOrCreate(
+                ['slug' => $sub['slug']],
+                [
+                    'parent_id' => $dairy->id,
+                    'name' => $sub['name'],
+                    'is_active' => true,
+                ]
+            );
         }
+
+        // Main category: Water
+        Category::firstOrCreate(
+            ['slug' => 'water'],
+            ['name' => 'Water', 'is_active' => true]
+        );
     }
 }
-

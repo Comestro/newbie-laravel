@@ -42,7 +42,7 @@ export default function ProductCard({ product, className = '', categoryName = ''
     const toggleWishlist = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        router.post(`/wishlist/${product.id}/toggle`, {}, { preserveScroll: true });
+        router.post(route('wishlist.toggle', product.id), {}, { preserveScroll: true });
     };
 
     const getCategoryEmoji = (cat) => {
@@ -82,12 +82,15 @@ export default function ProductCard({ product, className = '', categoryName = ''
             </button>
 
             {/* Image Area */}
-            <div className="h-40 w-full flex items-center justify-center relative bg-slate-50 overflow-hidden">
+            <Link
+                href={route('product.show', product.slug || product.id)}
+                className="h-40 w-full flex items-center justify-center relative bg-slate-50 overflow-hidden"
+            >
                 {image ? (
                     <img
                         src={image}
                         alt={product.name}
-                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
                         onError={() => setImage('')}
                     />
                 ) : (
@@ -95,7 +98,7 @@ export default function ProductCard({ product, className = '', categoryName = ''
                         {getCategoryEmoji(product.category)}
                     </span>
                 )}
-            </div>
+            </Link>
 
             {/* Product Info */}
             <div className="p-3.5 flex flex-col flex-1">
@@ -105,7 +108,7 @@ export default function ProductCard({ product, className = '', categoryName = ''
                     </span>
                 )}
                 <Link
-                    href={`/product/${product.slug || product.id}`}
+                    href={route('product.show', product.slug || product.id)}
                     className="block group-hover:text-purple-600 transition-colors"
                 >
                     <h3 className="text-xs font-bold text-slate-900 leading-snug mb-2 line-clamp-2 min-h-[2.4em]">
