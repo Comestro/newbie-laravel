@@ -68,7 +68,12 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
                                     }`}
                                 >
-                                    <span className="truncate mr-2">{catVal}</span>
+                                    <span
+                                        className={`truncate mr-2 ${(cat.depth || 0) > 0 ? 'text-[11px] font-medium' : ''}`}
+                                        style={(cat.depth || 0) > 0 ? { paddingLeft: `${cat.depth * 12}px` } : undefined}
+                                    >
+                                        {(cat.depth || 0) > 0 ? `↳ ${catVal}` : catVal}
+                                    </span>
                                     <span>{emoji}</span>
                                 </button>
                             );

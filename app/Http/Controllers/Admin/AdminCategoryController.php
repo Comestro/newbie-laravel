@@ -16,18 +16,19 @@ class AdminCategoryController extends Controller
     {
         $search = $request->query('search');
 
-        $categories = Category::query()
-            ->withCount('products')
-            ->when($search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%");
-            })
-            ->orderBy('name', 'asc')
-            ->paginate(15)
-            ->withQueryString();
+        $categories = Category::flatTree(onlyActive: false, withCounts: true);
+
+        if ($search) {
+            $needle = mb_strtolower($search);
+            $categories = $categories->filter(
+                fn ($cat) => str_contains(mb_strtolower($cat->name), $needle)
+                    || str_contains(mb_strtolower($cat->slug), $needle)
+                    || str_contains(mb_strtolower((string) $cat->path), $needle)
+            )->values();
+        }
 
         return Inertia::render('Admin/Categories/Index', [
-            'categories' => $categories,
+            'categories' => $categories->values(),
             'filters' => [
                 'search' => $search,
             ],
@@ -38,56 +39,65 @@ class AdminCategoryController extends Controller
     {
         return Inertia::render('Admin/Categories/Form', [
             'category' => null,
+            'parentCategories' => Category::flatTree(onlyActive: false),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:categories,name',
-            'slug' => 'nullable|string|max:100|unique:categories,slug',
-            'is_active' => 'nullable|boolean',
-        ]);
-
-        $slug = !empty($validated['slug'])
-            ? Str::slug($validated['slug'])
-            : Str::slug($validated['name']);
-
-        Category::create([
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $data = $this->validatedCategoryData($request);
+        Category::create($data);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
     }
 
     public function edit(Category $category): Response
     {
+        $excludeIds = [$category->id, ...$category->descendantIds()];
+
         return Inertia::render('Admin/Categories/Form', [
             'category' => $category,
+            'parentCategories' => Category::flatTree(onlyActive: false, excludeIds: $excludeIds),
         ]);
     }
 
     public function update(Request $request, Category $category): RedirectResponse
     {
+        $data = $this->validatedCategoryData($request, $category);
+        $category->update($data);
+
+        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
+    }
+
+    private function validatedCategoryData(Request $request, ?Category $category = null): array
+    {
+        $idRule = $category ? ',' . $category->id : '';
+
         $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:categories,name,' . $category->id,
-            'slug' => 'nullable|string|max:100|unique:categories,slug,' . $category->id,
+            'name' => 'required|string|max:100|unique:categories,name' . $idRule,
+            'slug' => 'nullable|string|max:100|unique:categories,slug' . $idRule,
+            'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
             'is_active' => 'nullable|boolean',
         ]);
+
+        $parentId = $validated['parent_id'] ?? null;
+        if ($parentId && $category) {
+            $forbiddenIds = [$category->id, ...$category->descendantIds()];
+            if (in_array((int) $parentId, $forbiddenIds, true)) {
+                $parentId = null;
+            }
+        }
 
         $slug = !empty($validated['slug'])
             ? Str::slug($validated['slug'])
             : Str::slug($validated['name']);
 
-        $category->update([
+        return [
+            'parent_id' => $parentId,
             'name' => $validated['name'],
             'slug' => $slug,
             'is_active' => $request->boolean('is_active', true),
-        ]);
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
+        ];
     }
 
     public function toggleActive(Category $category): RedirectResponse
@@ -99,12 +109,9 @@ class AdminCategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
-        $productCount = $category->products()->count();
-
-        if ($productCount > 0) {
-            return back()->with('error', "Cannot delete category '{$category->name}' because {$productCount} product(s) are assigned to it.");
+        foreach (array_reverse($category->descendantIds()) as $descendantId) {
+            Category::where('id', $descendantId)->delete();
         }
-
         $category->delete();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');

@@ -24,12 +24,12 @@ class ShopController extends Controller
         ])
             ->where('status', 'active')
             ->when($selectedCategory, function ($query, $cat) {
-                $query->whereHas('category', fn($q) => $q->where('slug', $cat)->orWhere('name', $cat)->orWhere('id', $cat));
+                $query->whereIn('category_id', Category::matchingIdsForFilter((string) $cat));
             })
             ->get()
             ->groupBy(fn($item) => $item->category?->name ?? 'Other');
 
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::activeOrdered();
 
         return Inertia::render('Shop/Home', [
             'groupedProducts' => $products,
@@ -50,7 +50,7 @@ class ShopController extends Controller
                 'category',
                 'variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')
             ])
-            ->when($category, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $category)->orWhere('name', $category)->orWhere('id', $category)))
+            ->when($category, fn($q) => $q->whereIn('category_id', Category::matchingIdsForFilter((string) $category)))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'like', '%' . $search . '%')
@@ -91,7 +91,7 @@ class ShopController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::activeOrdered();
 
         return Inertia::render('Shop/Catalog', [
             'products' => $products,

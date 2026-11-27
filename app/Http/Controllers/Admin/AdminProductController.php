@@ -47,7 +47,7 @@ class AdminProductController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $categories = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $categories = Category::activeOrdered();
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
@@ -64,7 +64,7 @@ class AdminProductController extends Controller
     {
         return Inertia::render('Admin/Products/Form', [
             'product' => null,
-            'categories' => Category::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'categories' => Category::activeOrdered(),
         ]);
     }
 
@@ -244,7 +244,7 @@ class AdminProductController extends Controller
 
         return Inertia::render('Admin/Products/Form', [
             'product' => $product,
-            'categories' => Category::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'categories' => Category::activeOrdered(),
         ]);
     }
 

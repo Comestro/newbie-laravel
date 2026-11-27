@@ -3,10 +3,11 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import { ArrowLeft, Save, PlusCircle, Edit3 } from 'lucide-react';
 
-export default function CategoryForm({ category = null }) {
+export default function CategoryForm({ category = null, parentCategories = [] }) {
     const isEdit = Boolean(category?.id);
 
     const { data, setData, post, put, processing, errors } = useForm({
+        parent_id: category?.parent_id || '',
         name: category?.name || '',
         slug: category?.slug || '',
         is_active: category ? Boolean(category.is_active) : true,
@@ -45,6 +46,25 @@ export default function CategoryForm({ category = null }) {
                     </div>
 
                     <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Parent Category <span className="text-slate-400 font-normal">(optional, leave empty for Main Category)</span>
+                            </label>
+                            <select
+                                value={data.parent_id}
+                                onChange={(e) => setData('parent_id', e.target.value)}
+                                className="w-full text-xs px-3 py-2.5 rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                            >
+                                <option value="">None (Main Category)</option>
+                                {parentCategories.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.path || p.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.parent_id && <p className="text-rose-500 text-[10px] mt-1">{errors.parent_id}</p>}
+                        </div>
+
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 mb-1">
                                 Category Name <span className="text-rose-500">*</span>

@@ -64,7 +64,7 @@ class HandleInertiaRequests extends Middleware
                 ? $request->user()->wishlists()->pluck('product_id')->toArray()
                 : (array) $request->session()->get('wishlist', []),
             'categories' => fn () => \Illuminate\Support\Facades\Schema::hasTable('categories')
-                ? \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug'])
+                ? \App\Models\Category::activeOrdered()
                 : [],
             'loyaltyConfig' => fn () => \Illuminate\Support\Facades\Schema::hasTable('settings')
                 ? \App\Models\Setting::getLoyaltyConfig()

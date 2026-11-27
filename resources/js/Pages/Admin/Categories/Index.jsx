@@ -3,7 +3,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import ConfirmModal from '../../../Components/ConfirmModal';
 import { Plus, Edit, Trash2, Layers, Search } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function Index({ categories, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -11,6 +10,8 @@ export default function Index({ categories, filters = {} }) {
         isOpen: false,
         id: null,
         name: '',
+        productCount: 0,
+        childrenCount: 0,
         loading: false,
     });
 
@@ -23,15 +24,13 @@ export default function Index({ categories, filters = {} }) {
         router.post(route('admin.categories.toggle-active', category.id), {}, { preserveScroll: true });
     };
 
-    const openDeleteModal = (id, name, productCount) => {
-        if (productCount > 0) {
-            toast.error(`Cannot delete "${name}" because it has ${productCount} assigned product(s). Please reassign or delete those products first.`);
-            return;
-        }
+    const openDeleteModal = (id, name, productCount, childrenCount) => {
         setDeleteModal({
             isOpen: true,
             id,
             name,
+            productCount,
+            childrenCount,
             loading: false,
         });
     };
@@ -42,7 +41,7 @@ export default function Index({ categories, filters = {} }) {
         router.delete(route('admin.categories.destroy', deleteModal.id), {
             preserveScroll: true,
             onFinish: () => {
-                setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
+                setDeleteModal({ isOpen: false, id: null, name: '', productCount: 0, childrenCount: 0, loading: false });
             },
         });
     };
@@ -101,6 +100,7 @@ export default function Index({ categories, filters = {} }) {
                             <thead className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                 <tr>
                                     <th className="py-3 px-4">Category Name</th>
+                                    <th className="py-3 px-4">Parent</th>
                                     <th className="py-3 px-4">Slug</th>
                                     <th className="py-3 px-4 text-center">Products</th>
                                     <th className="py-3 px-4 text-center">Status</th>
@@ -110,7 +110,7 @@ export default function Index({ categories, filters = {} }) {
                             <tbody className="divide-y divide-slate-100">
                                 {categoryList.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" className="py-12 text-center text-slate-400">
+                                        <td colSpan="6" className="py-12 text-center text-slate-400">
                                             <div className="max-w-xs mx-auto space-y-2">
                                                 <Layers className="w-8 h-8 text-slate-300 mx-auto" />
                                                 <p className="font-semibold text-slate-700">No categories found</p>
@@ -129,7 +129,26 @@ export default function Index({ categories, filters = {} }) {
                                     categoryList.map((cat) => (
                                         <tr key={cat.id} className="hover:bg-slate-50/50 transition">
                                             <td className="py-3 px-4 font-semibold text-slate-900">
-                                                {cat.name}
+                                                {(cat.depth || 0) > 0 ? (
+                                                    <span
+                                                        className="inline-flex items-center gap-1.5 text-slate-700"
+                                                        style={{ paddingLeft: `${cat.depth * 18}px` }}
+                                                    >
+                                                        <span className="text-slate-400">↳</span>
+                                                        <span>{cat.name}</span>
+                                                    </span>
+                                                ) : (
+                                                    <span>{cat.name}</span>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                {cat.parent ? (
+                                                    <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-semibold">
+                                                        {cat.parent.name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[11px] text-slate-400">Main</span>
+                                                )}
                                             </td>
                                             <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">
                                                 {cat.slug}
@@ -163,7 +182,7 @@ export default function Index({ categories, filters = {} }) {
                                                     </Link>
                                                     <button
                                                         type="button"
-                                                        onClick={() => openDeleteModal(cat.id, cat.name, cat.products_count ?? 0)}
+                                                        onClick={() => openDeleteModal(cat.id, cat.name, cat.products_count ?? 0, cat.children_count ?? 0)}
                                                         className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition"
                                                         title="Delete Category"
                                                     >
@@ -212,14 +231,25 @@ export default function Index({ categories, filters = {} }) {
                 title="Delete Category"
                 message={
                     <span>
-                        Are you sure you want to delete category <strong className="text-slate-800 font-semibold">"{deleteModal.name}"</strong>? This action cannot be undone.
+                        Are you sure you want to delete category <strong className="text-slate-800 font-semibold">"{deleteModal.name}"</strong>?
+                        {deleteModal.childrenCount > 0 && (
+                            <span className="block mt-1.5 text-rose-600 font-medium">
+                                Warning: All subcategories under this category will also be deleted.
+                            </span>
+                        )}
+                        {deleteModal.productCount > 0 && (
+                            <span className="block mt-1.5 text-rose-600 font-medium">
+                                Warning: {deleteModal.productCount} assigned product(s) will also be deleted.
+                            </span>
+                        )}
+                        <span className="block mt-1.5">This action cannot be undone.</span>
                     </span>
                 }
                 confirmText="Delete Category"
                 variant="danger"
                 loading={deleteModal.loading}
                 onConfirm={handleConfirmDelete}
-                onClose={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+                onClose={() => setDeleteModal({ isOpen: false, id: null, name: '', productCount: 0, childrenCount: 0, loading: false })}
             />
         </AdminLayout>
     );
