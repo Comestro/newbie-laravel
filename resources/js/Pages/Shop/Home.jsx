@@ -30,13 +30,13 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
         <ShopLayout>
             <Head title="Premium Grocery Delivery" />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-7 sm:space-y-10">
                 {/* Categories Row */}
                 <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">
+                    <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 mb-2.5 sm:mb-3">
                         Shop by Category
                     </h2>
-                    <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
+                    <div className="flex gap-2.5 sm:gap-3 overflow-x-auto scrollbar-none pb-1">
                         {categories.length > 0 ? (
                             categories.map((cat) => {
                                 const slug = cat.slug || cat.name?.toLowerCase();
@@ -44,10 +44,10 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                                     <Link
                                         key={cat.id || slug}
                                         href={`/catalog?category=${slug}`}
-                                        className="shrink-0 w-32 sm:w-44 flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                                        className="shrink-0 w-24 sm:w-36 md:w-44 flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
                                     >
-                                        <CategoryIcon icon={cat.icon} name={cat.name} className="w-8 h-8 mb-1.5" textClassName="text-3xl mb-1.5" />
-                                        <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700 text-center truncate max-w-full">
+                                        <CategoryIcon icon={cat.icon} name={cat.name} className="w-7 h-7 sm:w-8 sm:h-8 mb-1.5" textClassName="text-2xl sm:text-3xl mb-1.5" />
+                                        <span className="text-[11px] sm:text-xs font-semibold text-slate-700 group-hover:text-purple-700 text-center truncate max-w-full">
                                             {cat.name}
                                         </span>
                                     </Link>
@@ -82,9 +82,9 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                 </div>
 
                 {/* Promo Banners */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex md:grid md:grid-cols-3 gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x pb-1">
                     {/* Banner 1 */}
-                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white flex flex-col justify-between h-36 shadow-xs">
+                    <div className="shrink-0 w-[82%] sm:w-[58%] md:w-auto snap-start bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 sm:p-5 text-white flex flex-col justify-between h-32 sm:h-36 shadow-xs">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
                                 Farm Fresh
@@ -101,7 +101,7 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                     </div>
 
                     {/* Banner 2 */}
-                    <div className="bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl p-5 text-white flex flex-col justify-between h-36 shadow-xs">
+                    <div className="shrink-0 w-[82%] sm:w-[58%] md:w-auto snap-start bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl p-4 sm:p-5 text-white flex flex-col justify-between h-32 sm:h-36 shadow-xs">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
                                 Pure Water
@@ -118,7 +118,7 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                     </div>
 
                     {/* Banner 3 */}
-                    <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-white flex flex-col justify-between h-36 shadow-xs">
+                    <div className="shrink-0 w-[82%] sm:w-[58%] md:w-auto snap-start bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 sm:p-5 text-white flex flex-col justify-between h-32 sm:h-36 shadow-xs">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
                                 Daily Sips
@@ -127,7 +127,7 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                             <p className="text-amber-100 text-xs mt-0.5">Juices, sodas & beverages</p>
                         </div>
                         <Link
-                            href="/catalog?category=beverages"
+                            href="/catalog?category=lassi-and-beverages"
                             className="inline-block px-3.5 py-1.5 bg-white text-orange-700 text-xs font-bold rounded-lg w-fit hover:bg-orange-50 transition"
                         >
                             Order Now &rarr;
@@ -152,13 +152,13 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                             </div>
 
                             {/* Horizontal Scroll */}
-                            <div className="flex overflow-x-auto pb-4 -mx-4 px-4 space-x-3.5 scrollbar-none">
+                            <div className="flex overflow-x-auto pb-3 -mx-3 px-3 sm:-mx-4 sm:px-4 space-x-2.5 sm:space-x-3.5 scrollbar-none">
                                 {products.map((product) => (
                                     <ProductCard
                                         key={product.id}
                                         product={product}
                                         categoryName={category}
-                                        className="min-w-48 w-[195px] shrink-0"
+                                        className="min-w-[162px] w-[162px] sm:min-w-48 sm:w-[195px] shrink-0"
                                     />
                                 ))}
                             </div>

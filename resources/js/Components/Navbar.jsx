@@ -103,31 +103,31 @@ export default function Navbar() {
 
     return (
         <nav className="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
-                    <div className="flex items-center gap-8">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-14 sm:h-16 gap-2">
+                    <div className="flex items-center gap-4 sm:gap-8 min-w-0">
                         <div className="shrink-0 flex items-center">
                             <Link href="/" className="flex items-center">
-                                <img src="/logo.png" alt="Newbie" className="h-8 sm:h-9 w-auto" />
+                                <img src="/logo.png" alt="Newbie" className="h-7 sm:h-9 w-auto" />
                             </Link>
                         </div>
-                        <div className="hidden sm:flex items-center space-x-6">
+                        <div className="flex items-center space-x-3 sm:space-x-6">
                             <Link
                                 href="/catalog"
-                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+                                className="text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition"
                             >
                                 Shop
                             </Link>
                             <Link
                                 href="/catalog"
-                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+                                className="hidden sm:inline-block text-sm font-medium text-slate-600 hover:text-slate-900 transition"
                             >
                                 Categories
                             </Link>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="flex items-center space-x-1.5 sm:space-x-4 shrink-0">
                         {/* Search */}
                         <SearchBar
                             value={searchQuery}
@@ -274,6 +274,20 @@ export default function Navbar() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile Search Row */}
+            <div className="md:hidden px-3 pb-2.5">
+                <SearchBar
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    onSearch={handleSearch}
+                    debounceMs={400}
+                    placeholder="Search 'milk'..."
+                    size="sm"
+                    className="w-full"
+                    inputClassName="bg-slate-50 focus:bg-white py-2"
+                />
             </div>
         </nav>
     );

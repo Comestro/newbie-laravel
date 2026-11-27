@@ -71,9 +71,9 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 p-4 sm:p-6 lg:p-8">
+                <div className="flex-1 min-w-0 p-3 sm:p-6 lg:p-8">
                     {/* Mobile Category Nav */}
-                    <div className="md:hidden mb-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
+                    <div className="md:hidden mb-4 overflow-x-auto pb-1 scrollbar-none">
                         <div className="flex space-x-2">
                             <button
                                 type="button"
@@ -93,7 +93,6 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                                 const isSelected =
                                     currentCategory?.toLowerCase() === catSlug.toLowerCase() ||
                                     currentCategory?.toLowerCase() === catVal.toLowerCase();
-                                const emoji = cat.icon || (catVal.toUpperCase() === 'MILK' ? '🥛' : catVal.toUpperCase() === 'WATER' ? '💧' : '🍹');
                                 return (
                                     <button
                                         key={cat.id || catVal}
@@ -105,7 +104,7 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                                                 : 'bg-white border-slate-200 text-slate-600'
                                         }`}
                                     >
-                                        <span>{emoji}</span>
+                                        <CategoryIcon icon={cat.icon} name={catVal} className="w-4 h-4" textClassName="text-xs" />
                                         <span>{catVal}</span>
                                     </button>
                                 );
@@ -114,8 +113,8 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                     </div>
 
                     {/* Header */}
-                    <div className="mb-6">
-                        <h1 className="text-xl font-bold text-slate-900">
+                    <div className="mb-4 sm:mb-6">
+                        <h1 className="text-lg sm:text-xl font-bold text-slate-900">
                             {filters.search ? (
                                 `Search results for "${filters.search}"`
                             ) : currentCategory ? (
@@ -136,7 +135,7 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                             <p className="text-xs text-slate-400 mt-1">Try selecting a different category or clearing your search.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
                             {productList.map((product) => (
                                 <ProductCard key={product.id} product={product} />
                             ))}
@@ -145,7 +144,7 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
 
                     {/* Pagination */}
                     {products?.links && products.links.length > 3 && (
-                        <div className="mt-8 flex justify-center gap-1">
+                        <div className="mt-8 flex flex-wrap justify-center gap-1">
                             {products.links.map((link, i) => (
                                 <Link
                                     key={i}
