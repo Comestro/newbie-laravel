@@ -73,6 +73,8 @@ class HandleInertiaRequests extends Middleware
                     'membership_bonus_points' => 5000,
                     'points_per_rupee' => 100,
                     'require_membership_for_order' => true,
+                    'earn_points_on_order' => true,
+                    'points_per_100_rupees' => 1,
                 ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success') ?? $request->session()->get('status'),

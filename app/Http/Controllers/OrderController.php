@@ -252,6 +252,21 @@ class OrderController extends Controller
                     ]);
                 }
 
+                $loyaltyConfig = Setting::getLoyaltyConfig();
+                if ($loyaltyConfig['earn_points_on_order'] && $loyaltyConfig['points_per_100_rupees'] > 0 && $pricing['payable_total'] >= 100) {
+                    $earnedPoints = intdiv((int) floor((float) $pricing['payable_total']), 100) * $loyaltyConfig['points_per_100_rupees'];
+                    if ($earnedPoints > 0) {
+                        LoyaltyTransaction::create([
+                            'user_id' => $lockedUser->id,
+                            'type' => 'ORDER_EARN_PENDING',
+                            'points' => $earnedPoints,
+                            'amount' => $pricing['payable_total'],
+                            'description' => "Earned on Order #{$orderNumber} (On the way)",
+                            'order_id' => $order->id,
+                        ]);
+                    }
+                }
+
                 foreach ($cart as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,

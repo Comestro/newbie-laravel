@@ -24,6 +24,7 @@ class LoyaltyController extends Controller
         return Inertia::render('Customer/Loyalty', [
             'config' => Setting::getLoyaltyConfig(),
             'transactions' => $user->loyaltyTransactions()->latest()->take(25)->get(),
+            'pendingPoints' => (int) $user->loyaltyTransactions()->where('type', 'ORDER_EARN_PENDING')->sum('points'),
         ]);
     }
 

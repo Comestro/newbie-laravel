@@ -29,6 +29,8 @@ class Setting extends Model
             'membership_bonus_points',
             'points_per_rupee',
             'require_membership_for_order',
+            'earn_points_on_order',
+            'points_per_100_rupees',
         ])->pluck('value', 'key');
 
         return [
@@ -36,6 +38,8 @@ class Setting extends Model
             'membership_bonus_points' => (int) ($all['membership_bonus_points'] ?? 5000),
             'points_per_rupee' => max(1, (int) ($all['points_per_rupee'] ?? 100)),
             'require_membership_for_order' => filter_var($all['require_membership_for_order'] ?? '1', FILTER_VALIDATE_BOOLEAN),
+            'earn_points_on_order' => filter_var($all['earn_points_on_order'] ?? '1', FILTER_VALIDATE_BOOLEAN),
+            'points_per_100_rupees' => max(0, (int) ($all['points_per_100_rupees'] ?? 1)),
         ];
     }
 }

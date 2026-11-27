@@ -9,6 +9,8 @@ export default function Index({ settings }) {
         membership_bonus_points: settings.membership_bonus_points ?? 5000,
         points_per_rupee: settings.points_per_rupee ?? 100,
         require_membership_for_order: Boolean(settings.require_membership_for_order),
+        earn_points_on_order: Boolean(settings.earn_points_on_order ?? true),
+        points_per_100_rupees: settings.points_per_100_rupees ?? 1,
     });
 
     const handleSubmit = (e) => {
@@ -101,26 +103,71 @@ export default function Index({ settings }) {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Points Required per ₹1
-                        </label>
-                        <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={data.points_per_rupee}
-                            onChange={(e) => setData('points_per_rupee', e.target.value)}
-                            className="w-full sm:w-64 rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                        />
-                        {errors.points_per_rupee && <p className="text-xs text-rose-500 mt-1">{errors.points_per_rupee}</p>}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Points Required per ₹1 (Redeem / Top-up)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={data.points_per_rupee}
+                                onChange={(e) => setData('points_per_rupee', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                            />
+                            {errors.points_per_rupee && <p className="text-xs text-rose-500 mt-1">{errors.points_per_rupee}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Points Earned per ₹100 Spent
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                disabled={!data.earn_points_on_order}
+                                value={data.points_per_100_rupees}
+                                onChange={(e) => setData('points_per_100_rupees', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:bg-slate-100 disabled:text-slate-400"
+                            />
+                            {errors.points_per_100_rupees && <p className="text-xs text-rose-500 mt-1">{errors.points_per_100_rupees}</p>}
+                        </div>
                     </div>
+
+                    <label className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200/70 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={data.earn_points_on_order}
+                            onChange={(e) => setData('earn_points_on_order', e.target.checked)}
+                            className="mt-0.5 rounded accent-purple-600"
+                        />
+                        <div>
+                            <span className="text-xs font-bold text-slate-900 block">
+                                Award Loyalty Points on Order Placement
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                                When enabled, customers earn {Number(data.points_per_100_rupees || 0)} point(s) for every ₹100 spent on an order.
+                            </span>
+                        </div>
+                    </label>
 
                     <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-100 text-xs text-purple-900 space-y-1">
                         <p className="font-bold">Live Preview:</p>
                         <p>&bull; Conversion rate: <span className="font-bold">{pointsPerRupee} Points = ₹1.00</span></p>
                         <p>&bull; New member pays <span className="font-bold">₹{data.membership_fee || 0}</span> and receives <span className="font-bold">{Number(data.membership_bonus_points || 0).toLocaleString()} Points</span> (worth <span className="font-bold">₹{bonusWorth}</span>)</p>
                         <p>&bull; Direct top-up of ₹100 gives <span className="font-bold">{(100 * pointsPerRupee).toLocaleString()} Points</span></p>
+                        <p>
+                            &bull; Order reward:{' '}
+                            {data.earn_points_on_order ? (
+                                <span className="font-bold">
+                                    Earn {Number(data.points_per_100_rupees || 0)} point(s) per ₹100 spent (₹500 order = {5 * Number(data.points_per_100_rupees || 0)} points)
+                                </span>
+                            ) : (
+                                <span className="font-bold text-slate-600">Disabled (0 points earned on orders)</span>
+                            )}
+                        </p>
                     </div>
                 </div>
 
