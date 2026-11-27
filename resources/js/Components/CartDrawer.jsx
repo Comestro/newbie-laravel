@@ -33,8 +33,8 @@ export default function CartDrawer() {
                 className="fixed inset-0 bg-slate-900/25 backdrop-blur-[2px] transition-opacity"
             />
 
-            <div className="fixed inset-0 overflow-hidden">
-                <div className="absolute inset-0 overflow-hidden">
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
                         <div className="pointer-events-auto w-screen sm:max-w-md">
                             <div className="flex h-full flex-col bg-white border-l border-slate-100 shadow-sm">

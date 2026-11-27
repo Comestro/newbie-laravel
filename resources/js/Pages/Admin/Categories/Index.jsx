@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import SearchBar from '../../../Components/SearchBar';
+import CategoryIcon from '../../../Components/CategoryIcon';
 import ConfirmModal from '../../../Components/ConfirmModal';
 import { Plus, Edit, Trash2, Layers } from 'lucide-react';
 
@@ -139,10 +140,14 @@ export default function Index({ categories, filters = {} }) {
                                                         style={{ paddingLeft: `${cat.depth * 18}px` }}
                                                     >
                                                         <span className="text-slate-400">↳</span>
+                                                        <CategoryIcon icon={cat.icon} name={cat.name} className="w-5 h-5" textClassName="text-sm" />
                                                         <span>{cat.name}</span>
                                                     </span>
                                                 ) : (
-                                                    <span>{cat.name}</span>
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <CategoryIcon icon={cat.icon} name={cat.name} className="w-5 h-5" textClassName="text-sm" />
+                                                        <span>{cat.name}</span>
+                                                    </span>
                                                 )}
                                             </td>
                                             <td className="py-3 px-4">

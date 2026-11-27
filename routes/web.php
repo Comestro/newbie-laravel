@@ -86,7 +86,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
         Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
         Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
         Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
-        Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
+        Route::match(['put', 'patch', 'post'], '/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
         Route::post('/categories/{category}/toggle-active', [AdminCategoryController::class, 'toggleActive'])->name('categories.toggle-active');
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
 

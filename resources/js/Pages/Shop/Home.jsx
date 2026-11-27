@@ -2,8 +2,18 @@ import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import ProductCard from '../../Components/ProductCard';
+import CategoryIcon from '../../Components/CategoryIcon';
 
 export default function Home({ groupedProducts = {}, categories = [] }) {
+    const getCategorySlug = (cat, productsList = []) => {
+        const firstSlug = productsList[0]?.category?.slug;
+        if (firstSlug) return firstSlug;
+        const found = categories.find(
+            (c) => c.name?.toLowerCase() === cat?.toLowerCase() || c.slug?.toLowerCase() === cat?.toLowerCase()
+        );
+        return found?.slug || encodeURIComponent(cat.toLowerCase());
+    };
+
     const getCategoryDisplayTitle = (cat) => {
         const found = categories.find(
             (c) => c.name?.toLowerCase() === cat?.toLowerCase() || c.slug?.toLowerCase() === cat?.toLowerCase()
@@ -26,7 +36,7 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">
                         Shop by Category
                     </h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                    <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
                         {categories.length > 0 ? (
                             categories.map((cat) => {
                                 const slug = cat.slug || cat.name?.toLowerCase();
@@ -34,9 +44,9 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                                     <Link
                                         key={cat.id || slug}
                                         href={`/catalog?category=${slug}`}
-                                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
+                                        className="shrink-0 w-32 sm:w-44 flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition shadow-xs group"
                                     >
-                                        <span className="text-3xl mb-1.5">{cat.icon || '📦'}</span>
+                                        <CategoryIcon icon={cat.icon} name={cat.name} className="w-8 h-8 mb-1.5" textClassName="text-3xl mb-1.5" />
                                         <span className="text-xs font-semibold text-slate-700 group-hover:text-purple-700 text-center truncate max-w-full">
                                             {cat.name}
                                         </span>
@@ -134,7 +144,7 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                                     <span>{getCategoryDisplayTitle(category)}</span>
                                 </h2>
                                 <Link
-                                    href={`/catalog?category=${category.toLowerCase()}`}
+                                    href={`/catalog?category=${getCategorySlug(category, products)}`}
                                     className="text-purple-600 hover:text-purple-700 font-bold text-xs uppercase tracking-wider transition"
                                 >
                                     See all &rarr;

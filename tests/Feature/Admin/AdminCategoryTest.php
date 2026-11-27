@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCategoryTest extends TestCase
@@ -252,5 +254,39 @@ class AdminCategoryTest extends TestCase
                 ->has('products.data', 1)
                 ->where('products.data.0.name', 'Deep Nested Item')
             );
+    }
+
+    public function test_admin_can_create_and_update_category_with_icon_and_image(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->admin)->post('/admin/categories', [
+            'name' => 'Snacks',
+            'icon' => '🍪',
+            'is_active' => true,
+        ])->assertRedirect('/admin/categories');
+
+        $category = Category::where('slug', 'snacks')->firstOrFail();
+        $this->assertEquals('🍪', $category->icon);
+
+        $file = UploadedFile::fake()->image('snacks.png');
+        $this->actingAs($this->admin)->post("/admin/categories/{$category->id}", [
+            '_method' => 'PUT',
+            'name' => 'Snacks',
+            'image_file' => $file,
+            'is_active' => true,
+        ])->assertRedirect('/admin/categories');
+
+        $this->assertNotNull($category->fresh()->icon);
+        $this->assertNotEquals('🍪', $category->fresh()->icon);
+
+        // Reset back to default (null)
+        $this->actingAs($this->admin)->put("/admin/categories/{$category->id}", [
+            'name' => 'Snacks',
+            'remove_icon' => true,
+            'is_active' => true,
+        ])->assertRedirect('/admin/categories');
+
+        $this->assertNull($category->fresh()->icon);
     }
 }

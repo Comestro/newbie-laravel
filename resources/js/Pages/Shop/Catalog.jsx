@@ -2,6 +2,7 @@ import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import ProductCard from '../../Components/ProductCard';
+import CategoryIcon from '../../Components/CategoryIcon';
 
 export default function Catalog({ products, filters = {}, categories = [] }) {
     const currentCategory = filters.category || null;
@@ -9,7 +10,7 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
     const handleSelectCategory = (cat) => {
         router.get('/catalog', {
             category: cat || undefined,
-        }, { preserveScroll: true });
+        });
     };
 
     const productList = products?.data || (Array.isArray(products) ? products : []);
@@ -20,17 +21,17 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
 
             <div className="min-h-[calc(100vh-64px)] bg-slate-50/60 flex">
                 {/* Desktop Sidebar */}
-                <div className="w-60 bg-white border-r border-slate-100 shrink-0 hidden md:block overflow-y-auto h-[calc(100vh-64px)] sticky top-16 p-4">
+                <div className="w-60 bg-white border-r border-slate-100 shrink-0 hidden md:block self-start sticky top-16 max-h-[calc(100vh-64px)] overflow-y-auto scrollbar-none p-4">
                     <button
                         type="button"
                         onClick={() => handleSelectCategory(null)}
-                        className={`flex flex-col items-center justify-center w-full aspect-square border rounded-2xl mb-4 transition-all ${
+                        className={`flex items-center gap-2.5 w-full px-3 py-2.5 border rounded-xl mb-4 transition-all cursor-pointer ${
                             !currentCategory
                                 ? 'border-purple-500 bg-purple-50/70 text-purple-700'
-                                : 'border-slate-100 text-slate-500 hover:border-slate-200'
+                                : 'border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50'
                         }`}
                     >
-                        <span className="text-2xl mb-1">🛒</span>
+                        <span className="text-lg">🛒</span>
                         <span className="text-xs font-bold uppercase tracking-wider">All Products</span>
                     </button>
 
@@ -45,7 +46,6 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                             const isSelected =
                                 currentCategory?.toLowerCase() === catSlug.toLowerCase() ||
                                 currentCategory?.toLowerCase() === catVal.toLowerCase();
-                            const emoji = cat.icon || (catVal.toUpperCase() === 'MILK' ? '🥛' : catVal.toUpperCase() === 'WATER' ? '💧' : '🍹');
                             return (
                                 <button
                                     key={cat.id || catVal}
@@ -63,7 +63,7 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                                     >
                                         {(cat.depth || 0) > 0 ? `↳ ${catVal}` : catVal}
                                     </span>
-                                    <span>{emoji}</span>
+                                    <CategoryIcon icon={cat.icon} name={catVal} className="w-5 h-5" textClassName="text-sm" />
                                 </button>
                             );
                         })}
