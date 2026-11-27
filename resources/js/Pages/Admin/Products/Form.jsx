@@ -1,7 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { Plus, Trash2, ArrowLeft, Save, PlusCircle, Edit3, Package, Layers, Upload, Image as ImageIcon, X, Star } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Save, PlusCircle, Edit3, Package, Layers, Upload, Image as ImageIcon, X, Star, ListChecks } from 'lucide-react';
+
+const DEFAULT_DETAIL_KEYS = [
+    'Key Features',
+    'Ingredients',
+    'Shelf Life',
+    'FSSAI License',
+    'Country of Origin',
+    'Manufacturer Details',
+    'Seller',
+    'Disclaimer',
+];
+
+const NUTRITION_PRESET_KEYS = [
+    'Serve Size',
+    'Energy (Per 100 g)',
+    'Protein (Per 100 g)',
+    'Total Carbohydrates (Per 100 g)',
+    'Total Sugar (Per 100 g)',
+    'Added Sugar (Per 100 g)',
+    'Dietary Fiber (Per 100 g)',
+    'Total Fat (Per 100 g)',
+    'Saturated Fat (Per 100 g)',
+    'Trans Fat (Per 100 g)',
+    'Cholesterol (Per 100 g)',
+    'Sodium (Per 100 g)',
+];
 
 export default function ProductForm({ product = null, categories = [] }) {
     const isEdit = Boolean(product?.id);
@@ -71,18 +97,47 @@ export default function ProductForm({ product = null, categories = [] }) {
         };
     }, []);
 
+    const initialDetails = Array.isArray(product?.details) && product.details.length > 0
+        ? product.details.map((d) => ({ key: d.key || '', value: d.value || '' }))
+        : DEFAULT_DETAIL_KEYS.map((key) => ({ key, value: '' }));
+
     const { data, setData, post, processing, errors } = useForm({
         _method: isEdit ? 'put' : undefined,
         name: product?.name || '',
         brand: product?.brand || '',
         category_id: product?.category_id || defaultCategoryId,
         description: product?.description || '',
+        details: initialDetails,
         status: product?.status || (product?.is_active === false ? 'inactive' : 'active'),
         is_active: product ? (product.status ? product.status === 'active' : Boolean(product.is_active)) : true,
         variants: initialVariants,
         deleted_variant_ids: [],
         deleted_image_ids: [],
     });
+
+    const addDetailRow = () => {
+        setData('details', [...data.details, { key: '', value: '' }]);
+    };
+
+    const updateDetailRow = (index, field, value) => {
+        const next = [...data.details];
+        next[index] = { ...next[index], [field]: value };
+        setData('details', next);
+    };
+
+    const removeDetailRow = (index) => {
+        setData('details', data.details.filter((_, i) => i !== index));
+    };
+
+    const addNutritionPreset = () => {
+        const existingKeys = new Set(data.details.map((d) => d.key.trim().toLowerCase()));
+        const toAdd = NUTRITION_PRESET_KEYS
+            .filter((k) => !existingKeys.has(k.toLowerCase()))
+            .map((key) => ({ key, value: '' }));
+        if (toAdd.length > 0) {
+            setData('details', [...data.details, ...toAdd]);
+        }
+    };
 
     const getVariantError = (index, field) => errors[`variants.${index}.${field}`];
 
@@ -765,6 +820,73 @@ export default function ProductForm({ product = null, categories = [] }) {
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+
+                {/* Product Details (Dynamic Key-Value Specifications) */}
+                <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-xs space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                        <div>
+                            <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                <ListChecks className="w-4 h-4 text-purple-600" />
+                                <span>Product Details &amp; Specifications</span>
+                            </h3>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                                Fill relevant fields or add custom attributes. Empty rows are automatically skipped when saving.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={addNutritionPreset}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition cursor-pointer"
+                            >
+                                + Nutrition Fields
+                            </button>
+                            <button
+                                type="button"
+                                onClick={addDetailRow}
+                                className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold text-xs rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add Custom Field</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                        {data.details.map((row, idx) => (
+                            <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-start p-2.5 rounded-xl border border-slate-100 bg-slate-50/50">
+                                <div className="sm:col-span-4">
+                                    <input
+                                        type="text"
+                                        value={row.key}
+                                        onChange={(e) => updateDetailRow(idx, 'key', e.target.value)}
+                                        placeholder="Field name (e.g. Shelf Life)"
+                                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 font-semibold focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                                    />
+                                </div>
+                                <div className="sm:col-span-7">
+                                    <textarea
+                                        rows={2}
+                                        value={row.value}
+                                        onChange={(e) => updateDetailRow(idx, 'value', e.target.value)}
+                                        placeholder="Value (leave blank to omit)"
+                                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-800 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                                    />
+                                </div>
+                                <div className="sm:col-span-1 flex justify-end sm:justify-center pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => removeDetailRow(idx)}
+                                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                        title="Remove field"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 

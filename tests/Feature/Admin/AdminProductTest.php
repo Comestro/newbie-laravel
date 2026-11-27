@@ -808,5 +808,48 @@ class AdminProductTest extends TestCase
         $this->get("/product/{$product->slug}")
             ->assertStatus(404);
     }
+
+    public function test_admin_can_save_product_details_and_storefront_displays_them(): void
+    {
+        $payload = [
+            'name' => 'Whole Wheat Bread',
+            'brand' => 'Nutri Being',
+            'category_id' => $this->category->id,
+            'status' => 'active',
+            'details' => [
+                ['key' => 'Shelf Life', 'value' => '6 days'],
+                ['key' => 'FSSAI License', 'value' => '11522998000168'],
+                ['key' => 'Empty Field', 'value' => ''],
+            ],
+            'variants' => [
+                [
+                    'unit_size' => '250g',
+                    'mrp' => 55,
+                    'retail_price' => 50,
+                    'bulk_price' => 45,
+                    'min_bulk_qty' => 5,
+                    'stock' => 20,
+                    'status' => 'active',
+                ],
+            ],
+        ];
+
+        $this->actingAs($this->admin)
+            ->post('/admin/products', $payload)
+            ->assertRedirect('/admin/products');
+
+        $product = Product::where('slug', 'whole-wheat-bread')->firstOrFail();
+        $this->assertCount(2, $product->details);
+        $this->assertEquals('Shelf Life', $product->details[0]['key']);
+        $this->assertEquals('6 days', $product->details[0]['value']);
+
+        $this->get("/product/{$product->slug}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Shop/ProductShow')
+                ->has('product.details', 2)
+                ->where('product.details.1.key', 'FSSAI License')
+            );
+    }
 }
 

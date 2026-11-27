@@ -55,7 +55,10 @@ export default function Navbar() {
         if (q) {
             router.get('/catalog', { search: q }, { preserveState: true, replace: true });
         } else if (url.startsWith('/catalog')) {
-            router.get('/catalog', {}, { preserveState: true, replace: true });
+            // When clearing search, preserve the current category filter
+            const currentParams = new URLSearchParams(url.split('?')[1] || '');
+            const cat = currentParams.get('category');
+            router.get('/catalog', cat ? { category: cat } : {}, { preserveState: true, replace: true });
         }
     };
 

@@ -23,6 +23,14 @@ export default function SearchBar({
         };
     }, []);
 
+    // Cancel any pending debounce when value is cleared externally (e.g., page navigation)
+    useEffect(() => {
+        if (!value && timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    }, [value]);
+
     const handleChange = (e) => {
         const nextValue = e.target.value;
         onChange?.(nextValue);

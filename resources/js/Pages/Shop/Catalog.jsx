@@ -8,9 +8,10 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
     const currentCategory = filters.category || null;
 
     const handleSelectCategory = (cat) => {
+        // Clear search when selecting a category
         router.get('/catalog', {
             category: cat || undefined,
-        });
+        }, { preserveState: false });
     };
 
     const productList = products?.data || (Array.isArray(products) ? products : []);

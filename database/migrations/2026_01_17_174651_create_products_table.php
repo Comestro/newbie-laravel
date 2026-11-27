@@ -14,10 +14,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
+            $table->json('details')->nullable();
             $table->string('brand')->nullable();
             $table->string('status')->default('active');
-            $table->string('seo_title')->nullable();
-            $table->text('seo_description')->nullable();
             $table->timestamps();
         });
     }

@@ -14,6 +14,10 @@ class Product extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'details' => 'array',
+    ];
+
     public function getIsActiveAttribute(): bool
     {
         return ($this->attributes['status'] ?? 'active') === 'active';

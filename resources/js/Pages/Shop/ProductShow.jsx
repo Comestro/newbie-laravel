@@ -19,6 +19,7 @@ export default function ProductShow({ product }) {
         : (selectedVariant?.image_url ? [{ id: 'default', url: selectedVariant.image_url }] : []);
 
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [showAllDetails, setShowAllDetails] = useState(false);
 
     const handleSelectVariant = (id) => {
         setSelectedVariantId(id);
@@ -213,6 +214,35 @@ export default function ProductShow({ product }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Product Details & Specifications */}
+                {Array.isArray(product.details) && product.details.length > 0 && (
+                    <div className="mt-8 bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                            <h2 className="text-base font-bold text-slate-900">Product Details</h2>
+                            {product.details.length > 6 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAllDetails((prev) => !prev)}
+                                    className="text-xs font-bold text-purple-600 hover:text-purple-700 cursor-pointer"
+                                >
+                                    {showAllDetails ? 'Show less' : 'View details'}
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="divide-y divide-slate-100">
+                            {(showAllDetails ? product.details : product.details.slice(0, 6)).map((item, idx) => (
+                                <div key={idx} className="py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 text-xs">
+                                    <dt className="font-semibold text-slate-500">{item.key}</dt>
+                                    <dd className="sm:col-span-2 text-slate-800 whitespace-pre-line leading-relaxed">
+                                        {item.value}
+                                    </dd>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </ShopLayout>
     );

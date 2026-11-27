@@ -128,6 +128,27 @@ class AdminProductController extends Controller
         return $sku;
     }
 
+    private function sanitizeDetails(?array $details): ?array
+    {
+        if (empty($details)) {
+            return null;
+        }
+
+        $cleaned = [];
+        foreach ($details as $row) {
+            $key = trim((string) ($row['key'] ?? ''));
+            $value = trim((string) ($row['value'] ?? ''));
+            if ($key !== '' && $value !== '') {
+                $cleaned[] = [
+                    'key' => $key,
+                    'value' => $value,
+                ];
+            }
+        }
+
+        return count($cleaned) > 0 ? $cleaned : null;
+    }
+
     public function store(Request $request, ImageKitService $imageKitService): RedirectResponse
     {
         $validated = $request->validate([
@@ -135,6 +156,9 @@ class AdminProductController extends Controller
             'brand' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
+            'details' => 'nullable|array',
+            'details.*.key' => 'nullable|string|max:120',
+            'details.*.value' => 'nullable|string|max:5000',
             'status' => 'nullable|string|in:active,inactive',
             'is_active' => 'nullable|boolean',
             'variants' => 'required|array|min:1',
@@ -161,6 +185,7 @@ class AdminProductController extends Controller
                 'name' => $validated['name'],
                 'slug' => $this->generateUniqueSlug($validated['name']),
                 'description' => $validated['description'] ?? null,
+                'details' => $this->sanitizeDetails($validated['details'] ?? null),
                 'brand' => $validated['brand'],
                 'category_id' => $validated['category_id'],
                 'status' => $productStatus,
@@ -255,6 +280,9 @@ class AdminProductController extends Controller
             'brand' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
+            'details' => 'nullable|array',
+            'details.*.key' => 'nullable|string|max:120',
+            'details.*.value' => 'nullable|string|max:5000',
             'status' => 'nullable|string|in:active,inactive',
             'is_active' => 'nullable|boolean',
             'variants' => 'required|array|min:1',
@@ -286,6 +314,7 @@ class AdminProductController extends Controller
                 'name' => $validated['name'],
                 'slug' => $this->generateUniqueSlug($validated['name'], $product->id),
                 'description' => $validated['description'] ?? null,
+                'details' => $this->sanitizeDetails($validated['details'] ?? null),
                 'brand' => $validated['brand'],
                 'category_id' => $validated['category_id'],
                 'status' => $productStatus,
