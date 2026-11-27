@@ -13,38 +13,53 @@ use Inertia\Response;
 
 class AdminRetailerReviewController extends Controller
 {
+    private function formatApplicant(RetailerProfile $profile): array
+    {
+        return [
+            'id' => $profile->user->id,
+            'profile_id' => $profile->id,
+            'name' => $profile->user->name,
+            'email' => $profile->user->email,
+            'phone' => $profile->user->phone,
+            'shop_name' => $profile->shop_name,
+            'shop_address' => $profile->shop_address,
+            'gst_number' => $profile->gst_number,
+            'shop_image' => $profile->shop_image,
+            'aadhaar_card' => $profile->aadhaar_card,
+            'aadhaar_front' => $profile->aadhaar_card_front,
+            'aadhaar_back' => $profile->aadhaar_card_back,
+            'apply_status' => $profile->status,
+            'status' => $profile->status,
+            'rejection_reason' => $profile->rejection_reason,
+            'approved_at' => $profile->approved_at,
+            'created_at' => $profile->created_at,
+        ];
+    }
+
     public function index(Request $request): Response
     {
-        $status = $request->query('status', 'PENDING');
+        $status = $request->query('status', 'ALL');
 
         $requests = RetailerProfile::with('user')
-            ->where('status', $status)
+            ->when($status && $status !== 'ALL', fn ($q) => $q->where('status', $status))
             ->latest()
             ->get()
-            ->map(function ($profile) {
-                return [
-                    'id' => $profile->user->id,
-                    'profile_id' => $profile->id,
-                    'name' => $profile->user->name,
-                    'email' => $profile->user->email,
-                    'phone' => $profile->user->phone,
-                    'shop_name' => $profile->shop_name,
-                    'shop_address' => $profile->shop_address,
-                    'gst_number' => $profile->gst_number,
-                    'shop_image' => $profile->shop_image,
-                    'aadhaar_card' => $profile->aadhaar_card,
-                    'aadhaar_front' => $profile->aadhaar_card_front,
-                    'aadhaar_back' => $profile->aadhaar_card_back,
-                    'apply_status' => $profile->status,
-                    'status' => $profile->status,
-                    'rejection_reason' => $profile->rejection_reason,
-                    'created_at' => $profile->created_at,
-                ];
-            });
+            ->map(fn ($profile) => $this->formatApplicant($profile));
 
         return Inertia::render('Admin/ReviewRetailer', [
             'requests' => $requests,
             'currentStatus' => $status,
+        ]);
+    }
+
+    public function show(User $user): Response
+    {
+        $profile = RetailerProfile::with('user')
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        return Inertia::render('Admin/ReviewRetailerShow', [
+            'applicant' => $this->formatApplicant($profile),
         ]);
     }
 

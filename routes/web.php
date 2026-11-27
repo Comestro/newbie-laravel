@@ -99,6 +99,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
         Route::get('/orders/{order}/invoice', [AdminOrderController::class, 'invoice'])->name('orders.invoice');
 
         Route::get('/review-retailer', [AdminRetailerReviewController::class, 'index'])->name('reviewretailer');
+        Route::get('/review-retailer/{user}', [AdminRetailerReviewController::class, 'show'])->name('reviewretailer.show');
         Route::post('/review-retailer/{user}/approve', [AdminRetailerReviewController::class, 'approve'])->name('reviewretailer.approve');
         Route::post('/review-retailer/{user}/reject', [AdminRetailerReviewController::class, 'reject'])->name('reviewretailer.reject');
 
