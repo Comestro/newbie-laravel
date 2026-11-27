@@ -17,26 +17,26 @@ export default function BottomCartButton() {
             <button
                 type="button"
                 onClick={openCart}
-                className="flex items-center gap-3.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white pl-4 pr-5 py-2.5 rounded-full shadow-2xl shadow-purple-900/40 transition-all duration-200 cursor-pointer border border-purple-400/30 backdrop-blur-xs group"
+                className="flex items-center gap-2.5 sm:gap-3.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white pl-3 pr-3.5 py-1.5 sm:pl-4 sm:pr-5 sm:py-2.5 rounded-full shadow-2xl shadow-purple-900/40 transition-all duration-200 cursor-pointer border border-purple-400/30 backdrop-blur-xs whitespace-nowrap group"
                 aria-label={`View Cart: ${itemCount} items, total ₹${subtotal}`}
             >
-                <div className="flex items-center gap-2.5">
-                    <ShoppingBag className="w-5 h-5 text-white transition-transform group-hover:scale-110" />
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0 transition-transform group-hover:scale-110" />
                     <div className="text-left">
-                        <div className="text-xs font-bold leading-tight">
+                        <div className="text-[11px] sm:text-xs font-bold leading-tight">
                             {itemCount} {itemCount === 1 ? 'Item' : 'Items'}
                         </div>
-                        <div className="text-[11px] font-semibold text-purple-100 leading-tight">
+                        <div className="text-[10px] sm:text-[11px] font-semibold text-purple-100 leading-tight">
                             ₹{Number(subtotal).toLocaleString()}
                         </div>
                     </div>
                 </div>
 
-                <div className="h-4 w-px bg-purple-400/50" />
+                <div className="h-3.5 sm:h-4 w-px bg-purple-400/50 shrink-0" />
 
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
+                <div className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
                     <span>View Cart</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 </div>
             </button>
         </div>

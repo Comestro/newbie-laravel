@@ -22,11 +22,6 @@ export default function Index({ categories, filters = {} }) {
         router.get(route('admin.categories.index'), { search: query || undefined }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        applyCategorySearch();
-    };
-
     const handleToggleActive = (category) => {
         router.post(route('admin.categories.toggle-active', category.id), {}, { preserveScroll: true });
     };
@@ -73,30 +68,14 @@ export default function Index({ categories, filters = {} }) {
 
             <div className="space-y-4">
                 {/* Search Bar */}
-                <form onSubmit={handleSearch} className="flex gap-2 max-w-sm">
-                    <SearchBar
-                        value={search}
-                        onChange={setSearch}
-                        onSearch={applyCategorySearch}
-                        placeholder="Search categories..."
-                        className="flex-1"
-                        inputClassName="py-2 text-slate-800"
-                    />
-                    <button
-                        type="submit"
-                        className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
-                    >
-                        Filter
-                    </button>
-                    {filters.search && (
-                        <Link
-                            href={route('admin.categories.index')}
-                            className="px-3 py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 flex items-center"
-                        >
-                            Clear
-                        </Link>
-                    )}
-                </form>
+                <SearchBar
+                    value={search}
+                    onChange={setSearch}
+                    onSearch={applyCategorySearch}
+                    placeholder="Search categories..."
+                    className="max-w-sm"
+                    inputClassName="py-2 text-slate-800"
+                />
 
                 {/* Categories Table */}
                 <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">

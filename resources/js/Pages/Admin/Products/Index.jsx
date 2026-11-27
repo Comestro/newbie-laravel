@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import SearchBar from '../../../Components/SearchBar';
+import StatusToggle from '../../../Components/StatusToggle';
 import ConfirmModal from '../../../Components/ConfirmModal';
 import { Plus, Edit, Trash2, Package, Layers, AlertCircle } from 'lucide-react';
 
@@ -17,22 +18,20 @@ export default function Index({ products, categories = [], filters = {} }) {
         loading: false,
     });
 
-    const applyProductFilter = (nextSearch) => {
-        const query = nextSearch !== undefined ? nextSearch : search;
+    const applyProductFilter = (overrides = {}) => {
+        const nextSearch = overrides.search !== undefined ? overrides.search : search;
+        const nextCategory = overrides.category_id !== undefined ? overrides.category_id : categoryId;
+        const nextStatus = overrides.status !== undefined ? overrides.status : status;
+
         router.get(
             route('admin.products.index'),
             {
-                search: query || undefined,
-                category_id: categoryId || undefined,
-                status: status || undefined,
+                search: nextSearch || undefined,
+                category_id: nextCategory || undefined,
+                status: nextStatus || undefined,
             },
             { preserveState: true, preserveScroll: true, replace: true }
         );
-    };
-
-    const handleFilter = (e) => {
-        e?.preventDefault();
-        applyProductFilter();
     };
 
     const handleClear = () => {
@@ -100,12 +99,12 @@ export default function Index({ products, categories = [], filters = {} }) {
 
             <div className="space-y-4">
                 {/* Search & Filters */}
-                <form onSubmit={handleFilter} className="bg-white rounded-xl border border-slate-100 p-3 shadow-xs">
+                <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-xs">
                     <div className="flex flex-wrap items-center gap-2.5">
                         <SearchBar
                             value={search}
                             onChange={setSearch}
-                            onSearch={applyProductFilter}
+                            onSearch={(val) => applyProductFilter({ search: val })}
                             placeholder="Search by product name, brand, or SKU..."
                             className="flex-1 min-w-[200px]"
                             inputClassName="py-2"
@@ -113,7 +112,11 @@ export default function Index({ products, categories = [], filters = {} }) {
 
                         <select
                             value={categoryId}
-                            onChange={(e) => setCategoryId(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setCategoryId(val);
+                                applyProductFilter({ category_id: val });
+                            }}
                             className="text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-700 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         >
                             <option value="">All Categories</option>
@@ -126,7 +129,11 @@ export default function Index({ products, categories = [], filters = {} }) {
 
                         <select
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setStatus(val);
+                                applyProductFilter({ status: val });
+                            }}
                             className="text-xs px-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-700 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         >
                             <option value="">All Statuses</option>
@@ -134,24 +141,17 @@ export default function Index({ products, categories = [], filters = {} }) {
                             <option value="inactive">Inactive</option>
                         </select>
 
-                        <button
-                            type="submit"
-                            className="px-3.5 py-2 text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
-                        >
-                            Filter
-                        </button>
-
                         {(filters.search || filters.category_id || filters.status) && (
                             <button
                                 type="button"
                                 onClick={handleClear}
-                                className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+                                className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
                             >
                                 Reset
                             </button>
                         )}
                     </div>
-                </form>
+                </div>
 
                 {/* Products Table */}
                 <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">
@@ -239,17 +239,13 @@ export default function Index({ products, categories = [], filters = {} }) {
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-4 text-center">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleToggleActive(prod)}
-                                                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold transition capitalize ${
-                                                            (prod.status ? prod.status === 'active' : prod.is_active)
-                                                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                                        }`}
-                                                    >
-                                                        {prod.status || (prod.is_active ? 'active' : 'inactive')}
-                                                    </button>
+                                                    <div className="inline-flex items-center gap-2">
+                                                        <StatusToggle
+                                                            checked={prod.status ? prod.status === 'active' : prod.is_active}
+                                                            onChange={() => handleToggleActive(prod)}
+                                                            label={`Toggle ${prod.name} status`}
+                                                        />
+                                                    </div>
                                                 </td>
                                                 <td className="py-3 px-4 text-right">
                                                     <div className="flex items-center justify-end gap-1">

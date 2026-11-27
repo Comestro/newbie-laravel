@@ -111,26 +111,26 @@ export default function Navbar() {
                     <div className="flex items-center gap-4 sm:gap-8 min-w-0">
                         <div className="shrink-0 flex items-center">
                             <Link href="/" className="flex items-center">
-                                <img src="/logo.png" alt="Newbie" className="h-7 sm:h-9 w-auto" />
+                                <img src="/logo.png" alt="Newbie" className="h-6 sm:h-9 w-auto" />
                             </Link>
                         </div>
-                        <div className="flex items-center space-x-3 sm:space-x-6">
+                        <div className="hidden sm:flex items-center space-x-6">
                             <Link
                                 href="/catalog"
-                                className="text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
                             >
                                 Shop
                             </Link>
                             <Link
                                 href="/catalog"
-                                className="hidden sm:inline-block text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
                             >
                                 Categories
                             </Link>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 sm:space-x-4 shrink-0">
+                    <div className="flex items-center space-x-1 sm:space-x-4 shrink-0">
                         {/* Search */}
                         <SearchBar
                             value={searchQuery}
@@ -270,7 +270,7 @@ export default function Navbar() {
                         ) : (
                             <Link
                                 href="/login"
-                                className="text-sm font-semibold text-slate-700 hover:text-purple-600 transition"
+                                className="hidden sm:inline-block text-sm font-semibold text-slate-700 hover:text-purple-600 transition"
                             >
                                 Log in
                             </Link>

@@ -22,7 +22,7 @@ export default function CartDrawer() {
 
     return (
         <div
-            className="relative z-50 font-sans"
+            className="relative z-[60] font-sans"
             aria-labelledby="slide-over-title"
             role="dialog"
             aria-modal="true"
