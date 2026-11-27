@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification as BaseNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
@@ -186,5 +188,40 @@ class User extends Authenticatable
         }
 
         return true;
+    }
+
+    /**
+     * Send a notification without failing the caller if the broadcast server is offline.
+     */
+    public static function sendNotificationSafely(mixed $notifiables, BaseNotification $notification): void
+    {
+        if (blank($notifiables)) {
+            return;
+        }
+
+        try {
+            Notification::send($notifiables, $notification);
+        } catch (\Throwable) {
+            // Do not block primary flows if broadcast server is offline
+        }
+    }
+
+    /**
+     * Notify all admin users safely.
+     */
+    public static function notifyAdmins(BaseNotification $notification): void
+    {
+        $admins = static::where('role', UserRole::ADMIN)->get();
+        if ($admins->isNotEmpty()) {
+            static::sendNotificationSafely($admins, $notification);
+        }
+    }
+
+    /**
+     * Notify this user safely.
+     */
+    public function notifySafely(BaseNotification $notification): void
+    {
+        static::sendNotificationSafely($this, $notification);
     }
 }

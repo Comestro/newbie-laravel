@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useCart } from '../Context/CartContext';
+import NotificationBell from './NotificationBell';
 import {
     ChevronDown,
     Coins,
@@ -163,6 +164,9 @@ export default function Navbar() {
                                 </span>
                             )}
                         </button>
+
+                        {/* Notifications (authenticated users) */}
+                        {user && <NotificationBell compact />}
 
                         {/* Auth / Profile Dropdown */}
                         {user ? (

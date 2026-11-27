@@ -2,12 +2,10 @@
 
 namespace App\Notifications;
 
-use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 class NewUserRegisteredNotification extends Notification implements ShouldBroadcastNow
 {
@@ -21,16 +19,7 @@ class NewUserRegisteredNotification extends Notification implements ShouldBroadc
      */
     public static function notifyAdmins(User $user, ?string $shopName = null): void
     {
-        $admins = User::where('role', UserRole::ADMIN)->get();
-        if ($admins->isEmpty()) {
-            return;
-        }
-
-        try {
-            NotificationFacade::send($admins, new self($user, $shopName));
-        } catch (\Throwable) {
-            // Do not block registration or KYC submission if broadcast server is offline
-        }
+        User::notifyAdmins(new self($user, $shopName));
     }
 
     public function via(object $notifiable): array

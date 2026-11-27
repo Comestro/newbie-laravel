@@ -1,7 +1,7 @@
 import React from 'react';
 import PanelLayout from './PanelLayout';
 import AdminSidebar from '../Components/AdminSidebar';
-import AdminNotificationBell from '../Components/AdminNotificationBell';
+import NotificationBell from '../Components/NotificationBell';
 
 export default function AdminLayout({ children, title, subtitle, action }) {
     return (
@@ -10,7 +10,7 @@ export default function AdminLayout({ children, title, subtitle, action }) {
             title={title}
             subtitle={subtitle}
             action={action}
-            headerRight={<AdminNotificationBell />}
+            headerRight={<NotificationBell />}
         >
             {children}
         </PanelLayout>

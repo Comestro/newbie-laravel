@@ -4,7 +4,6 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminCouponController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminRetailerReviewController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerPortalController;
 use App\Http\Controllers\LoyaltyController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RetailerController;
 use App\Http\Controllers\ShopController;
@@ -61,6 +61,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/loyalty/membership/verify', [LoyaltyController::class, 'verifyMembership'])->name('loyalty.membership.verify');
     Route::post('/loyalty/topup/razorpay-order', [LoyaltyController::class, 'createTopupOrder'])->name('loyalty.topup.order');
     Route::post('/loyalty/topup/verify', [LoyaltyController::class, 'verifyTopup'])->name('loyalty.topup.verify');
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 // Admin Routes
@@ -109,9 +112,6 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
 
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
         Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
-
-        Route::post('/notifications/{id}/read', [AdminNotificationController::class, 'markAsRead'])->name('notifications.read');
-        Route::post('/notifications/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     });
 
 // Retailer Routes
@@ -165,6 +165,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsRetailer::class])
         <p>Click any action below to safely execute the Artisan command directly from the browser.</p>
         <div class="btn-grid">
             <form method="POST" action="/artisan/migrate"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn">🚀 php artisan migrate</button></form>
+            <form method="POST" action="/artisan/migrate-fresh" onsubmit="return confirm('WARNING: This will drop ALL database tables and re-run migrations (without seeding). Are you sure?')"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn btn-danger">🔄 migrate:fresh</button></form>
             <form method="POST" action="/artisan/migrate-fresh-seed" onsubmit="return confirm('WARNING: This will drop ALL database tables and re-seed everything. Are you sure you want to proceed?')"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn btn-danger">⚠️ migrate:fresh --seed</button></form>
             <form method="POST" action="/artisan/optimize-clear"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn btn-warning">🧹 optimize:clear</button></form>
             <form method="POST" action="/artisan/cache-clear"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="btn btn-warning">⚡ cache:clear</button></form>
@@ -181,28 +182,42 @@ HTML;
             return response($html)->header('Content-Type', 'text/html');
         });
 
-        Route::post('/migrate', function () {
-            $staleMigration = database_path('migrations/2025_09_22_145432_add_two_factor_columns_to_users_table.php');
-            if (file_exists($staleMigration)) {
-                @unlink($staleMigration);
+        $cleanupStaleMigrations = function (): void {
+            $staleFiles = [
+                'migrations/2025_09_22_145432_add_two_factor_columns_to_users_table.php',
+                'migrations/2026_01_17_174652_add_columns_to_users_table.php',
+            ];
+            foreach ($staleFiles as $file) {
+                $path = database_path($file);
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
             }
+        };
 
+        $renderArtisanOutput = function (string $title, string $color, string $output, string $fallback) {
+            return response('<div style="background:#0f172a;color:#f8fafc;padding:30px;min-height:100vh;font-family:system-ui;"><div style="max-width:700px;margin:0 auto;"><h2 style="color:'.$color.';">'.$title.'</h2><pre style="background:#1e293b;color:#4ade80;padding:16px;border-radius:8px;border:1px solid #334155;font-family:monospace;white-space:pre-wrap;">'.e($output ?: $fallback).'</pre><br><a href="/artisan" style="color:#38bdf8;text-decoration:none;font-weight:bold;">← Back to Artisan Tools</a></div></div>');
+        };
+
+        Route::post('/migrate', function () use ($cleanupStaleMigrations, $renderArtisanOutput) {
+            $cleanupStaleMigrations();
             Artisan::call('migrate', ['--force' => true]);
-            $output = Artisan::output();
 
-            return response('<div style="background:#0f172a;color:#f8fafc;padding:30px;min-height:100vh;font-family:system-ui;"><div style="max-width:700px;margin:0 auto;"><h2 style="color:#38bdf8;">🚀 php artisan migrate Output:</h2><pre style="background:#1e293b;color:#4ade80;padding:16px;border-radius:8px;border:1px solid #334155;font-family:monospace;white-space:pre-wrap;">'.e($output ?: 'Migrations ran successfully. Nothing to migrate.').'</pre><br><a href="/artisan" style="color:#38bdf8;text-decoration:none;font-weight:bold;">← Back to Artisan Tools</a></div></div>');
+            return $renderArtisanOutput('🚀 php artisan migrate Output:', '#38bdf8', Artisan::output(), 'Migrations ran successfully. Nothing to migrate.');
         });
 
-        Route::post('/migrate-fresh-seed', function () {
-            $staleMigration = database_path('migrations/2025_09_22_145432_add_two_factor_columns_to_users_table.php');
-            if (file_exists($staleMigration)) {
-                @unlink($staleMigration);
-            }
+        Route::post('/migrate-fresh', function () use ($cleanupStaleMigrations, $renderArtisanOutput) {
+            $cleanupStaleMigrations();
+            Artisan::call('migrate:fresh', ['--force' => true]);
 
+            return $renderArtisanOutput('🔄 php artisan migrate:fresh Output:', '#ef4444', Artisan::output(), 'Database refreshed successfully.');
+        });
+
+        Route::post('/migrate-fresh-seed', function () use ($cleanupStaleMigrations, $renderArtisanOutput) {
+            $cleanupStaleMigrations();
             Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
-            $output = Artisan::output();
 
-            return response('<div style="background:#0f172a;color:#f8fafc;padding:30px;min-height:100vh;font-family:system-ui;"><div style="max-width:700px;margin:0 auto;"><h2 style="color:#ef4444;">⚠️ php artisan migrate:fresh --seed Output:</h2><pre style="background:#1e293b;color:#4ade80;padding:16px;border-radius:8px;border:1px solid #334155;font-family:monospace;white-space:pre-wrap;">'.e($output ?: 'Database refreshed and seeded successfully.').'</pre><br><a href="/artisan" style="color:#38bdf8;text-decoration:none;font-weight:bold;">← Back to Artisan Tools</a></div></div>');
+            return $renderArtisanOutput('⚠️ php artisan migrate:fresh --seed Output:', '#ef4444', Artisan::output(), 'Database refreshed and seeded successfully.');
         });
 
         Route::post('/optimize-clear', function () {

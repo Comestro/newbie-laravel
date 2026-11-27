@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\LoyaltyTransaction;
 use App\Models\Order;
+use App\Notifications\OrderUpdatedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +111,8 @@ class AdminOrderController extends Controller
             ]);
         });
 
+        $order->user?->notifySafely(new OrderUpdatedNotification($order->fresh(), 'edited'));
+
         return back()->with('success', 'Order updated successfully.');
     }
 
@@ -159,6 +162,12 @@ class AdminOrderController extends Controller
             $order->update($data);
         });
 
+        if ($previousStatus !== $newStatus) {
+            $order->user?->notifySafely(
+                new OrderUpdatedNotification($order->fresh(), 'status_changed', $previousStatus?->value)
+            );
+        }
+
         return back()->with('success', 'Order status updated successfully.');
     }
 
@@ -177,6 +186,8 @@ class AdminOrderController extends Controller
                 'paid_at' => $newPaymentStatus === PaymentStatus::PAID->value ? ($latestPayment->paid_at ?? now()) : $latestPayment->paid_at,
             ]);
         }
+
+        $order->user?->notifySafely(new OrderUpdatedNotification($order->fresh(), 'payment_status_changed'));
 
         return back()->with('success', 'Payment status updated successfully.');
     }

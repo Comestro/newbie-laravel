@@ -78,10 +78,10 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success') ?? $request->session()->get('status'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-            'adminNotifications' => fn () => $request->user()?->isAdmin() && \Illuminate\Support\Facades\Schema::hasTable('notifications')
+            'notifications' => fn () => $user && \Illuminate\Support\Facades\Schema::hasTable('notifications')
                 ? [
-                    'unread_count' => $request->user()->unreadNotifications()->count(),
-                    'items' => $request->user()->notifications()->latest()->take(15)->get()->map(fn ($n) => [
+                    'unread_count' => $user->unreadNotifications()->count(),
+                    'items' => $user->notifications()->latest()->take(15)->get()->map(fn ($n) => [
                         'id' => $n->id,
                         'data' => $n->data,
                         'read_at' => $n->read_at,

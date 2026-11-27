@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\User;
+use App\Notifications\NewOrderReceivedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -271,6 +272,8 @@ class OrderController extends Controller
         }
 
         session()->forget('cart');
+
+        User::notifyAdmins(new NewOrderReceivedNotification($order, $user));
 
         return redirect()->route('ordersuccess', ['order' => $order->order_number]);
     }

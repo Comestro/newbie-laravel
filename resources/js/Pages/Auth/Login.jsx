@@ -1,7 +1,31 @@
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import GuestLayout from '../../Layouts/GuestLayout';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldCheck, Store, User } from 'lucide-react';
+
+const DEMO_ACCOUNTS = [
+    {
+        label: 'Admin',
+        email: 'admin@newbie.com',
+        password: 'password',
+        icon: ShieldCheck,
+        badgeClass: 'bg-purple-50 text-purple-700 border-purple-200/80 hover:bg-purple-100',
+    },
+    {
+        label: 'Retailer',
+        email: 'retailer@newbie.com',
+        password: 'password',
+        icon: Store,
+        badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80 hover:bg-amber-100',
+    },
+    {
+        label: 'Customer',
+        email: 'user@newbie.com',
+        password: 'password',
+        icon: User,
+        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100',
+    },
+];
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
@@ -13,6 +37,19 @@ export default function Login() {
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/login');
+    };
+
+    const handleDemoLogin = (account) => {
+        setData({
+            email: account.email,
+            password: account.password,
+            remember: false,
+        });
+        router.post('/login', {
+            email: account.email,
+            password: account.password,
+            remember: false,
+        });
     };
 
     return (
@@ -87,6 +124,31 @@ export default function Login() {
                     </Link>
                 </p>
             </form>
+
+            {/* Floating Quick Demo Login (Bottom-Right Corner) */}
+            <div className="fixed bottom-4 right-4 z-50 bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-lg rounded-2xl p-3 w-64">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Quick Demo Login
+                </p>
+                <div className="grid grid-cols-3 gap-1.5">
+                    {DEMO_ACCOUNTS.map((account) => {
+                        const Icon = account.icon;
+                        return (
+                            <button
+                                key={account.email}
+                                type="button"
+                                disabled={processing}
+                                onClick={() => handleDemoLogin(account)}
+                                className={`py-2 px-1.5 rounded-xl border text-[11px] font-semibold flex flex-col items-center justify-center gap-1 transition cursor-pointer disabled:opacity-50 ${account.badgeClass}`}
+                                title={`${account.email} / ${account.password}`}
+                            >
+                                <Icon className="w-3.5 h-3.5 shrink-0" />
+                                <span>{account.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
         </GuestLayout>
     );
 }
