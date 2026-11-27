@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
+import SearchBar from '../../../Components/SearchBar';
 import ConfirmModal from '../../../Components/ConfirmModal';
-import { Plus, Edit, Trash2, Package, Search, Layers, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Layers, AlertCircle } from 'lucide-react';
 
 export default function Index({ products, categories = [], filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -16,17 +17,22 @@ export default function Index({ products, categories = [], filters = {} }) {
         loading: false,
     });
 
-    const handleFilter = (e) => {
-        e?.preventDefault();
+    const applyProductFilter = (nextSearch) => {
+        const query = nextSearch !== undefined ? nextSearch : search;
         router.get(
             route('admin.products.index'),
             {
-                search: search || undefined,
+                search: query || undefined,
                 category_id: categoryId || undefined,
                 status: status || undefined,
             },
-            { preserveScroll: true }
+            { preserveState: true, preserveScroll: true, replace: true }
         );
+    };
+
+    const handleFilter = (e) => {
+        e?.preventDefault();
+        applyProductFilter();
     };
 
     const handleClear = () => {
@@ -96,16 +102,14 @@ export default function Index({ products, categories = [], filters = {} }) {
                 {/* Search & Filters */}
                 <form onSubmit={handleFilter} className="bg-white rounded-xl border border-slate-100 p-3 shadow-xs">
                     <div className="flex flex-wrap items-center gap-2.5">
-                        <div className="relative flex-1 min-w-[200px]">
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by product name, brand, or SKU..."
-                                className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                            />
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                        </div>
+                        <SearchBar
+                            value={search}
+                            onChange={setSearch}
+                            onSearch={applyProductFilter}
+                            placeholder="Search by product name, brand, or SKU..."
+                            className="flex-1 min-w-[200px]"
+                            inputClassName="py-2"
+                        />
 
                         <select
                             value={categoryId}

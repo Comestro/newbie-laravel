@@ -1,25 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import ProductCard from '../../Components/ProductCard';
-import { Search } from 'lucide-react';
 
 export default function Catalog({ products, filters = {}, categories = [] }) {
-    const [search, setSearch] = useState(filters.search || '');
     const currentCategory = filters.category || null;
 
     const handleSelectCategory = (cat) => {
         router.get('/catalog', {
             category: cat || undefined,
-            search: search || undefined,
-        }, { preserveScroll: true });
-    };
-
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        router.get('/catalog', {
-            category: currentCategory || undefined,
-            search: search || undefined,
         }, { preserveScroll: true });
     };
 
@@ -125,33 +114,19 @@ export default function Catalog({ products, filters = {}, categories = [] }) {
                     </div>
 
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
-                        <div>
-                            <h1 className="text-xl font-bold text-slate-900">
-                                {filters.search ? (
-                                    `Search results for "${filters.search}"`
-                                ) : currentCategory ? (
-                                    currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)
-                                ) : (
-                                    'All Products'
-                                )}
-                            </h1>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                                Showing {productList.length} items
-                            </p>
-                        </div>
-
-                        {/* Search Input */}
-                        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-64">
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search products..."
-                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200/80 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                            />
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                        </form>
+                    <div className="mb-6">
+                        <h1 className="text-xl font-bold text-slate-900">
+                            {filters.search ? (
+                                `Search results for "${filters.search}"`
+                            ) : currentCategory ? (
+                                currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)
+                            ) : (
+                                'All Products'
+                            )}
+                        </h1>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                            Showing {productList.length} items
+                        </p>
                     </div>
 
                     {/* Products Grid */}

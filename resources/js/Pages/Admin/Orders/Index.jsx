@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { Search, Eye, Receipt, FilePlus2, RefreshCw } from 'lucide-react';
+import SearchBar from '../../../Components/SearchBar';
+import { Eye, Receipt, FilePlus2, RefreshCw } from 'lucide-react';
 
 export default function Index({ orders, statuses = [], filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -13,12 +14,11 @@ export default function Index({ orders, statuses = [], filters = {} }) {
             status: newFilters.status !== undefined ? newFilters.status : status,
         };
         Object.keys(query).forEach((k) => !query[k] && delete query[k]);
-        router.get('/admin/orders', query, { preserveScroll: true });
+        router.get('/admin/orders', query, { preserveState: true, preserveScroll: true, replace: true });
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        applyFilters({ search });
+    const handleSearch = (nextSearch) => {
+        applyFilters({ search: nextSearch !== undefined ? nextSearch : search });
     };
 
     return (
@@ -28,16 +28,13 @@ export default function Index({ orders, statuses = [], filters = {} }) {
             <div className="space-y-4">
                 {/* Search & Status Filters */}
                 <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <form onSubmit={handleSearch} className="relative w-full sm:w-72">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search Order ID or customer..."
-                            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                        />
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                    </form>
+                    <SearchBar
+                        value={search}
+                        onChange={setSearch}
+                        onSearch={handleSearch}
+                        placeholder="Search Order ID or customer..."
+                        className="w-full sm:w-72"
+                    />
 
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                         <select

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useCart } from '../Context/CartContext';
+import SearchBar from './SearchBar';
 import NotificationBell from './NotificationBell';
 import {
     ChevronDown,
@@ -21,7 +22,13 @@ export default function Navbar() {
     const { auth, wishlistProductIds = [] } = usePage().props;
     const { url } = usePage();
     const { itemCount, openCart } = useCart();
-    const [searchQuery, setSearchQuery] = useState('');
+    const getUrlSearch = (pageUrl) => {
+        const queryIndex = (pageUrl || '').indexOf('?');
+        if (queryIndex === -1) return '';
+        return new URLSearchParams(pageUrl.slice(queryIndex + 1)).get('search') || '';
+    };
+
+    const [searchQuery, setSearchQuery] = useState(() => getUrlSearch(url));
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -30,6 +37,7 @@ export default function Navbar() {
 
     useEffect(() => {
         setMenuOpen(false);
+        setSearchQuery(getUrlSearch(url));
     }, [url]);
 
     useEffect(() => {
@@ -42,10 +50,12 @@ export default function Navbar() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            router.get('/catalog', { search: searchQuery.trim() });
+    const handleSearch = (queryValue) => {
+        const q = (queryValue ?? searchQuery).trim();
+        if (q) {
+            router.get('/catalog', { search: q }, { preserveState: true, replace: true });
+        } else if (url.startsWith('/catalog')) {
+            router.get('/catalog', {}, { preserveState: true, replace: true });
         }
     };
 
@@ -119,20 +129,15 @@ export default function Navbar() {
 
                     <div className="flex items-center space-x-3 sm:space-x-4">
                         {/* Search */}
-                        <form onSubmit={handleSearch} className="relative hidden md:block w-72 lg:w-80">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </div>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="block w-full pl-9 pr-3 py-1.5 border border-slate-200/80 rounded-lg text-sm bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                                placeholder="Search 'milk'..."
-                            />
-                        </form>
+                        <SearchBar
+                            value={searchQuery}
+                            onChange={setSearchQuery}
+                            onSearch={handleSearch}
+                            debounceMs={400}
+                            placeholder="Search 'milk'..."
+                            size="md"
+                            className="hidden md:block w-72 lg:w-80"
+                        />
 
                         {/* Wishlist */}
                         <Link

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
-import { Search } from 'lucide-react';
+import SearchBar from '../../Components/SearchBar';
 
 export default function Customers({ customers, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -13,12 +13,11 @@ export default function Customers({ customers, filters = {} }) {
             role: newFilters.role !== undefined ? newFilters.role : role,
         };
         Object.keys(query).forEach((k) => !query[k] && delete query[k]);
-        router.get('/admin/customers', query, { preserveScroll: true });
+        router.get('/admin/customers', query, { preserveState: true, preserveScroll: true, replace: true });
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        applyFilters({ search });
+    const handleSearch = (nextSearch) => {
+        applyFilters({ search: nextSearch !== undefined ? nextSearch : search });
     };
 
     const toggleActive = (id) => {
@@ -32,16 +31,13 @@ export default function Customers({ customers, filters = {} }) {
             <div className="space-y-4">
                 {/* Search & Filters Bar */}
                 <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <form onSubmit={handleSearch} className="relative w-full sm:w-72">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search customer name or email..."
-                            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                        />
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                    </form>
+                    <SearchBar
+                        value={search}
+                        onChange={setSearch}
+                        onSearch={handleSearch}
+                        placeholder="Search customer name or email..."
+                        className="w-full sm:w-72"
+                    />
 
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                         <select

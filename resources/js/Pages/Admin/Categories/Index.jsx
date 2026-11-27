@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
+import SearchBar from '../../../Components/SearchBar';
 import ConfirmModal from '../../../Components/ConfirmModal';
-import { Plus, Edit, Trash2, Layers, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Layers } from 'lucide-react';
 
 export default function Index({ categories, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -15,9 +16,14 @@ export default function Index({ categories, filters = {} }) {
         loading: false,
     });
 
+    const applyCategorySearch = (nextSearch) => {
+        const query = nextSearch !== undefined ? nextSearch : search;
+        router.get(route('admin.categories.index'), { search: query || undefined }, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
     const handleSearch = (e) => {
         e.preventDefault();
-        router.get(route('admin.categories.index'), { search: search || undefined }, { preserveScroll: true });
+        applyCategorySearch();
     };
 
     const handleToggleActive = (category) => {
@@ -67,16 +73,14 @@ export default function Index({ categories, filters = {} }) {
             <div className="space-y-4">
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="flex gap-2 max-w-sm">
-                    <div className="relative flex-1">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search categories..."
-                            className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200/80 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                        />
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                    </div>
+                    <SearchBar
+                        value={search}
+                        onChange={setSearch}
+                        onSearch={applyCategorySearch}
+                        placeholder="Search categories..."
+                        className="flex-1"
+                        inputClassName="py-2 text-slate-800"
+                    />
                     <button
                         type="submit"
                         className="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
