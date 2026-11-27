@@ -152,6 +152,45 @@ class AdminOrderController extends Controller
                         'order_id' => $order->id,
                     ]);
                 }
+
+                LoyaltyTransaction::where('order_id', $order->id)
+                    ->where('type', 'ORDER_EARN_PENDING')
+                    ->delete();
+
+                $earnedPoints = (int) LoyaltyTransaction::where('order_id', $order->id)
+                    ->where('type', 'ORDER_EARN')
+                    ->sum('points');
+
+                if ($earnedPoints > 0 && $order->user) {
+                    $order->user->refresh();
+                    $deductPoints = min($earnedPoints, max(0, (int) $order->user->loyalty_points));
+                    if ($deductPoints > 0) {
+                        $order->user->decrement('loyalty_points', $deductPoints);
+                    }
+                    LoyaltyTransaction::create([
+                        'user_id' => $order->user_id,
+                        'type' => 'ORDER_EARN_REVERSAL',
+                        'points' => -$deductPoints,
+                        'amount' => $order->total_amount,
+                        'description' => "Reversed earned points from cancelled Order #{$order->order_number}",
+                        'order_id' => $order->id,
+                    ]);
+                }
+            } elseif ($previousStatus !== OrderStatus::DELIVERED && $newStatus === OrderStatus::DELIVERED) {
+                $pendingEarned = LoyaltyTransaction::where('order_id', $order->id)
+                    ->where('type', 'ORDER_EARN_PENDING')
+                    ->get();
+
+                $totalPendingPoints = (int) $pendingEarned->sum('points');
+                if ($totalPendingPoints > 0 && $order->user) {
+                    $order->user->increment('loyalty_points', $totalPendingPoints);
+                    foreach ($pendingEarned as $tx) {
+                        $tx->update([
+                            'type' => 'ORDER_EARN',
+                            'description' => "Earned on Order #{$order->order_number}",
+                        ]);
+                    }
+                }
             } elseif ($previousStatus === OrderStatus::CANCELLED && $newStatus !== OrderStatus::CANCELLED) {
                 foreach ($order->items()->with('variant')->get() as $item) {
                     if ($item->variant) {

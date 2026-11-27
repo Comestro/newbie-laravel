@@ -4,9 +4,9 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import CustomerLayout from '../../Layouts/CustomerLayout';
 import { openRazorpayCheckout } from '../../utils/razorpay';
-import { ArrowDownLeft, ArrowUpRight, CheckCircle2, Coins, Crown, PlusCircle, ShieldAlert } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CheckCircle2, Clock, Coins, Crown, PlusCircle, ShieldAlert } from 'lucide-react';
 
-export default function Loyalty({ config, transactions = [] }) {
+export default function Loyalty({ config, transactions = [], pendingPoints = 0 }) {
     const { auth } = usePage().props;
     const user = auth?.user || {};
 
@@ -119,6 +119,12 @@ export default function Loyalty({ config, transactions = [] }) {
                         <p className="text-xs text-purple-100 mt-1">
                             Worth <span className="font-bold text-white">₹{pointsWorth}</span> ({pointsPerRupee} points = ₹1)
                         </p>
+                        {pendingPoints > 0 && (
+                            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400/20 border border-amber-300/30 text-amber-100 text-[11px] font-semibold">
+                                <Clock className="w-3.5 h-3.5 text-amber-300" />
+                                <span>+{Number(pendingPoints).toLocaleString()} pts On the way (credited on delivery)</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Membership Status Card */}
@@ -229,23 +235,37 @@ export default function Loyalty({ config, transactions = [] }) {
                     ) : (
                         <div className="divide-y divide-slate-100">
                             {transactions.map((tx) => {
+                                const isPending = tx.type === 'ORDER_EARN_PENDING';
                                 const isCredit = tx.points >= 0;
                                 return (
                                     <div key={tx.id} className="py-3 flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                                                isCredit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                                isPending
+                                                    ? 'bg-amber-50 text-amber-600'
+                                                    : isCredit
+                                                        ? 'bg-emerald-50 text-emerald-600'
+                                                        : 'bg-rose-50 text-rose-600'
                                             }`}>
-                                                {isCredit ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                                                {isPending ? <Clock className="w-4 h-4" /> : isCredit ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
                                             </div>
                                             <div>
-                                                <p className="text-xs font-semibold text-slate-900">{tx.description}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-xs font-semibold text-slate-900">{tx.description}</p>
+                                                    {isPending && (
+                                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                            On the way
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-[11px] text-slate-400">
                                                     {tx.type} &bull; {new Date(tx.created_at).toLocaleString()}
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className={`text-xs font-extrabold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        <span className={`text-xs font-extrabold ${
+                                            isPending ? 'text-amber-600' : isCredit ? 'text-emerald-600' : 'text-rose-600'
+                                        }`}>
                                             {isCredit ? `+${tx.points.toLocaleString()}` : tx.points.toLocaleString()} pts
                                         </span>
                                     </div>

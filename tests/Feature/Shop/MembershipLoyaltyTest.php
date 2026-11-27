@@ -72,6 +72,8 @@ class MembershipLoyaltyTest extends TestCase
             'membership_bonus_points' => 10000,
             'points_per_rupee' => 50,
             'require_membership_for_order' => false,
+            'earn_points_on_order' => true,
+            'points_per_100_rupees' => 5,
         ]);
 
         $response->assertRedirect();
@@ -81,6 +83,8 @@ class MembershipLoyaltyTest extends TestCase
         $this->assertEquals(10000, $config['membership_bonus_points']);
         $this->assertEquals(50, $config['points_per_rupee']);
         $this->assertFalse($config['require_membership_for_order']);
+        $this->assertTrue($config['earn_points_on_order']);
+        $this->assertEquals(5, $config['points_per_100_rupees']);
     }
 
     public function test_new_user_requires_membership_when_setting_enabled_and_can_bypass_when_disabled(): void
@@ -101,6 +105,8 @@ class MembershipLoyaltyTest extends TestCase
             'membership_bonus_points' => 5000,
             'points_per_rupee' => 100,
             'require_membership_for_order' => false,
+            'earn_points_on_order' => true,
+            'points_per_100_rupees' => 1,
         ]);
 
         $okRes = $this->actingAs($user->fresh())
@@ -184,6 +190,100 @@ class MembershipLoyaltyTest extends TestCase
         ]);
 
         $this->assertEquals(5000, $user->fresh()->loyalty_points);
+    }
+
+    public function test_earning_loyalty_points_on_order_and_reversing_on_cancel(): void
+    {
+        [$user, $address, $cart] = $this->createNewCustomer();
+        $user->update(['is_member' => true, 'loyalty_points' => 10]);
+
+        $variantId = array_key_first($cart);
+        $cart[$variantId]['price'] = 120;
+        $cart[$variantId]['quantity'] = 2; // items = 240, delivery = 15 -> total = 255
+
+        // 1. Default earn_points_on_order = true, order_earn_per_amount = 100, order_earn_points = 1 -> floor(255 / 100) * 1 = 2 points "On the way"
+        $this->actingAs($user)
+            ->withSession(['cart' => $cart])
+            ->post(route('checkout.place-order'), [
+                'address_id' => $address->id,
+                'payment_method' => 'COD',
+            ])
+            ->assertRedirect();
+
+        $order1 = Order::where('user_id', $user->id)->latest('id')->first();
+        // Not credited yet while pending
+        $this->assertEquals(10, $user->fresh()->loyalty_points);
+        $this->assertDatabaseHas('loyalty_transactions', [
+            'order_id' => $order1->id,
+            'type' => 'ORDER_EARN_PENDING',
+            'points' => 2,
+        ]);
+
+        // Loyalty page shows pendingPoints = 2 ("On the way")
+        $this->actingAs($user)
+            ->get('/loyalty')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Customer/Loyalty')
+                ->where('pendingPoints', 2)
+            );
+
+        // When delivered, 2 points are credited to wallet
+        $this->actingAs($this->admin)->post(route('admin.orders.status', $order1), [
+            'status' => OrderStatus::DELIVERED->value,
+        ]);
+        $this->assertEquals(12, $user->fresh()->loyalty_points);
+        $this->assertDatabaseHas('loyalty_transactions', [
+            'order_id' => $order1->id,
+            'type' => 'ORDER_EARN',
+            'points' => 2,
+        ]);
+
+        // Cancelling a pending order removes its ORDER_EARN_PENDING transaction
+        $this->actingAs($user->fresh())
+            ->withSession(['cart' => $cart])
+            ->post(route('checkout.place-order'), [
+                'address_id' => $address->id,
+                'payment_method' => 'COD',
+            ])
+            ->assertRedirect();
+
+        $order2 = Order::where('user_id', $user->id)->latest('id')->first();
+        $this->assertDatabaseHas('loyalty_transactions', [
+            'order_id' => $order2->id,
+            'type' => 'ORDER_EARN_PENDING',
+            'points' => 2,
+        ]);
+
+        $this->actingAs($this->admin)->post(route('admin.orders.status', $order2), [
+            'status' => OrderStatus::CANCELLED->value,
+        ]);
+        $this->assertEquals(12, $user->fresh()->loyalty_points);
+        $this->assertDatabaseMissing('loyalty_transactions', [
+            'order_id' => $order2->id,
+            'type' => 'ORDER_EARN_PENDING',
+        ]);
+
+        // 2. Admin disables earn_points_on_order -> 0 points earned
+        $this->actingAs($this->admin)->post(route('admin.settings.update'), [
+            'membership_fee' => 49,
+            'membership_bonus_points' => 5000,
+            'points_per_rupee' => 100,
+            'require_membership_for_order' => true,
+            'earn_points_on_order' => false,
+            'order_earn_per_amount' => 50,
+            'order_earn_points' => 5,
+        ]);
+
+        $this->actingAs($user->fresh())
+            ->withSession(['cart' => $cart])
+            ->post(route('checkout.place-order'), [
+                'address_id' => $address->id,
+                'payment_method' => 'COD',
+            ])
+            ->assertRedirect();
+
+        $this->assertEquals(12, $user->fresh()->loyalty_points);
     }
 }
 

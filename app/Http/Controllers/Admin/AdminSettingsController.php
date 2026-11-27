@@ -25,6 +25,8 @@ class AdminSettingsController extends Controller
             'membership_bonus_points' => 'required|integer|min:0',
             'points_per_rupee' => 'required|integer|min:1',
             'require_membership_for_order' => 'required|boolean',
+            'earn_points_on_order' => 'required|boolean',
+            'points_per_100_rupees' => 'required|integer|min:0',
         ]);
 
         foreach ($validated as $key => $value) {
