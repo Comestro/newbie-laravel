@@ -23,6 +23,7 @@ class ShopController extends Controller
             }
         ])
             ->where('status', 'active')
+            ->whereHas('variants', fn($q) => $q->where('status', 'active'))
             ->when($selectedCategory, function ($query, $cat) {
                 $query->whereIn('category_id', Category::matchingIdsForFilter((string) $cat));
             })
@@ -46,6 +47,7 @@ class ShopController extends Controller
 
         $query = Product::query()
             ->where('status', 'active')
+            ->whereHas('variants', fn($q) => $q->where('status', 'active'))
             ->with([
                 'category',
                 'variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')
@@ -106,6 +108,8 @@ class ShopController extends Controller
 
     public function show(Product $product): Response
     {
+        abort_unless($product->status === 'active', 404);
+
         $product->load([
             'category',
             'variants' => function ($q) {
@@ -116,10 +120,13 @@ class ShopController extends Controller
             'images' => fn($iq) => $iq->orderBy('sort_order', 'asc'),
         ]);
 
+        abort_if($product->variants->isEmpty(), 404);
+
         $relatedProducts = Product::query()
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('status', 'active')
+            ->whereHas('variants', fn($q) => $q->where('status', 'active'))
             ->with(['category', 'variants' => fn($q) => $q->where('status', 'active')->orderBy('retail_price')])
             ->take(4)
             ->get();

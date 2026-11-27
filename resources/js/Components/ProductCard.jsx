@@ -4,7 +4,7 @@ import { useCart } from '../Context/CartContext';
 import { Heart } from 'lucide-react';
 
 export default function ProductCard({ product, className = '', categoryName = '' }) {
-    if (!product || !product.id) return null;
+    if (!product || !product.id || !product.variants?.length) return null;
 
     const { auth, wishlistProductIds = [] } = usePage().props;
     const isWishlisted = Array.isArray(wishlistProductIds) ? wishlistProductIds.includes(product.id) : false;

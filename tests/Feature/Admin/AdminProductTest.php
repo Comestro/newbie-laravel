@@ -713,5 +713,100 @@ class AdminProductTest extends TestCase
         $this->assertTrue((bool) $image2->is_primary);
         $this->assertEquals('https://example.com/cashew-2.jpg', $variant->image_url);
     }
+
+    public function test_admin_can_toggle_variant_status_and_inactive_variant_is_hidden_on_store(): void
+    {
+        $product = Product::create([
+            'category_id' => $this->category->id,
+            'name' => 'Ghee Jar',
+            'slug' => 'ghee-jar',
+            'brand' => 'Medha',
+            'status' => 'active',
+        ]);
+
+        $v1 = ProductVariant::create([
+            'product_id' => $product->id,
+            'variant_name' => 'Ghee - 500ml',
+            'unit_size' => '500ml',
+            'mrp' => 350.00,
+            'retail_price' => 330.00,
+            'bulk_price' => 310.00,
+            'stock' => 25,
+            'sku' => 'GHEE-500ML',
+            'status' => 'active',
+            'is_default' => true,
+        ]);
+
+        $v2 = ProductVariant::create([
+            'product_id' => $product->id,
+            'variant_name' => 'Ghee - 1L',
+            'unit_size' => '1L',
+            'mrp' => 680.00,
+            'retail_price' => 650.00,
+            'bulk_price' => 610.00,
+            'stock' => 15,
+            'sku' => 'GHEE-1L',
+            'status' => 'active',
+        ]);
+
+        $payload = [
+            'name' => 'Ghee Jar',
+            'brand' => 'Medha',
+            'category_id' => $this->category->id,
+            'status' => 'active',
+            'variants' => [
+                [
+                    'id' => $v1->id,
+                    'status' => 'active',
+                    'unit_size' => '500ml',
+                    'mrp' => 350.00,
+                    'retail_price' => 330.00,
+                    'bulk_price' => 310.00,
+                    'min_bulk_qty' => 5,
+                    'stock' => 25,
+                    'sku' => 'GHEE-500ML',
+                ],
+                [
+                    'id' => $v2->id,
+                    'status' => 'inactive',
+                    'unit_size' => '1L',
+                    'mrp' => 680.00,
+                    'retail_price' => 650.00,
+                    'bulk_price' => 610.00,
+                    'min_bulk_qty' => 5,
+                    'stock' => 15,
+                    'sku' => 'GHEE-1L',
+                ],
+            ],
+        ];
+
+        $this->actingAs($this->admin)
+            ->put("/admin/products/{$product->id}", $payload)
+            ->assertRedirect('/admin/products');
+
+        $this->assertDatabaseHas('product_variants', ['id' => $v1->id, 'status' => 'active']);
+        $this->assertDatabaseHas('product_variants', ['id' => $v2->id, 'status' => 'inactive']);
+
+        $this->get("/product/{$product->slug}")
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('Shop/ProductShow')
+                ->has('product.variants', 1)
+                ->where('product.variants.0.id', $v1->id)
+            );
+
+        // If all variants are inactive, product should not appear in catalog or detail page
+        $v1->update(['status' => 'inactive']);
+
+        $this->get('/catalog')
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('Shop/Catalog')
+                ->has('products.data', 0)
+            );
+
+        $this->get("/product/{$product->slug}")
+            ->assertStatus(404);
+    }
 }
 

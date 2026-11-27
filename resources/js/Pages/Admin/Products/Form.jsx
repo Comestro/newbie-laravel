@@ -465,21 +465,41 @@ export default function ProductForm({ product = null, categories = [] }) {
                                     key={v.id || index}
                                     className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition space-y-3 relative group"
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                                             <Package className="w-3.5 h-3.5 text-purple-500" />
                                             <span>Variant #{index + 1} {index === 0 && <span className="text-purple-600 font-semibold">(Default)</span>}</span>
-                                        </span>
-                                        {data.variants.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeVariant(index)}
-                                                className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
-                                                title="Remove Variant"
+                                            <span
+                                                className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                                                    (v.status || 'active') === 'active'
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-200 text-slate-600'
+                                                }`}
                                             >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        )}
+                                                {v.status || 'active'}
+                                            </span>
+                                        </span>
+                                        <div className="flex items-center gap-3">
+                                            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={(v.status || 'active') === 'active'}
+                                                    onChange={(e) => updateVariant(index, 'status', e.target.checked ? 'active' : 'inactive')}
+                                                    className="rounded accent-purple-600 h-3.5 w-3.5"
+                                                />
+                                                <span>Active Variant</span>
+                                            </label>
+                                            {data.variants.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeVariant(index)}
+                                                    className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+                                                    title="Remove Variant"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

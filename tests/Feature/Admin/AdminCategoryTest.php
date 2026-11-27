@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -167,11 +168,22 @@ class AdminCategoryTest extends TestCase
             'is_active' => true,
         ]);
 
-        Product::create([
+        $mango = Product::create([
             'category_id' => $sub->id,
             'name' => 'Mango Juice',
             'slug' => 'mango-juice',
             'brand' => 'FreshCo',
+            'status' => 'active',
+        ]);
+        ProductVariant::create([
+            'product_id' => $mango->id,
+            'variant_name' => 'Mango Juice - 1L',
+            'unit_size' => '1L',
+            'mrp' => 100,
+            'retail_price' => 90,
+            'bulk_price' => 80,
+            'stock' => 10,
+            'sku' => 'MANGO-1L',
             'status' => 'active',
         ]);
 
@@ -215,11 +227,22 @@ class AdminCategoryTest extends TestCase
         $this->assertNull($root->fresh()->parent_id);
 
         // Product in 3rd-level category appears when filtering catalog by root category
-        Product::create([
+        $nested = Product::create([
             'category_id' => $level3->id,
             'name' => 'Deep Nested Item',
             'slug' => 'deep-nested-item',
             'brand' => 'TestBrand',
+            'status' => 'active',
+        ]);
+        ProductVariant::create([
+            'product_id' => $nested->id,
+            'variant_name' => 'Deep Nested Item - 1pc',
+            'unit_size' => '1pc',
+            'mrp' => 50,
+            'retail_price' => 45,
+            'bulk_price' => 40,
+            'stock' => 10,
+            'sku' => 'NESTED-1PC',
             'status' => 'active',
         ]);
 
