@@ -36,11 +36,24 @@ class CustomerPortalController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)
             ->where('user_id', Auth::id())
-            ->with(['items.variant.product', 'address'])
+            ->with(['items.variant.product', 'address', 'invoice'])
             ->firstOrFail();
 
         return Inertia::render('Customer/OrderShow', [
             'order' => $order,
+        ]);
+    }
+
+    public function orderInvoice(string $orderNumber): Response
+    {
+        $order = Order::where('order_number', $orderNumber)
+            ->where('user_id', Auth::id())
+            ->whereHas('invoice')
+            ->with('invoice')
+            ->firstOrFail();
+
+        return Inertia::render('Invoices/Show', [
+            'invoice' => $order->invoice,
         ]);
     }
 

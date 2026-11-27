@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, Receipt, FilePlus2, RefreshCw } from 'lucide-react';
 
 export default function Index({ orders, statuses = [], filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -68,13 +68,14 @@ export default function Index({ orders, statuses = [], filters = {} }) {
                                     <th className="py-3 px-4">Status</th>
                                     <th className="py-3 px-4">Payment</th>
                                     <th className="py-3 px-4">Total</th>
+                                    <th className="py-3 px-4">Invoice</th>
                                     <th className="py-3 px-4 text-right">View</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {orders?.data?.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="py-10 text-center text-slate-400">
+                                        <td colSpan="8" className="py-10 text-center text-slate-400">
                                             No orders match your query.
                                         </td>
                                     </tr>
@@ -100,6 +101,39 @@ export default function Index({ orders, statuses = [], filters = {} }) {
                                             </td>
                                             <td className="py-3 px-4 font-bold text-slate-900">
                                                 ₹{ord.total_amount}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                {ord.invoice ? (
+                                                    <div className="inline-flex items-center gap-1.5">
+                                                        <a
+                                                            href={`/admin/orders/${ord.id}/invoice`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-semibold transition"
+                                                        >
+                                                            <Receipt className="w-3 h-3" />
+                                                            <span>{ord.invoice.invoice_number}</span>
+                                                        </a>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => router.post(`/admin/orders/${ord.id}/generate-invoice`, {}, { preserveScroll: true })}
+                                                            title="Regenerate Invoice"
+                                                            aria-label="Regenerate Invoice"
+                                                            className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition cursor-pointer"
+                                                        >
+                                                            <RefreshCw className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => router.post(`/admin/orders/${ord.id}/generate-invoice`, {}, { preserveScroll: true })}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 text-[11px] font-semibold transition cursor-pointer"
+                                                    >
+                                                        <FilePlus2 className="w-3 h-3" />
+                                                        <span>Generate</span>
+                                                    </button>
+                                                )}
                                             </td>
                                             <td className="py-3 px-4 text-right">
                                                 <Link

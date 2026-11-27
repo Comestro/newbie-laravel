@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
 use App\Models\LoyaltyTransaction;
 use App\Models\Order;
 use App\Notifications\OrderUpdatedNotification;
@@ -23,7 +24,7 @@ class AdminOrderController extends Controller
         $status = $request->query('status');
         $search = $request->query('search');
 
-        $orders = Order::with('user')
+        $orders = Order::with(['user', 'invoice'])
             ->when($status, fn($q) => $q->where('status', $status))
             ->when($search, function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
@@ -45,7 +46,7 @@ class AdminOrderController extends Controller
 
     public function show(Order $order): Response
     {
-        $order->load(['items.variant.product', 'address', 'user', 'payments']);
+        $order->load(['items.variant.product', 'address', 'user', 'payments', 'invoice']);
 
         return Inertia::render('Admin/Orders/Show', [
             'order' => $order,
@@ -190,6 +191,30 @@ class AdminOrderController extends Controller
         $order->user?->notifySafely(new OrderUpdatedNotification($order->fresh(), 'payment_status_changed'));
 
         return back()->with('success', 'Payment status updated successfully.');
+    }
+
+    public function generateInvoice(Order $order): RedirectResponse
+    {
+        $isRegenerate = $order->invoice()->exists();
+        $invoice = Invoice::generateFromOrder($order);
+
+        $order->user?->notifySafely(new OrderUpdatedNotification($order->fresh('invoice'), 'invoice_generated'));
+
+        $message = $isRegenerate
+            ? "Invoice {$invoice->invoice_number} regenerated successfully."
+            : "Invoice {$invoice->invoice_number} generated successfully.";
+
+        return back()->with('success', $message);
+    }
+
+    public function invoice(Order $order): Response
+    {
+        $order->load('invoice');
+        abort_unless($order->invoice, 404);
+
+        return Inertia::render('Invoices/Show', [
+            'invoice' => $order->invoice,
+        ]);
     }
 }
 

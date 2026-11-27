@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/my-orders', [CustomerPortalController::class, 'orders'])->name('myorders');
     Route::get('/order-view/{order}', [CustomerPortalController::class, 'orderView'])->name('orderview');
+    Route::get('/order-view/{order}/invoice', [CustomerPortalController::class, 'orderInvoice'])->name('order.invoice');
     Route::get('/my-addresses', [CustomerPortalController::class, 'addresses'])->name('myaddresses');
     Route::post('/my-addresses', [CustomerPortalController::class, 'storeAddress'])->name('myaddresses.store');
     Route::delete('/my-addresses/{address}', [CustomerPortalController::class, 'deleteAddress'])->name('myaddresses.destroy');
@@ -94,6 +95,8 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
         Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
         Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
         Route::post('/orders/{order}/payment-status', [AdminOrderController::class, 'updatePaymentStatus'])->name('orders.payment-status');
+        Route::post('/orders/{order}/generate-invoice', [AdminOrderController::class, 'generateInvoice'])->name('orders.generate-invoice');
+        Route::get('/orders/{order}/invoice', [AdminOrderController::class, 'invoice'])->name('orders.invoice');
 
         Route::get('/review-retailer', [AdminRetailerReviewController::class, 'index'])->name('reviewretailer');
         Route::post('/review-retailer/{user}/approve', [AdminRetailerReviewController::class, 'approve'])->name('reviewretailer.approve');

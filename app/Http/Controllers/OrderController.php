@@ -200,7 +200,6 @@ class OrderController extends Controller
                 }
 
                 $isPaid = $isOnline || $pricing['payable_total'] <= 0;
-                $orderNumber = $this->generateOrderNumber();
 
                 $order = Order::create([
                     'user_id' => $lockedUser->id,
@@ -212,12 +211,15 @@ class OrderController extends Controller
                     'coupon_discount' => $pricing['coupon_discount'],
                     'points_used' => $pricing['points_used'],
                     'delivery_fee' => $pricing['delivery_fee'],
-                    'order_number' => $orderNumber,
+                    'order_number' => 'TMP-' . Str::uuid(),
                     'address' => $address->toArray(),
                     'status' => OrderStatus::PENDING,
                     'payment_status' => $isPaid ? PaymentStatus::PAID : PaymentStatus::PENDING,
                     'payment_method' => $isOnline ? PaymentMethod::ONLINE : PaymentMethod::COD,
                 ]);
+
+                $orderNumber = 'ORD' . str_pad((string) $order->id, 8, '0', STR_PAD_LEFT);
+                $order->update(['order_number' => $orderNumber]);
 
                 Payment::create([
                     'order_id' => $order->id,
@@ -325,14 +327,5 @@ class OrderController extends Controller
             'total_discount' => round($couponDiscount + $pointsDiscount, 2),
             'payable_total' => $payableTotal,
         ];
-    }
-
-    private function generateOrderNumber(): string
-    {
-        do {
-            $orderNumber = 'NB' . rand(10000000, 99999999);
-        } while (Order::where('order_number', $orderNumber)->exists());
-
-        return $orderNumber;
     }
 }

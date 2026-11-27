@@ -34,6 +34,10 @@ class OrderUpdatedNotification extends Notification implements ShouldBroadcastNo
                 "Payment Updated for #{$orderNumber}",
                 "Payment status for order #{$orderNumber} is now " . Str::headline($this->order->payment_status?->value ?? (string) $this->order->payment_status) . '.',
             ],
+            'invoice_generated' => [
+                "Invoice Ready for #{$orderNumber}",
+                "Invoice {$this->order->invoice?->invoice_number} has been generated for your order #{$orderNumber}.",
+            ],
             default => [
                 "Order #{$orderNumber} Updated",
                 "Admin updated details or items on your order #{$orderNumber}.",

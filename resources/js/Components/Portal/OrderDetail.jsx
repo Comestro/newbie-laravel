@@ -33,18 +33,31 @@ export default function OrderDetail({ order, backUrl = '/my-orders' }) {
             </Link>
 
             {/* Status Bar */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 shadow-xs flex items-center justify-between">
+            <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Status</span>
                     <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadge(order.status)}`}>
                         {order.status?.value || order.status}
                     </span>
                 </div>
-                <div className="text-right">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Placed On</span>
-                    <span className="text-xs font-medium text-slate-700">
-                        {new Date(order.created_at).toLocaleString()}
-                    </span>
+                <div className="flex items-center gap-3">
+                    {order.invoice && (
+                        <a
+                            href={`/order-view/${order.order_number}/invoice`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition shadow-2xs"
+                        >
+                            <Receipt className="w-3.5 h-3.5" />
+                            <span>View Invoice ({order.invoice.invoice_number})</span>
+                        </a>
+                    )}
+                    <div className="text-right">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Placed On</span>
+                        <span className="text-xs font-medium text-slate-700">
+                            {new Date(order.created_at).toLocaleString()}
+                        </span>
+                    </div>
                 </div>
             </div>
 

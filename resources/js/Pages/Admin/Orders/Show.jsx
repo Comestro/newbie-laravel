@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { ArrowLeft, Check, Pencil, Trash2, X, XCircle } from 'lucide-react';
+import { ArrowLeft, Check, FilePlus2, Pencil, Receipt, RefreshCw, Trash2, X, XCircle } from 'lucide-react';
 
 export default function Show({ order, statuses = [], paymentStatuses = [] }) {
     const currentStatus = order.status?.value || order.status;
@@ -335,6 +335,49 @@ export default function Show({ order, statuses = [], paymentStatuses = [] }) {
                         >
                             Save Payment Status
                         </button>
+                    </div>
+
+                    {/* Invoice */}
+                    <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-xs space-y-2.5">
+                        <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Order Invoice</h4>
+                        {order.invoice ? (
+                            <>
+                                <p className="text-[11px] text-emerald-700 font-medium">
+                                    Generated: {order.invoice.invoice_number}
+                                </p>
+                                <a
+                                    href={`/admin/orders/${order.id}/invoice`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5"
+                                >
+                                    <Receipt className="w-3.5 h-3.5" />
+                                    <span>View / Print Invoice</span>
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={() => router.post(`/admin/orders/${order.id}/generate-invoice`, {}, { preserveScroll: true })}
+                                    className="w-full py-2 bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-700 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    <span>Regenerate Invoice</span>
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-[11px] text-slate-500">
+                                    Generate invoice so the customer/retailer can view and download it.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => router.post(`/admin/orders/${order.id}/generate-invoice`, {}, { preserveScroll: true })}
+                                    className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    <FilePlus2 className="w-3.5 h-3.5" />
+                                    <span>Generate Invoice</span>
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Shipping Address */}

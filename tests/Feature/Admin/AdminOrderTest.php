@@ -9,8 +9,10 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Notifications\OrderUpdatedNotification;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AdminOrderTest extends TestCase
@@ -164,6 +166,7 @@ class AdminOrderTest extends TestCase
         $this->assertEquals($initialStock - 4, $variant->fresh()->stock);
 
         $order = Order::latest('id')->first();
+        $this->assertEquals('ORD' . str_pad((string) $order->id, 8, '0', STR_PAD_LEFT), $order->order_number);
         $item = $order->items->first();
 
         // 2. Admin reduces qty from 4 to 2 -> stock restores by 2
@@ -177,6 +180,98 @@ class AdminOrderTest extends TestCase
             'status' => OrderStatus::CANCELLED->value,
         ]);
         $this->assertEquals($initialStock, $variant->fresh()->stock);
+    }
+
+    public function test_admin_can_generate_invoice_and_customer_can_view_it_after_generation(): void
+    {
+        Notification::fake();
+
+        $order = $this->createSampleOrder();
+
+        // Customer cannot view invoice before admin generates it
+        $this->actingAs($this->customer)
+            ->get(route('order.invoice', $order->order_number))
+            ->assertNotFound();
+
+        // Non-admin cannot generate invoice
+        $this->actingAs($this->customer)
+            ->post(route('admin.orders.generate-invoice', $order))
+            ->assertForbidden();
+
+        // Admin generates invoice
+        $this->actingAs($this->admin)
+            ->post(route('admin.orders.generate-invoice', $order))
+            ->assertRedirect();
+
+        $order->refresh();
+        $expectedInvoiceNumber = 'INV-' . $order->order_number;
+        $this->assertDatabaseHas('invoices', [
+            'order_id' => $order->id,
+            'user_id' => $this->customer->id,
+            'invoice_number' => $expectedInvoiceNumber,
+        ]);
+        $this->assertNotNull($order->invoice);
+
+        Notification::assertSentTo(
+            $this->customer,
+            OrderUpdatedNotification::class,
+            fn ($notification) => $notification->event === 'invoice_generated'
+                && $notification->order->id === $order->id
+        );
+
+        // Admin can view printable invoice
+        $this->actingAs($this->admin)
+            ->get(route('admin.orders.invoice', $order))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Invoices/Show')
+                ->where('invoice.invoice_number', $expectedInvoiceNumber)
+                ->where('invoice.snapshot.totals.total_amount', 215)
+            );
+
+        // Customer can view printable invoice and sees invoice in order detail
+        $this->actingAs($this->customer)
+            ->get(route('order.invoice', $order->order_number))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Invoices/Show')
+                ->where('invoice.invoice_number', $expectedInvoiceNumber)
+                ->where('invoice.snapshot.totals.total_amount', 215)
+            );
+
+        // Editing the order AFTER invoice generation must NOT mutate the saved invoice snapshot
+        $item = $order->items()->first();
+        $this->actingAs($this->admin)
+            ->put(route('admin.orders.update', $order), [
+                'items' => [['id' => $item->id, 'quantity' => 5]],
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($this->customer)
+            ->get(route('order.invoice', $order->order_number))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('invoice.snapshot.totals.total_amount', 215)
+                ->where('invoice.snapshot.items.0.quantity', 2)
+            );
+
+        // Regenerating the invoice updates the snapshot to reflect the edited order
+        $this->actingAs($this->admin)
+            ->post(route('admin.orders.generate-invoice', $order))
+            ->assertRedirect();
+
+        $this->actingAs($this->customer)
+            ->get(route('order.invoice', $order->order_number))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('invoice.snapshot.items.0.quantity', 5)
+            );
+
+        $this->actingAs($this->customer)
+            ->get(route('orderview', $order->order_number))
+            ->assertInertia(fn ($page) => $page
+                ->where('order.invoice.invoice_number', $expectedInvoiceNumber)
+            );
     }
 }
 
