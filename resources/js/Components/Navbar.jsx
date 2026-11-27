@@ -177,9 +177,9 @@ export default function Navbar() {
                                     className="flex items-center gap-1.5 p-1.5 pr-2 rounded-full border border-slate-200/80 bg-slate-50 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
                                     aria-label="Account menu"
                                 >
-                                    {user.avatar_url ? (
+                                    {user.profile_pic ? (
                                         <img
-                                            src={user.avatar_url}
+                                            src={user.profile_pic.startsWith('http') || user.profile_pic.startsWith('/') ? user.profile_pic : `/storage/${user.profile_pic}`}
                                             alt={user.name}
                                             className="w-7 h-7 rounded-full object-cover"
                                         />

@@ -27,7 +27,7 @@ return new class extends Migration
             $table->boolean('is_member')->default(false);
             $table->integer('loyalty_points')->default(0);
             $table->timestamp('membership_paid_at')->nullable();
-            $table->string('avatar_url')->nullable();
+            $table->string('profile_pic')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

@@ -9,6 +9,7 @@ use App\Models\RetailerProfile;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Notifications\NewUserRegisteredNotification;
+use App\Services\ImageKitService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -152,7 +153,7 @@ class CustomerPortalController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request): RedirectResponse
+    public function updateProfile(Request $request, ImageKitService $imageKitService): RedirectResponse
     {
         $user = Auth::user();
 
@@ -167,11 +168,19 @@ class CustomerPortalController extends Controller
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone' => ['nullable', 'string', 'regex:/^[6-9]\d{9}$/'],
             'password' => 'nullable|string|min:6|max:100',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         $user->name = trim($validated['name']);
         $user->email = trim($validated['email']);
         $user->phone = !empty($validated['phone']) ? trim($validated['phone']) : null;
+
+        if ($request->hasFile('avatar')) {
+            $uploadRes = $imageKitService->upload($request->file('avatar'), null, '/avatars');
+            if (!empty($uploadRes['url'])) {
+                $user->profile_pic = $uploadRes['url'];
+            }
+        }
 
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
@@ -216,7 +225,7 @@ class CustomerPortalController extends Controller
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
             'pincode' => 'required|string|size:6',
-            'gst_number' => 'nullable|string|max:20',
+            'gst_number' => 'required|string|max:20',
             'shop_image' => 'nullable|image|max:4096',
             'avatar' => 'nullable|image|max:2048',
             'aadhaar_card' => 'required|string|size:12',
@@ -226,11 +235,11 @@ class CustomerPortalController extends Controller
         ]);
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
-                Storage::disk('public')->delete($user->avatar_url);
+            if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
+                Storage::disk('public')->delete($user->profile_pic);
             }
             $avatarPath = $request->file('avatar')->store('retailer/avatar', 'public');
-            $user->update(['avatar_url' => $avatarPath]);
+            $user->update(['profile_pic' => $avatarPath]);
         }
 
         $shopImagePath = $existingProfile?->shop_image;

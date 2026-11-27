@@ -363,7 +363,7 @@ export default function KycManager({ user, isRetailer = false }) {
 
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                        GST Number (GSTIN) <span className="text-slate-400 font-normal">(Optional)</span>
+                                        GST Number (GSTIN) <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input

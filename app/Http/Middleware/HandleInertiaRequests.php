@@ -55,7 +55,11 @@ class HandleInertiaRequests extends Middleware
                     'loyalty_points' => (int) $user->loyalty_points,
                     'needs_membership' => $user->needsMembershipToOrder(),
                     'kyc_reject_reason' => $user->kyc_reject_reason,
-                    'avatar_url' => $user->avatar_url ? asset('storage/' . $user->avatar_url) : null,
+                    'profile_pic' => $user->profile_pic
+                        ? (str_starts_with($user->profile_pic, 'http') || str_starts_with($user->profile_pic, '/')
+                            ? $user->profile_pic
+                            : asset('storage/' . $user->profile_pic))
+                        : null,
                     'email_verified_at' => $user->email_verified_at,
                 ] : null,
             ],

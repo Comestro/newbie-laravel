@@ -351,10 +351,10 @@ class RetailerKycOrderTest extends TestCase
         $response = $this->actingAs($customer)->post('/apply-to-retailer', [
             'shop_name' => 'Demo Shop',
             'aadhaar_card' => '123456789012',
-            // address omitted
+            // address and gst_number omitted
         ]);
 
-        $response->assertSessionHasErrors(['line1', 'city', 'state', 'pincode']);
+        $response->assertSessionHasErrors(['line1', 'city', 'state', 'pincode', 'gst_number']);
     }
 
     public function test_submitting_retailer_kyc_successfully_saves_all_fields_and_syncs_address(): void
@@ -442,5 +442,27 @@ class RetailerKycOrderTest extends TestCase
         $this->assertEquals('Jaipur', $address->city);
         $this->assertEquals('Rajasthan', $address->state);
         $this->assertEquals('302005', $address->pincode);
+    }
+
+    public function test_submitting_retailer_kyc_requires_gst_number(): void
+    {
+        $customer = User::create([
+            'name' => 'KYC Applicant',
+            'email' => 'applicant-gst@example.com',
+            'password' => bcrypt('password'),
+            'role' => UserRole::USER,
+        ]);
+
+        $response = $this->actingAs($customer)->post('/apply-to-retailer', [
+            'shop_name' => 'Demo Shop',
+            'line1' => 'Street 1',
+            'city' => 'Jaipur',
+            'state' => 'Rajasthan',
+            'pincode' => '302001',
+            'aadhaar_card' => '123456789012',
+            // gst_number omitted
+        ]);
+
+        $response->assertSessionHasErrors('gst_number');
     }
 }

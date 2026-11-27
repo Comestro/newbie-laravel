@@ -30,7 +30,7 @@ class User extends Authenticatable
         'is_member',
         'loyalty_points',
         'membership_paid_at',
-        'avatar_url',
+        'profile_pic',
         'last_login_at',
     ];
 
