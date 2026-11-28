@@ -20,8 +20,8 @@ export default function AdminSidebar() {
         { label: 'Products', href: '/admin/products', icon: Package },
         { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
         { label: 'Customers', href: '/admin/customers', icon: Users },
+        { label: 'Retailer', href: '/admin/review-retailer', icon: ShieldCheck },
         { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
-        { label: 'Retailer KYC', href: '/admin/review-retailer', icon: ShieldCheck },
         { label: 'Loyalty Settings', href: '/admin/settings', icon: Settings },
     ];
 

@@ -47,7 +47,7 @@ export default function AddressManager({ addresses = [], isRetailer = false }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/my-addresses', {
+        post(route('myaddresses.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 setIsEditing(false);

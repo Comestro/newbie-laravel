@@ -43,9 +43,21 @@ class AdminRetailerReviewController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->query('status', 'ALL');
+        $search = trim((string) $request->query('search', ''));
 
         $requests = RetailerProfile::with('user')
             ->when($status && $status !== 'ALL', fn ($q) => $q->where('status', $status))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('shop_name', 'like', "%{$search}%")
+                        ->orWhere('gst_number', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->latest()
             ->get()
             ->map(fn ($profile) => $this->formatApplicant($profile));
@@ -53,6 +65,9 @@ class AdminRetailerReviewController extends Controller
         return Inertia::render('Admin/ReviewRetailer', [
             'requests' => $requests,
             'currentStatus' => $status,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 

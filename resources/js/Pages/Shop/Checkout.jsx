@@ -3,6 +3,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import ShopLayout from '../../Layouts/ShopLayout';
+import AddressFormFields from '../../Components/Portal/AddressFormFields';
 import { useCart } from '../../Context/CartContext';
 import { openRazorpayCheckout } from '../../utils/razorpay';
 import { ShieldAlert, Clock, AlertCircle, CreditCard, Banknote, Coins, Crown, Ticket, X } from 'lucide-react';
@@ -45,7 +46,8 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     const [editingAddressId, setEditingAddressId] = useState(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        label: 'Home',
+        id: null,
+        label: isRetailer ? 'Shop' : 'Home',
         phone: '',
         line1: '',
         line2: '',
@@ -58,6 +60,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
     const handleEditAddress = (addr) => {
         setEditingAddressId(addr.id);
         setData({
+            id: addr.id,
             label: addr.label || 'Home',
             phone: addr.phone || '',
             line1: addr.line1 || '',
@@ -78,24 +81,14 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
 
     const handleSaveAddress = (e) => {
         e.preventDefault();
-        if (editingAddressId) {
-            router.put(`/my-addresses/${editingAddressId}`, data, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowAddressForm(false);
-                    setEditingAddressId(null);
-                    reset();
-                },
-            });
-        } else {
-            post('/my-addresses', {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowAddressForm(false);
-                    reset();
-                },
-            });
-        }
+        post(route('myaddresses.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowAddressForm(false);
+                setEditingAddressId(null);
+                reset();
+            },
+        });
     };
 
     const loadRazorpayScript = () => {
@@ -114,7 +107,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
         if (!couponInput.trim()) return;
         setApplyingCoupon(true);
         try {
-            const { data } = await axios.post('/checkout/coupon', { code: couponInput.trim() });
+            const { data } = await axios.post(route('checkout.coupon'), { code: couponInput.trim() });
             setAppliedCoupon(data);
             toast.success(data.message || `Coupon ${data.code} applied!`);
         } catch (err) {
@@ -147,7 +140,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
 
         if (paymentMethod === 'COD' || grandTotal <= 0) {
             setPlacingOrder(true);
-            router.post('/checkout', {
+            router.post(route('checkout.place-order'), {
                 address_id: selectedAddressId,
                 payment_method: 'COD',
                 points_to_use: activePointsUsed,
@@ -160,14 +153,14 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
 
         setPlacingOrder(true);
         try {
-            const { data: orderData } = await axios.post('/checkout/razorpay-order', {
+            const { data: orderData } = await axios.post(route('checkout.razorpay-order'), {
                 address_id: selectedAddressId,
                 points_to_use: activePointsUsed,
                 coupon_code: appliedCoupon?.code || null,
             });
 
             if (orderData.free) {
-                router.post('/checkout', {
+                router.post(route('checkout.place-order'), {
                     address_id: selectedAddressId,
                     payment_method: 'COD',
                     points_to_use: activePointsUsed,
@@ -194,7 +187,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                     setPlacingOrder(false);
                 },
                 onSuccess: (response) => {
-                    router.post('/checkout', {
+                    router.post(route('checkout.place-order'), {
                         address_id: selectedAddressId,
                         payment_method: 'ONLINE',
                         points_to_use: activePointsUsed,
@@ -333,10 +326,10 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                                                     {address.label}
                                                                 </span>
                                                             </div>
-                                                            <p className="text-slate-600">
+                                                            <p className="text-slate-600 capitalize">
                                                                 {address.line1}{address.line2 ? `, ${address.line2}` : ''}
                                                             </p>
-                                                            <p className="text-slate-600">
+                                                            <p className="text-slate-600 capitalize">
                                                                 {address.city}, {address.state} - {address.pincode}
                                                             </p>
                                                             <p className="mt-1 font-medium text-slate-500">
@@ -360,107 +353,23 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
 
                                 {/* Form */}
                                 {showAddressForm && (
-                                    <form onSubmit={handleSaveAddress} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3 border-t border-slate-100">
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                Address Type
-                                            </label>
-                                            <select
-                                                value={data.label}
-                                                onChange={(e) => setData('label', e.target.value)}
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            >
-                                                <option value="Home">Home</option>
-                                                <option value="Shop">Shop</option>
-                                                <option value="Office">Office</option>
-                                            </select>
-                                        </div>
+                                    <form onSubmit={handleSaveAddress} className="mt-4 pt-4 border-t border-slate-100 space-y-4">
+                                        <AddressFormFields
+                                            data={data}
+                                            setData={setData}
+                                            errors={errors}
+                                            showLabel={true}
+                                            showPhone={true}
+                                            isRetailer={isRetailer}
+                                        />
 
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                Phone Number
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                value={data.phone}
-                                                onChange={(e) => setData('phone', e.target.value)}
-                                                placeholder="10 digit mobile"
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            />
-                                        </div>
-
-                                        <div className="sm:col-span-2">
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                Flat / House / Block
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.line1}
-                                                onChange={(e) => setData('line1', e.target.value)}
-                                                placeholder="Flat 101, Galaxy"
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            />
-                                        </div>
-
-                                        <div className="sm:col-span-2">
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                Landmark / Area (Optional)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.line2}
-                                                onChange={(e) => setData('line2', e.target.value)}
-                                                placeholder="Near Green Park"
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                City
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.city}
-                                                onChange={(e) => setData('city', e.target.value)}
-                                                placeholder="City"
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                State
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.state}
-                                                onChange={(e) => setData('state', e.target.value)}
-                                                placeholder="State"
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                                                Pincode
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.pincode}
-                                                onChange={(e) => setData('pincode', e.target.value)}
-                                                placeholder="6 digits"
-                                                className="w-full rounded-lg px-2.5 py-1.5 text-xs border border-slate-200/80 bg-white text-slate-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                            />
-                                        </div>
-
-                                        <div className="sm:col-span-2 flex gap-2 pt-2">
+                                        <div className="flex gap-2 pt-1">
                                             <button
                                                 type="submit"
                                                 disabled={processing}
-                                                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-semibold text-xs transition"
+                                                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white py-2.5 rounded-xl font-semibold text-xs transition cursor-pointer"
                                             >
-                                                {editingAddressId ? 'Update Address' : 'Save Address'}
+                                                {processing ? 'Saving...' : editingAddressId ? 'Update Address' : 'Save Address'}
                                             </button>
                                             <button
                                                 type="button"
@@ -468,7 +377,7 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                                                     setShowAddressForm(false);
                                                     setEditingAddressId(null);
                                                 }}
-                                                className="flex-1 border border-slate-200 py-2 rounded-lg font-semibold text-xs text-slate-700 hover:bg-slate-50 transition"
+                                                className="flex-1 border border-slate-200 py-2.5 rounded-xl font-semibold text-xs text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                                             >
                                                 Cancel
                                             </button>

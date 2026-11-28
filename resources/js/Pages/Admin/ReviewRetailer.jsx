@@ -2,17 +2,30 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import ConfirmModal from '../../Components/ConfirmModal';
+import SearchBar from '../../Components/SearchBar';
 import { CheckCircle2, Eye } from 'lucide-react';
 
-export default function ReviewRetailer({ requests = [], currentStatus = 'ALL' }) {
+export default function ReviewRetailer({ requests = [], currentStatus = 'ALL', filters = {} }) {
+    const [search, setSearch] = useState(filters.search || '');
     const [confirmApprove, setConfirmApprove] = useState({
         isOpen: false,
         userId: null,
         loading: false,
     });
 
+    const applyFilter = (nextStatus = currentStatus, nextSearch = search) => {
+        const params = {};
+        if (nextStatus && nextStatus !== 'ALL') params.status = nextStatus;
+        if (nextSearch && nextSearch.trim()) params.search = nextSearch.trim();
+        router.get(route('admin.reviewretailer'), params, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
     const handleFilter = (status) => {
-        router.get('/admin/review-retailer', status === 'ALL' ? {} : { status }, { preserveScroll: true });
+        applyFilter(status, search);
     };
 
     const handleApprove = (userId) => {
@@ -42,8 +55,9 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'ALL' })
             <Head title="Retailer KYC - Admin Console" />
 
             <div className="space-y-4">
-                {/* Tabs */}
-                <div className="flex flex-wrap items-center gap-2">
+                {/* Tabs & Search */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                     <button
                         type="button"
                         onClick={() => handleFilter('ALL')}
@@ -88,6 +102,16 @@ export default function ReviewRetailer({ requests = [], currentStatus = 'ALL' })
                     >
                         Rejected
                     </button>
+                </div>
+
+                    <SearchBar
+                        value={search}
+                        onChange={setSearch}
+                        onSearch={(q) => applyFilter(currentStatus, q)}
+                        placeholder="Search name, shop, email, phone or GST..."
+                        className="w-full sm:w-80"
+                        inputClassName="py-2 text-slate-800"
+                    />
                 </div>
 
                 {/* Table */}
