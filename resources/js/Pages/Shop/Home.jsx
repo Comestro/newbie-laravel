@@ -3,8 +3,9 @@ import { Head, Link } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
 import ProductCard from '../../Components/ProductCard';
 import CategoryIcon from '../../Components/CategoryIcon';
+import { resolveImageUrl } from '../../utils/media';
 
-export default function Home({ groupedProducts = {}, categories = [] }) {
+export default function Home({ groupedProducts = {}, categories = [], banners = [] }) {
     const getCategorySlug = (cat, productsList = []) => {
         const firstSlug = productsList[0]?.category?.slug;
         if (firstSlug) return firstSlug;
@@ -81,59 +82,40 @@ export default function Home({ groupedProducts = {}, categories = [] }) {
                     </div>
                 </div>
 
-                {/* Promo Banners */}
-                <div className="flex md:grid md:grid-cols-3 gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x pb-1">
-                    {/* Banner 1 */}
-                    <div className="shrink-0 w-[82%] sm:w-[58%] md:w-auto snap-start bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 sm:p-5 text-white flex flex-col justify-between h-32 sm:h-36 shadow-xs">
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
-                                Farm Fresh
-                            </span>
-                            <h3 className="font-bold text-base mt-1.5">Fresh Milk Delivered</h3>
-                            <p className="text-blue-100 text-xs mt-0.5">Pure dairy at your doorstep</p>
-                        </div>
-                        <Link
-                            href="/catalog?category=milk"
-                            className="inline-block px-3.5 py-1.5 bg-white text-blue-700 text-xs font-bold rounded-lg w-fit hover:bg-blue-50 transition"
-                        >
-                            Order Now &rarr;
-                        </Link>
-                    </div>
+                {/* Dynamic Image Banners (managed from Admin Panel) */}
+                {(() => {
+                    const visibleBanners = banners.filter((b) => resolveImageUrl(b.banner_image));
+                    if (visibleBanners.length === 0) return null;
 
-                    {/* Banner 2 */}
-                    <div className="shrink-0 w-[82%] sm:w-[58%] md:w-auto snap-start bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl p-4 sm:p-5 text-white flex flex-col justify-between h-32 sm:h-36 shadow-xs">
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
-                                Pure Water
-                            </span>
-                            <h3 className="font-bold text-base mt-1.5">Natural Mineral Water</h3>
-                            <p className="text-cyan-100 text-xs mt-0.5">Safe, pure drinking water</p>
-                        </div>
-                        <Link
-                            href="/catalog?category=water"
-                            className="inline-block px-3.5 py-1.5 bg-white text-teal-700 text-xs font-bold rounded-lg w-fit hover:bg-cyan-50 transition"
-                        >
-                            Order Now &rarr;
-                        </Link>
-                    </div>
+                    const count = visibleBanners.length;
+                    const itemWidthClass =
+                        count === 1
+                            ? 'w-full aspect-[5/2] max-h-56'
+                            : count <= 3
+                            ? 'shrink-0 w-[85%] sm:w-[58%] md:flex-1 md:min-w-0 aspect-[5/2]'
+                            : 'shrink-0 w-[85%] sm:w-[58%] md:w-[32.2%] aspect-[5/2]';
 
-                    {/* Banner 3 */}
-                    <div className="shrink-0 w-[82%] sm:w-[58%] md:w-auto snap-start bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 sm:p-5 text-white flex flex-col justify-between h-32 sm:h-36 shadow-xs">
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
-                                Daily Sips
-                            </span>
-                            <h3 className="font-bold text-base mt-1.5">Refreshing Drinks</h3>
-                            <p className="text-amber-100 text-xs mt-0.5">Juices, sodas & beverages</p>
+                    return (
+                        <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x pb-1">
+                            {visibleBanners.map((banner) => {
+                                const bgImage = resolveImageUrl(banner.banner_image);
+                                return (
+                                    <Link
+                                        key={banner.id}
+                                        href={banner.cta_link || '/catalog'}
+                                        className={`${itemWidthClass} snap-start overflow-hidden rounded-2xl shadow-xs block bg-slate-100`}
+                                    >
+                                        <img
+                                            src={bgImage}
+                                            alt="Banner"
+                                            className="w-full h-full object-cover hover:scale-[1.02] transition duration-300"
+                                        />
+                                    </Link>
+                                );
+                            })}
                         </div>
-                        <Link
-                            href="/catalog?category=lassi-and-beverages"
-                            className="inline-block px-3.5 py-1.5 bg-white text-orange-700 text-xs font-bold rounded-lg w-fit hover:bg-orange-50 transition"
-                        >
-                            Order Now &rarr;
-                        </Link>
-                    </div>
-                </div>
+                    );
+                })()}
 
                 {/* Grouped Product Rows */}
                 <div className="space-y-10">

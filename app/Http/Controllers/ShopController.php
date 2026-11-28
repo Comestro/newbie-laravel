@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Address;
+use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -31,11 +32,16 @@ class ShopController extends Controller
             ->groupBy(fn($item) => $item->category?->name ?? 'Other');
 
         $categories = Category::activeOrdered();
+        $banners = Banner::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
 
         return Inertia::render('Shop/Home', [
             'groupedProducts' => $products,
             'selectedCategory' => $selectedCategory,
             'categories' => $categories,
+            'banners' => $banners,
         ]);
     }
 

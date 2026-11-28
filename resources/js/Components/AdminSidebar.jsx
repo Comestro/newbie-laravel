@@ -8,12 +8,14 @@ import {
     ShieldCheck,
     Settings,
     Ticket,
+    Image as ImageIcon,
 } from 'lucide-react';
 import PanelSidebar from './Portal/PanelSidebar';
 
 export default function AdminSidebar() {
     const links = [
         { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { label: 'Banners', href: '/admin/banners', icon: ImageIcon },
         { label: 'Categories', href: '/admin/categories', icon: Layers },
         { label: 'Products', href: '/admin/products', icon: Package },
         { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
