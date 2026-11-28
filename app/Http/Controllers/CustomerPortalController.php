@@ -10,10 +10,13 @@ use App\Models\User;
 use App\Models\Wishlist;
 use App\Notifications\NewUserRegisteredNotification;
 use App\Services\ImageKitService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -78,8 +81,8 @@ class CustomerPortalController extends Controller
             'line2' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'state' => 'required|string|max:255',
-            'pincode' => 'required|string|max:20',
-            'phone' => 'required|string|max:20',
+            'pincode' => ['required', 'string', 'regex:/^\d{6}$/'],
+            'phone' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -90,32 +93,30 @@ class CustomerPortalController extends Controller
             Address::where('user_id', $userId)->update(['is_default' => false]);
         }
 
+        $addressData = [
+            'label' => Str::title(trim($validated['label'])),
+            'line1' => Str::title(trim($validated['line1'])),
+            'line2' => !empty($validated['line2']) ? Str::title(trim($validated['line2'])) : null,
+            'city' => Str::title(trim($validated['city'])),
+            'state' => Str::title(trim($validated['state'])),
+            'pincode' => $validated['pincode'],
+            'phone' => $validated['phone'],
+        ];
+
         if (!empty($validated['id'])) {
             $address = Address::where('id', $validated['id'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
             $address->update([
-                'label' => $validated['label'],
-                'line1' => $validated['line1'],
-                'line2' => $validated['line2'] ?? null,
-                'city' => $validated['city'],
-                'state' => $validated['state'],
-                'pincode' => $validated['pincode'],
-                'phone' => $validated['phone'],
+                ...$addressData,
                 'is_default' => $isDefault,
             ]);
             $msg = 'Address updated successfully.';
         } else {
             Address::create([
+                ...$addressData,
                 'user_id' => $userId,
-                'label' => $validated['label'],
-                'line1' => $validated['line1'],
-                'line2' => $validated['line2'] ?? null,
-                'city' => $validated['city'],
-                'state' => $validated['state'],
-                'pincode' => $validated['pincode'],
-                'phone' => $validated['phone'],
                 'is_default' => $isDefault || Address::where('user_id', $userId)->count() === 0,
             ]);
             $msg = 'Address added successfully.';
@@ -132,6 +133,54 @@ class CustomerPortalController extends Controller
 
         $address->delete();
         return back()->with('success', 'Address deleted successfully.');
+    }
+
+    public function lookupPincode(string $pincode): JsonResponse
+    {
+        if (!preg_match('/^\d{6}$/', $pincode)) {
+            return response()->json(['found' => false]);
+        }
+
+        $cacheKey = "pincode_lookup_v2_{$pincode}";
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached) && ($cached['found'] ?? false)) {
+            return response()->json($cached);
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0',
+                'Accept' => 'application/json',
+            ])
+                ->withOptions([
+                    'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4],
+                ])
+                ->timeout(15)
+                ->get("https://api.postalpincode.in/pincode/{$pincode}");
+            if ($response->successful()) {
+                $payload = $response->json();
+                $first = is_array($payload) ? ($payload[0] ?? null) : null;
+                if (($first['Status'] ?? '') === 'Success' && !empty($first['PostOffice'][0])) {
+                    $po = $first['PostOffice'][0];
+                    $result = [
+                        'found' => true,
+                        'city' => $po['District'] ?? ($po['Block'] ?? ($po['Name'] ?? '')),
+                        'state' => $po['State'] ?? '',
+                    ];
+                    Cache::put($cacheKey, $result, now()->addDays(7));
+
+                    return response()->json($result);
+                }
+
+                if (($first['Status'] ?? '') === 'Error') {
+                    return response()->json(['found' => false]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore external API timeout/error and let user type manually
+        }
+
+        return response()->json(['found' => false, 'unavailable' => true]);
     }
 
     public function setDefaultAddress(Address $address): RedirectResponse
@@ -233,6 +282,10 @@ class CustomerPortalController extends Controller
         $user = Auth::user();
         $existingProfile = RetailerProfile::where('user_id', $user->id)->first();
 
+        if ($existingProfile?->status === 'VERIFIED') {
+            return back()->with('error', 'Verified KYC details cannot be edited.');
+        }
+
         $validated = $request->validate([
             'shop_name' => 'required|string|max:255',
             'line1' => 'required|string|max:255',
@@ -260,16 +313,17 @@ class CustomerPortalController extends Controller
         $frontPath = $this->uploadKycImage($request, $imageKitService, 'aadhaar_front', '/retailer/aadhaar', $existingProfile?->aadhaar_card_front);
         $backPath = $this->uploadKycImage($request, $imageKitService, 'aadhaar_back', '/retailer/aadhaar', $existingProfile?->aadhaar_card_back);
 
-        $line1 = trim($validated['line1']);
-        $line2 = !empty($validated['line2']) ? trim($validated['line2']) : null;
-        $city = trim($validated['city']);
-        $state = trim($validated['state']);
+        $shopName = Str::title(trim($validated['shop_name']));
+        $line1 = Str::title(trim($validated['line1']));
+        $line2 = !empty($validated['line2']) ? Str::title(trim($validated['line2'])) : null;
+        $city = Str::title(trim($validated['city']));
+        $state = Str::title(trim($validated['state']));
         $pincode = trim($validated['pincode']);
 
         $shopAddress = $line1 . ($line2 ? ", {$line2}" : '') . ", {$city}, {$state} - {$pincode}";
 
         $profileData = [
-            'shop_name' => $validated['shop_name'],
+            'shop_name' => $shopName,
             'shop_address' => $shopAddress,
             'gst_number' => !empty($validated['gst_number']) ? strtoupper(trim($validated['gst_number'])) : null,
             'shop_image' => $shopImagePath,

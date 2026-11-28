@@ -202,7 +202,7 @@ export default function AddressManager({ addresses = [], isRetailer = false }) {
                                     </div>
                                 </div>
 
-                                <p className="text-xs text-slate-600 leading-relaxed">
+                                <p className="text-xs text-slate-600 leading-relaxed capitalize">
                                     {addr.line1}
                                     {addr.line2 ? `, ${addr.line2}` : ''}
                                     <br />

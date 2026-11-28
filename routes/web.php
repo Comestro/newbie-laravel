@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [ShopController::class, 'index'])->name('home');
 Route::get('/catalog', [ShopController::class, 'catalog'])->name('catalog');
 Route::get('/product/{product:slug}', [ShopController::class, 'show'])->name('product.show');
+Route::get('/pincode/{pincode}', [CustomerPortalController::class, 'lookupPincode'])
+    ->where('pincode', '\d{6}')
+    ->name('pincode.lookup');
 
 // Cart & Wishlist Routes
 Route::post('/cart/add', [CartController::class, 'store'])->name('cart.add');

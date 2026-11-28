@@ -5,6 +5,7 @@ namespace Tests\Feature\Customer;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class PortalRoutesTest extends TestCase
@@ -101,5 +102,38 @@ class PortalRoutesTest extends TestCase
         $user->refresh();
         $this->assertEquals('Ramesh Kumar', $user->name);
         $this->assertEquals('9876543210', $user->phone);
+    }
+
+    public function test_store_address_validates_phone_and_pincode_and_pincode_lookup_works(): void
+    {
+        $user = User::where('email', 'user@newbie.com')->first();
+
+        $this->actingAs($user)->post('/my-addresses', [
+            'label' => 'Home',
+            'line1' => '123 Main St',
+            'city' => 'Patna',
+            'state' => 'Bihar',
+            'pincode' => '8000',
+            'phone' => '12345',
+        ])->assertSessionHasErrors(['phone', 'pincode']);
+
+        Http::fake([
+            'https://api.postalpincode.in/pincode/800001' => Http::response([
+                [
+                    'Status' => 'Success',
+                    'PostOffice' => [
+                        ['District' => 'Patna', 'State' => 'Bihar'],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->getJson('/pincode/800001')
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'city' => 'Patna',
+                'state' => 'Bihar',
+            ]);
     }
 }
