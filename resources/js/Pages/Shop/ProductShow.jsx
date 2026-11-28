@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ShopLayout from '../../Layouts/ShopLayout';
+import ProductCard from '../../Components/ProductCard';
 import { useCart } from '../../Context/CartContext';
-import { CheckCircle2, Clock, Heart } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Heart } from 'lucide-react';
 
-export default function ProductShow({ product }) {
+export default function ProductShow({ product, relatedProducts = [] }) {
     const { auth, wishlistProductIds = [] } = usePage().props;
     const isWishlisted = Array.isArray(wishlistProductIds) && wishlistProductIds.includes(product.id);
     const { addToCart } = useCart();
@@ -239,6 +240,36 @@ export default function ProductShow({ product }) {
                                         {item.value}
                                     </dd>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Related Products */}
+                {relatedProducts.length > 0 && (
+                    <div className="mt-10 sm:mt-12 space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                                Related Products
+                            </h2>
+                            {product.category?.slug && (
+                                <Link
+                                    href={`/catalog?category=${product.category.slug}`}
+                                    className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 transition"
+                                >
+                                    <span>See all</span>
+                                    <ArrowRight className="w-3.5 h-3.5" />
+                                </Link>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                            {relatedProducts.map((related) => (
+                                <ProductCard
+                                    key={related.id}
+                                    product={related}
+                                    categoryName={related.category?.name || product.category?.name}
+                                />
                             ))}
                         </div>
                     </div>
