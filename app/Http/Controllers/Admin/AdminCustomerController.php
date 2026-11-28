@@ -42,15 +42,22 @@ class AdminCustomerController extends Controller
     public function show(User $user): Response
     {
         $user->load('addresses');
+        $user->is_member = $user->hasActiveMembership();
         $orders = $user->orders()
             ->with('invoice:id,order_id,invoice_number')
             ->withCount('items')
             ->latest()
             ->get();
 
+        $loyaltyTransactions = $user->loyaltyTransactions()
+            ->latest()
+            ->take(20)
+            ->get();
+
         return Inertia::render('Admin/CustomerShow', [
             'customer' => $user,
             'orders' => $orders,
+            'loyaltyTransactions' => $loyaltyTransactions,
         ]);
     }
 

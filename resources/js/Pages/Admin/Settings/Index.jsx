@@ -44,7 +44,7 @@ export default function Index({ settings }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Membership Fee (₹)
+                                Monthly Membership Fee (₹ / month)
                             </label>
                             <input
                                 type="number"
@@ -156,7 +156,7 @@ export default function Index({ settings }) {
                     <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-100 text-xs text-purple-900 space-y-1">
                         <p className="font-bold">Live Preview:</p>
                         <p>&bull; Conversion rate: <span className="font-bold">{pointsPerRupee} Points = ₹1.00</span></p>
-                        <p>&bull; New member pays <span className="font-bold">₹{data.membership_fee || 0}</span> and receives <span className="font-bold">{Number(data.membership_bonus_points || 0).toLocaleString()} Points</span> (worth <span className="font-bold">₹{bonusWorth}</span>)</p>
+                        <p>&bull; Member pays <span className="font-bold">₹{data.membership_fee || 0}/month</span> and receives <span className="font-bold">{Number(data.membership_bonus_points || 0).toLocaleString()} Points</span> (worth <span className="font-bold">₹{bonusWorth}</span>)</p>
                         <p>&bull; Direct top-up of ₹100 gives <span className="font-bold">{(100 * pointsPerRupee).toLocaleString()} Points</span></p>
                         <p>
                             &bull; Order reward:{' '}

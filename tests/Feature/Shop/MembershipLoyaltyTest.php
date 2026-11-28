@@ -147,6 +147,8 @@ class MembershipLoyaltyTest extends TestCase
 
         $user->refresh();
         $this->assertTrue($user->is_member);
+        $this->assertTrue($user->hasActiveMembership());
+        $this->assertNotNull($user->membership_expires_at);
         $this->assertEquals(5000, $user->loyalty_points);
 
         // 3. Direct top-up of ₹20 -> +2000 points (total 7000)
@@ -284,6 +286,50 @@ class MembershipLoyaltyTest extends TestCase
             ->assertRedirect();
 
         $this->assertEquals(12, $user->fresh()->loyalty_points);
+    }
+
+    public function test_monthly_membership_expires_after_one_month_and_can_be_renewed(): void
+    {
+        [$user] = $this->createNewCustomer();
+
+        $user->update([
+            'is_member' => true,
+            'membership_paid_at' => now()->subMonth()->subDay(),
+            'membership_expires_at' => now()->subDay(),
+        ]);
+
+        $this->assertFalse($user->fresh()->hasActiveMembership());
+        $this->assertTrue($user->fresh()->needsMembershipToOrder());
+
+        Http::fake([
+            'https://api.razorpay.com/v1/orders' => Http::response([
+                'id' => 'order_renew_1',
+                'amount' => 4900,
+                'currency' => 'INR',
+            ], 200),
+        ]);
+
+        // Expired member can initiate renewal order
+        $this->actingAs($user)
+            ->postJson(route('loyalty.membership.order'))
+            ->assertOk()
+            ->assertJson(['order_id' => 'order_renew_1', 'amount' => 4900]);
+
+        $sig = hash_hmac('sha256', 'order_renew_1|pay_renew_1', 'rzp_test_secret');
+        $this->actingAs($user)
+            ->post(route('loyalty.membership.verify'), [
+                'razorpay_order_id' => 'order_renew_1',
+                'razorpay_payment_id' => 'pay_renew_1',
+                'razorpay_signature' => $sig,
+            ])
+            ->assertRedirect();
+
+        $user->refresh();
+        $this->assertTrue($user->hasActiveMembership());
+        $this->assertFalse($user->needsMembershipToOrder());
+        $this->assertTrue($user->membership_expires_at->isFuture());
+        // Renewal credits 49 * 100 = 4900 points (no first-time +100 bonus)
+        $this->assertEquals(4900, $user->loyalty_points);
     }
 }
 

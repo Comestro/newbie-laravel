@@ -131,13 +131,25 @@ export default function Loyalty({ config, transactions = [], pendingPoints = 0 }
                     <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col justify-between">
                         {user.is_member ? (
                             <>
-                                <div className="flex items-center gap-2 text-emerald-700">
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    <span className="text-sm font-bold">Active Member</span>
+                                <div>
+                                    <div className="flex items-center gap-2 text-emerald-700">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                        <span className="text-sm font-bold">Active Monthly Member</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">
+                                        Your monthly membership is active! You can place orders and redeem your loyalty points anytime at checkout.
+                                    </p>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-2">
-                                    Your membership is active! You can place orders and redeem your loyalty points anytime at checkout.
-                                </p>
+                                {user.membership_expires_at && (
+                                    <p className="text-[11px] font-semibold text-emerald-700 mt-3 pt-3 border-t border-slate-100">
+                                        Valid until{' '}
+                                        {new Date(user.membership_expires_at).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                        })}
+                                    </p>
+                                )}
                             </>
                         ) : (
                             <>
@@ -149,13 +161,29 @@ export default function Loyalty({ config, transactions = [], pendingPoints = 0 }
                                             <Crown className="w-5 h-5" />
                                         )}
                                         <span className="text-sm font-bold">
-                                            {config?.require_membership_for_order ? 'Membership Required to Order' : 'Become a Member'}
+                                            {user.membership_paid_at
+                                                ? 'Monthly Membership Expired'
+                                                : config?.require_membership_for_order
+                                                ? 'Monthly Membership Required to Order'
+                                                : 'Become a Monthly Member'}
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-500 mt-1.5">
-                                        Pay <span className="font-bold text-slate-900">₹{membershipFee}</span> once and get{' '}
-                                        <span className="font-bold text-purple-700">{bonusPoints.toLocaleString()} Loyalty Points</span>{' '}
-                                        (worth ₹{(bonusPoints / pointsPerRupee).toFixed(2)}) immediately!
+                                        {user.membership_paid_at ? (
+                                            <>
+                                                Renew for <span className="font-bold text-slate-900">₹{membershipFee}/month</span> and get{' '}
+                                                <span className="font-bold text-purple-700">
+                                                    {Math.round(membershipFee * pointsPerRupee).toLocaleString()} Loyalty Points
+                                                </span>{' '}
+                                                (worth ₹{membershipFee.toFixed(2)})!
+                                            </>
+                                        ) : (
+                                            <>
+                                                Pay <span className="font-bold text-slate-900">₹{membershipFee}/month</span> and get{' '}
+                                                <span className="font-bold text-purple-700">{bonusPoints.toLocaleString()} Loyalty Points</span>{' '}
+                                                on your first month ({Math.round(membershipFee * pointsPerRupee).toLocaleString()} pts/month on renewal)!
+                                            </>
+                                        )}
                                     </p>
                                 </div>
                                 <button
@@ -164,7 +192,11 @@ export default function Loyalty({ config, transactions = [], pendingPoints = 0 }
                                     disabled={loadingMembership}
                                     className="mt-4 w-full sm:w-auto px-5 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl transition cursor-pointer"
                                 >
-                                    {loadingMembership ? 'Opening Razorpay...' : `Activate Membership (Pay ₹${membershipFee})`}
+                                    {loadingMembership
+                                        ? 'Opening Razorpay...'
+                                        : user.membership_paid_at
+                                        ? `Renew Monthly Membership (Pay ₹${membershipFee})`
+                                        : `Activate Monthly Membership (Pay ₹${membershipFee})`}
                                 </button>
                             </>
                         )}

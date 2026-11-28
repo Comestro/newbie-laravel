@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import ConfirmModal from '../../Components/ConfirmModal';
 import UserOrderHistory from '../../Components/Admin/UserOrderHistory';
+import UserLoyaltyMembershipCard from '../../Components/Admin/UserLoyaltyMembershipCard';
 import { resolveImageUrl } from '../../utils/media';
 import {
     ArrowLeft,
@@ -19,7 +20,7 @@ import {
     XCircle,
 } from 'lucide-react';
 
-export default function ReviewRetailerShow({ applicant, orders = [] }) {
+export default function ReviewRetailerShow({ applicant, orders = [], loyaltyTransactions = [] }) {
     const [rejectReason, setRejectReason] = useState('');
     const [showRejectForm, setShowRejectForm] = useState(false);
     const [confirmApprove, setConfirmApprove] = useState(false);
@@ -196,6 +197,9 @@ export default function ReviewRetailerShow({ applicant, orders = [] }) {
                             ))}
                         </div>
                     </div>
+
+                    {/* Membership & Loyalty Points */}
+                    <UserLoyaltyMembershipCard user={applicant} transactions={loyaltyTransactions} />
 
                     {/* Retailer Order History */}
                     <UserOrderHistory orders={orders} />

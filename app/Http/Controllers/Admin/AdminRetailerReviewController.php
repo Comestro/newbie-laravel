@@ -33,6 +33,10 @@ class AdminRetailerReviewController extends Controller
             'rejection_reason' => $profile->rejection_reason,
             'approved_at' => $profile->approved_at,
             'created_at' => $profile->created_at,
+            'is_member' => $profile->user->hasActiveMembership(),
+            'membership_paid_at' => $profile->user->membership_paid_at,
+            'membership_expires_at' => $profile->user->membership_expires_at,
+            'loyalty_points' => (int) ($profile->user->loyalty_points ?? 0),
         ];
     }
 
@@ -64,9 +68,15 @@ class AdminRetailerReviewController extends Controller
             ->latest()
             ->get();
 
+        $loyaltyTransactions = $user->loyaltyTransactions()
+            ->latest()
+            ->take(20)
+            ->get();
+
         return Inertia::render('Admin/ReviewRetailerShow', [
             'applicant' => $this->formatApplicant($profile),
             'orders' => $orders,
+            'loyaltyTransactions' => $loyaltyTransactions,
         ]);
     }
 

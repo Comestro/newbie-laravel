@@ -221,10 +221,17 @@ export default function Checkout({ addresses = [], deliveryCharge = 15 }) {
                     <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 flex items-start gap-3 shadow-xs">
                         <Crown className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="font-bold text-xs text-purple-950">Membership Plan Required</p>
+                            <p className="font-bold text-xs text-purple-950">Monthly Membership Required</p>
                             <p className="text-[11px] text-purple-800 mt-0.5">
-                                Activate your membership for <span className="font-bold">₹{loyaltyConfig.membership_fee ?? 49}</span> to place orders and receive{' '}
-                                <span className="font-bold">{Number(loyaltyConfig.membership_bonus_points ?? 5000).toLocaleString()} loyalty points</span> instantly.
+                                Pay <span className="font-bold">₹{loyaltyConfig.membership_fee ?? 49}/month</span> to keep your membership active to place orders and receive{' '}
+                                <span className="font-bold">
+                                    {(auth?.user?.membership_paid_at
+                                        ? Math.round(Number(loyaltyConfig.membership_fee ?? 49) * Number(loyaltyConfig.points_per_rupee ?? 100))
+                                        : Number(loyaltyConfig.membership_bonus_points ?? 5000)
+                                    ).toLocaleString()}{' '}
+                                    loyalty points
+                                </span>{' '}
+                                instantly.
                             </p>
                             <Link
                                 href="/loyalty"

@@ -30,6 +30,7 @@ class User extends Authenticatable
         'is_member',
         'loyalty_points',
         'membership_paid_at',
+        'membership_expires_at',
         'profile_pic',
         'last_login_at',
     ];
@@ -63,6 +64,7 @@ class User extends Authenticatable
             'is_member' => 'boolean',
             'loyalty_points' => 'integer',
             'membership_paid_at' => 'datetime',
+            'membership_expires_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
     }
@@ -167,6 +169,19 @@ class User extends Authenticatable
         return $this->hasMany(LoyaltyTransaction::class);
     }
 
+    public function hasActiveMembership(): bool
+    {
+        if (!$this->is_member) {
+            return false;
+        }
+
+        if ($this->membership_expires_at && $this->membership_expires_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function needsMembershipToOrder(): bool
     {
         if ($this->isAdmin()) {
@@ -174,7 +189,7 @@ class User extends Authenticatable
         }
 
         $config = Setting::getLoyaltyConfig();
-        return $config['require_membership_for_order'] && !$this->is_member;
+        return $config['require_membership_for_order'] && !$this->hasActiveMembership();
     }
 
     public function canPlaceOrder(): bool

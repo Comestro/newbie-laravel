@@ -2,9 +2,10 @@ import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import UserOrderHistory from '../../Components/Admin/UserOrderHistory';
+import UserLoyaltyMembershipCard from '../../Components/Admin/UserLoyaltyMembershipCard';
 import { ArrowLeft, Coins, Crown, Mail, MapPin, Phone, User } from 'lucide-react';
 
-export default function CustomerShow({ customer, orders = [] }) {
+export default function CustomerShow({ customer, orders = [], loyaltyTransactions = [] }) {
     const toggleActive = () => {
         router.post(route('admin.customers.toggle-active', customer.id), {}, { preserveScroll: true });
     };
@@ -132,6 +133,9 @@ export default function CustomerShow({ customer, orders = [] }) {
                         )}
                     </div>
                 </div>
+
+                {/* Membership & Loyalty Points */}
+                <UserLoyaltyMembershipCard user={customer} transactions={loyaltyTransactions} />
 
                 {/* Order History */}
                 <UserOrderHistory orders={orders} />

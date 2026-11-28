@@ -31,7 +31,7 @@ class LoyaltyController extends Controller
     public function createMembershipOrder(): JsonResponse
     {
         $user = Auth::user();
-        if ($user->is_member) {
+        if ($user->hasActiveMembership()) {
             return response()->json(['message' => 'Membership is already active.'], 422);
         }
 
@@ -63,14 +63,14 @@ class LoyaltyController extends Controller
         }
 
         $config = Setting::getLoyaltyConfig();
-        $this->activateMembershipForUser(
+        $points = $this->activateMembershipForUser(
             Auth::id(),
             $config,
             $request->input('razorpay_order_id'),
             $request->input('razorpay_payment_id')
         );
 
-        return back()->with('success', "Membership activated! {$config['membership_bonus_points']} loyalty points added.");
+        return back()->with('success', "Membership activated! {$points} loyalty points added.");
     }
 
     public function createTopupOrder(Request $request): JsonResponse
@@ -121,31 +121,39 @@ class LoyaltyController extends Controller
         return back()->with('success', "{$points} loyalty points added to your wallet!");
     }
 
-    private function activateMembershipForUser(int $userId, array $config, ?string $orderId, ?string $paymentId): void
+    private function activateMembershipForUser(int $userId, array $config, ?string $orderId, ?string $paymentId): int
     {
-        DB::transaction(function () use ($userId, $config, $orderId, $paymentId) {
+        return DB::transaction(function () use ($userId, $config, $orderId, $paymentId) {
             $user = User::where('id', $userId)->lockForUpdate()->firstOrFail();
-            if ($user->is_member) {
-                return;
+            if ($user->hasActiveMembership()) {
+                return 0;
             }
 
-            $bonusPoints = (int) $config['membership_bonus_points'];
+            $isFirstTime = $user->membership_paid_at === null;
+            $pointsToCredit = $isFirstTime
+                ? (int) $config['membership_bonus_points']
+                : (int) round((float) $config['membership_fee'] * (int) $config['points_per_rupee']);
 
             $user->update([
                 'is_member' => true,
                 'membership_paid_at' => now(),
-                'loyalty_points' => $user->loyalty_points + $bonusPoints,
+                'membership_expires_at' => now()->addMonth(),
+                'loyalty_points' => $user->loyalty_points + $pointsToCredit,
             ]);
 
             LoyaltyTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'MEMBERSHIP',
-                'points' => $bonusPoints,
+                'points' => $pointsToCredit,
                 'amount' => $config['membership_fee'],
-                'description' => 'Membership plan activation bonus',
+                'description' => $isFirstTime
+                    ? 'Monthly membership plan activation'
+                    : 'Monthly membership renewal',
                 'gateway_order_id' => $orderId,
                 'gateway_payment_id' => $paymentId,
             ]);
+
+            return $pointsToCredit;
         });
     }
 
