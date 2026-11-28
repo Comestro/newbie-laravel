@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import SearchBar from '../../Components/SearchBar';
+import { Eye } from 'lucide-react';
 
 export default function Customers({ customers, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -48,7 +49,7 @@ export default function Customers({ customers, filters = {} }) {
                                     <th className="py-3 px-4">Email</th>
                                     <th className="py-3 px-4">Phone</th>
                                     <th className="py-3 px-4">Status</th>
-                                    <th className="py-3 px-4 text-right">Toggle</th>
+                                    <th className="py-3 px-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -80,17 +81,26 @@ export default function Customers({ customers, filters = {} }) {
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-right">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleActive(user.id)}
-                                                    className={`px-2.5 py-1 text-xs font-semibold rounded transition ${
-                                                        user.is_active
-                                                            ? 'text-rose-600 hover:bg-rose-50'
-                                                            : 'text-emerald-600 hover:bg-emerald-50'
-                                                    }`}
-                                                >
-                                                    {user.is_active ? 'Deactivate' : 'Activate'}
-                                                </button>
+                                                <div className="inline-flex items-center gap-2">
+                                                    <Link
+                                                        href={route('admin.customers.show', user.id)}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition"
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        <span>View</span>
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleActive(user.id)}
+                                                        className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                                                            user.is_active
+                                                                ? 'text-rose-600 hover:bg-rose-50'
+                                                                : 'text-emerald-600 hover:bg-emerald-50'
+                                                        }`}
+                                                    >
+                                                        {user.is_active ? 'Deactivate' : 'Activate'}
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

@@ -213,7 +213,22 @@ class CustomerPortalController extends Controller
         ]);
     }
 
-    public function submitRetailer(Request $request): RedirectResponse
+    private function uploadKycImage(Request $request, ImageKitService $imageKitService, string $field, string $folder, ?string $existing): ?string
+    {
+        if (!$request->hasFile($field)) {
+            return $existing;
+        }
+
+        if ($existing && !str_starts_with($existing, 'http') && !str_starts_with($existing, '/') && Storage::disk('public')->exists($existing)) {
+            Storage::disk('public')->delete($existing);
+        }
+
+        $uploadRes = $imageKitService->upload($request->file($field), null, $folder);
+
+        return !empty($uploadRes['url']) ? $uploadRes['url'] : $existing;
+    }
+
+    public function submitRetailer(Request $request, ImageKitService $imageKitService): RedirectResponse
     {
         $user = Auth::user();
         $existingProfile = RetailerProfile::where('user_id', $user->id)->first();
@@ -235,36 +250,15 @@ class CustomerPortalController extends Controller
         ]);
 
         if ($request->hasFile('avatar')) {
-            if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
-                Storage::disk('public')->delete($user->profile_pic);
+            $newAvatar = $this->uploadKycImage($request, $imageKitService, 'avatar', '/retailer/avatars', $user->profile_pic);
+            if ($newAvatar) {
+                $user->update(['profile_pic' => $newAvatar]);
             }
-            $avatarPath = $request->file('avatar')->store('retailer/avatar', 'public');
-            $user->update(['profile_pic' => $avatarPath]);
         }
 
-        $shopImagePath = $existingProfile?->shop_image;
-        if ($request->hasFile('shop_image')) {
-            if ($existingProfile?->shop_image && Storage::disk('public')->exists($existingProfile->shop_image)) {
-                Storage::disk('public')->delete($existingProfile->shop_image);
-            }
-            $shopImagePath = $request->file('shop_image')->store('retailer/shop', 'public');
-        }
-
-        $frontPath = $existingProfile?->aadhaar_card_front;
-        if ($request->hasFile('aadhaar_front')) {
-            if ($existingProfile?->aadhaar_card_front && Storage::disk('public')->exists($existingProfile->aadhaar_card_front)) {
-                Storage::disk('public')->delete($existingProfile->aadhaar_card_front);
-            }
-            $frontPath = $request->file('aadhaar_front')->store('retailer/aadhaar', 'public');
-        }
-
-        $backPath = $existingProfile?->aadhaar_card_back;
-        if ($request->hasFile('aadhaar_back')) {
-            if ($existingProfile?->aadhaar_card_back && Storage::disk('public')->exists($existingProfile->aadhaar_card_back)) {
-                Storage::disk('public')->delete($existingProfile->aadhaar_card_back);
-            }
-            $backPath = $request->file('aadhaar_back')->store('retailer/aadhaar', 'public');
-        }
+        $shopImagePath = $this->uploadKycImage($request, $imageKitService, 'shop_image', '/retailer/shops', $existingProfile?->shop_image);
+        $frontPath = $this->uploadKycImage($request, $imageKitService, 'aadhaar_front', '/retailer/aadhaar', $existingProfile?->aadhaar_card_front);
+        $backPath = $this->uploadKycImage($request, $imageKitService, 'aadhaar_back', '/retailer/aadhaar', $existingProfile?->aadhaar_card_back);
 
         $line1 = trim($validated['line1']);
         $line2 = !empty($validated['line2']) ? trim($validated['line2']) : null;

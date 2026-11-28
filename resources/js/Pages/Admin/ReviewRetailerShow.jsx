@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import ConfirmModal from '../../Components/ConfirmModal';
+import UserOrderHistory from '../../Components/Admin/UserOrderHistory';
+import { resolveImageUrl } from '../../utils/media';
 import {
     ArrowLeft,
     Building2,
@@ -17,7 +19,7 @@ import {
     XCircle,
 } from 'lucide-react';
 
-export default function ReviewRetailerShow({ applicant }) {
+export default function ReviewRetailerShow({ applicant, orders = [] }) {
     const [rejectReason, setRejectReason] = useState('');
     const [showRejectForm, setShowRejectForm] = useState(false);
     const [confirmApprove, setConfirmApprove] = useState(false);
@@ -60,9 +62,9 @@ export default function ReviewRetailerShow({ applicant }) {
     };
 
     const documents = [
-        { label: 'Shop Photo', path: applicant.shop_image, empty: 'No shop photo uploaded' },
-        { label: 'Aadhaar Front', path: applicant.aadhaar_front, empty: 'No front image uploaded' },
-        { label: 'Aadhaar Back', path: applicant.aadhaar_back, empty: 'No back image uploaded' },
+        { label: 'Shop Photo', url: resolveImageUrl(applicant.shop_image), empty: 'No shop photo uploaded' },
+        { label: 'Aadhaar Front', url: resolveImageUrl(applicant.aadhaar_front), empty: 'No front image uploaded' },
+        { label: 'Aadhaar Back', url: resolveImageUrl(applicant.aadhaar_back), empty: 'No back image uploaded' },
     ];
 
     return (
@@ -165,9 +167,9 @@ export default function ReviewRetailerShow({ applicant }) {
                                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                             {doc.label}
                                         </span>
-                                        {doc.path && (
+                                        {doc.url && (
                                             <a
-                                                href={`/storage/${doc.path}`}
+                                                href={doc.url}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="text-[10px] font-semibold text-purple-600 hover:text-purple-700 inline-flex items-center gap-0.5"
@@ -177,10 +179,10 @@ export default function ReviewRetailerShow({ applicant }) {
                                             </a>
                                         )}
                                     </div>
-                                    {doc.path ? (
-                                        <a href={`/storage/${doc.path}`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-slate-200 bg-white">
+                                    {doc.url ? (
+                                        <a href={doc.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-slate-200 bg-white">
                                             <img
-                                                src={`/storage/${doc.path}`}
+                                                src={doc.url}
                                                 alt={doc.label}
                                                 className="h-40 w-full object-contain hover:scale-105 transition duration-200"
                                             />
@@ -194,6 +196,9 @@ export default function ReviewRetailerShow({ applicant }) {
                             ))}
                         </div>
                     </div>
+
+                    {/* Retailer Order History */}
+                    <UserOrderHistory orders={orders} />
                 </div>
 
                 {/* Right Column: Decision & Timeline */}

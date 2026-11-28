@@ -39,6 +39,21 @@ class AdminCustomerController extends Controller
         ]);
     }
 
+    public function show(User $user): Response
+    {
+        $user->load('addresses');
+        $orders = $user->orders()
+            ->with('invoice:id,order_id,invoice_number')
+            ->withCount('items')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/CustomerShow', [
+            'customer' => $user,
+            'orders' => $orders,
+        ]);
+    }
+
     public function toggleActive(User $user): RedirectResponse
     {
         $user->update(['is_active' => !$user->is_active]);

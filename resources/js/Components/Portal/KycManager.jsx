@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import AddressFormFields from './AddressFormFields';
+import { resolveImageUrl } from '../../utils/media';
 import {
     ShieldCheck,
     AlertCircle,
@@ -60,15 +61,9 @@ export default function KycManager({ user, isRetailer = false }) {
     const [showAddressPicker, setShowAddressPicker] = useState(false);
 
     // Image previews
-    const [shopImagePreview, setShopImagePreview] = useState(
-        user?.shop_image ? `/storage/${user.shop_image}` : null
-    );
-    const [aadhaarFrontPreview, setAadhaarFrontPreview] = useState(
-        user?.aadhaar_card_front ? `/storage/${user.aadhaar_card_front}` : null
-    );
-    const [aadhaarBackPreview, setAadhaarBackPreview] = useState(
-        user?.aadhaar_card_back ? `/storage/${user.aadhaar_card_back}` : null
-    );
+    const [shopImagePreview, setShopImagePreview] = useState(resolveImageUrl(user?.shop_image));
+    const [aadhaarFrontPreview, setAadhaarFrontPreview] = useState(resolveImageUrl(user?.aadhaar_card_front));
+    const [aadhaarBackPreview, setAadhaarBackPreview] = useState(resolveImageUrl(user?.aadhaar_card_back));
 
     const initialAddr = parseInitialAddress(user);
 
@@ -259,7 +254,7 @@ export default function KycManager({ user, isRetailer = false }) {
                                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Shop Front Photo</p>
                                 {user?.shop_image ? (
                                     <img
-                                        src={`/storage/${user.shop_image}`}
+                                        src={resolveImageUrl(user.shop_image)}
                                         alt="Shop Front"
                                         className="h-28 w-full object-cover rounded-lg border border-slate-200"
                                     />
@@ -275,7 +270,7 @@ export default function KycManager({ user, isRetailer = false }) {
                                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Aadhaar Front</p>
                                 {user?.aadhaar_card_front ? (
                                     <img
-                                        src={`/storage/${user.aadhaar_card_front}`}
+                                        src={resolveImageUrl(user.aadhaar_card_front)}
                                         alt="Aadhaar Front"
                                         className="h-28 w-full object-cover rounded-lg border border-slate-200"
                                     />
@@ -291,7 +286,7 @@ export default function KycManager({ user, isRetailer = false }) {
                                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Aadhaar Back</p>
                                 {user?.aadhaar_card_back ? (
                                     <img
-                                        src={`/storage/${user.aadhaar_card_back}`}
+                                        src={resolveImageUrl(user.aadhaar_card_back)}
                                         alt="Aadhaar Back"
                                         className="h-28 w-full object-cover rounded-lg border border-slate-200"
                                     />

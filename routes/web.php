@@ -104,6 +104,7 @@ Route::middleware(['auth', 'verified', EnsureUserIsAdmin::class])
         Route::post('/review-retailer/{user}/reject', [AdminRetailerReviewController::class, 'reject'])->name('reviewretailer.reject');
 
         Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers');
+        Route::get('/customers/{user}', [AdminCustomerController::class, 'show'])->name('customers.show');
         Route::post('/customers/{user}/toggle-active', [AdminCustomerController::class, 'toggleActive'])->name('customers.toggle-active');
 
         Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');

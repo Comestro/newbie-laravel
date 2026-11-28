@@ -58,8 +58,15 @@ class AdminRetailerReviewController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
+        $orders = $user->orders()
+            ->with('invoice:id,order_id,invoice_number')
+            ->withCount('items')
+            ->latest()
+            ->get();
+
         return Inertia::render('Admin/ReviewRetailerShow', [
             'applicant' => $this->formatApplicant($profile),
+            'orders' => $orders,
         ]);
     }
 
