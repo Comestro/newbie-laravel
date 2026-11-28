@@ -46,8 +46,12 @@ class AdminCategoryController extends Controller
 
     public function store(Request $request, ImageKitService $imageKitService): RedirectResponse
     {
-        $data = $this->validatedCategoryData($request, null, $imageKitService);
-        Category::create($data);
+        $data = $this->validatedCategoryData($request);
+        $category = Category::create($data);
+
+        if ($request->hasFile('image_file')) {
+            $imageKitService->queueUpload($request->file('image_file'), Category::class, $category->id, 'icon', '/categories');
+        }
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
     }
@@ -64,13 +68,17 @@ class AdminCategoryController extends Controller
 
     public function update(Request $request, Category $category, ImageKitService $imageKitService): RedirectResponse
     {
-        $data = $this->validatedCategoryData($request, $category, $imageKitService);
+        $data = $this->validatedCategoryData($request, $category);
         $category->update($data);
+
+        if ($request->hasFile('image_file')) {
+            $imageKitService->queueUpload($request->file('image_file'), Category::class, $category->id, 'icon', '/categories');
+        }
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
     }
 
-    private function validatedCategoryData(Request $request, ?Category $category = null, ?ImageKitService $imageKitService = null): array
+    private function validatedCategoryData(Request $request, ?Category $category = null): array
     {
         $idRule = $category ? ',' . $category->id : '';
 
@@ -97,12 +105,9 @@ class AdminCategoryController extends Controller
             : Str::slug($validated['name']);
 
         $icon = $category?->icon;
-        if ($request->hasFile('image_file') && $imageKitService) {
-            $uploadRes = $imageKitService->upload($request->file('image_file'), null, '/categories');
-            $icon = $uploadRes['url'] ?? $icon;
-        } elseif ($request->boolean('remove_icon')) {
+        if ($request->boolean('remove_icon') && !$request->hasFile('image_file')) {
             $icon = null;
-        } elseif (array_key_exists('icon', $validated)) {
+        } elseif (!$request->hasFile('image_file') && array_key_exists('icon', $validated)) {
             $icon = !empty($validated['icon']) ? trim($validated['icon']) : null;
         }
 

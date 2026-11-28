@@ -227,31 +227,21 @@ class AdminProductController extends Controller
                     $uploadedFiles = [$request->file("variants.{$index}.image_file")];
                 }
 
-                $firstImageUrl = $variant->image_url;
                 foreach ($uploadedFiles as $imgIdx => $file) {
                     if (!$file) {
                         continue;
                     }
-                    $uploadRes = $imageKitService->upload($file, null, '/products');
-                    if (!$firstImageUrl || $imgIdx === 0) {
-                        $firstImageUrl = $uploadRes['url'];
-                    }
 
-                    ProductImage::create([
+                    $productImage = ProductImage::create([
                         'product_id' => $product->id,
                         'product_variant_id' => $variant->id,
-                        'url' => $uploadRes['url'],
-                        'file_id' => $uploadRes['file_id'] ?? null,
-                        'file_path' => $uploadRes['file_path'] ?? null,
-                        'thumbnail_url' => $uploadRes['thumbnail_url'] ?? null,
+                        'url' => '',
                         'alt_text' => $variant->variant_name,
                         'is_primary' => ($imgIdx === 0),
                         'sort_order' => $imgIdx,
                     ]);
-                }
 
-                if ($firstImageUrl && $variant->image_url !== $firstImageUrl) {
-                    $variant->update(['image_url' => $firstImageUrl]);
+                    $imageKitService->queueUpload($file, ProductImage::class, $productImage->id, 'url', '/products');
                 }
             }
         });
@@ -432,17 +422,12 @@ class AdminProductController extends Controller
                         continue;
                     }
                     $currentSortOrder++;
-                    $uploadRes = $imageKitService->upload($file, null, '/products');
-
                     $isNewCover = !$hasExplicitExistingCover && ($fIdx === 0 && (!empty($variantData['cover_new_file_id']) || $targetVariant->image_url === null));
 
                     $newProductImage = ProductImage::create([
                         'product_id' => $product->id,
                         'product_variant_id' => $targetVariant->id,
-                        'url' => $uploadRes['url'],
-                        'file_id' => $uploadRes['file_id'] ?? null,
-                        'file_path' => $uploadRes['file_path'] ?? null,
-                        'thumbnail_url' => $uploadRes['thumbnail_url'] ?? null,
+                        'url' => '',
                         'alt_text' => $targetVariant->variant_name,
                         'is_primary' => $isNewCover,
                         'sort_order' => $isNewCover ? 0 : $currentSortOrder,
@@ -452,8 +437,9 @@ class AdminProductController extends Controller
                         ProductImage::where('product_variant_id', $targetVariant->id)
                             ->where('id', '!=', $newProductImage->id)
                             ->update(['is_primary' => false]);
-                        $targetVariant->update(['image_url' => $uploadRes['url']]);
                     }
+
+                    $imageKitService->queueUpload($file, ProductImage::class, $newProductImage->id, 'url', '/products');
                 }
 
                 // Sync cover image and image_url for variant

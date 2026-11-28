@@ -135,8 +135,8 @@ export default function Navbar() {
                         <SearchBar
                             value={searchQuery}
                             onChange={setSearchQuery}
-                            onSearch={handleSearch}
-                            debounceMs={400}
+                            onSubmit={() => handleSearch(searchQuery)}
+                            onClear={() => handleSearch('')}
                             placeholder="Search 'milk'..."
                             size="md"
                             className="hidden md:block w-72 lg:w-80"
@@ -284,8 +284,8 @@ export default function Navbar() {
                 <SearchBar
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    onSearch={handleSearch}
-                    debounceMs={400}
+                    onSubmit={() => handleSearch(searchQuery)}
+                    onClear={() => handleSearch('')}
                     placeholder="Search 'milk'..."
                     size="sm"
                     className="w-full"

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Jobs\UploadImageToImageKit;
+use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -46,15 +48,16 @@ class ImageKitService
             ];
         }
 
-        // 2. If it's an UploadedFile
-        if ($file instanceof UploadedFile) {
-            $name = $fileName ?: $file->getClientOriginalName();
+        // 2. If it's an UploadedFile or a local file path
+        if ($file instanceof UploadedFile || (is_string($file) && is_file($file))) {
+            $realPath = $file instanceof UploadedFile ? $file->getRealPath() : $file;
+            $name = $fileName ?: ($file instanceof UploadedFile ? $file->getClientOriginalName() : basename($file));
 
             // If ImageKit credentials are configured, upload to ImageKit API
             if ($this->isConfigured()) {
                 try {
                     $response = Http::withBasicAuth($this->privateKey, '')
-                        ->attach('file', file_get_contents($file->getRealPath()), $name)
+                        ->attach('file', file_get_contents($realPath), $name)
                         ->post('https://upload.imagekit.io/api/v1/files/upload', [
                             'fileName' => $name,
                             'folder' => $folder,
@@ -78,7 +81,8 @@ class ImageKitService
             }
 
             // Fallback to local storage (for local offline dev or when keys not yet provided)
-            $path = Storage::disk('public')->putFile('products', $file);
+            $storageFile = $file instanceof UploadedFile ? $file : new File($file);
+            $path = Storage::disk('public')->putFile('products', $storageFile);
             $url = '/storage/' . $path;
 
             return [
@@ -90,6 +94,32 @@ class ImageKitService
         }
 
         throw new \InvalidArgumentException('Invalid file provided for upload.');
+    }
+
+    /**
+     * Store an uploaded file temporarily and dispatch a queued job to upload it to ImageKit.
+     */
+    public function queueUpload(
+        UploadedFile $file,
+        string $modelClass,
+        int $modelId,
+        string $column,
+        string $folder = '/products',
+        ?string $oldFileId = null,
+        ?string $oldFilePath = null
+    ): void {
+        $tempPath = Storage::disk('local')->putFile('temp-uploads', $file);
+
+        UploadImageToImageKit::dispatch(
+            $tempPath,
+            $file->getClientOriginalName(),
+            $modelClass,
+            $modelId,
+            $column,
+            $folder,
+            $oldFileId,
+            $oldFilePath
+        )->afterCommit();
     }
 
     /**

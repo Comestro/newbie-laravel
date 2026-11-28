@@ -224,18 +224,15 @@ class CustomerPortalController extends Controller
         $user->email = trim($validated['email']);
         $user->phone = !empty($validated['phone']) ? trim($validated['phone']) : null;
 
-        if ($request->hasFile('avatar')) {
-            $uploadRes = $imageKitService->upload($request->file('avatar'), null, '/avatars');
-            if (!empty($uploadRes['url'])) {
-                $user->profile_pic = $uploadRes['url'];
-            }
-        }
-
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
         $user->save();
+
+        if ($request->hasFile('avatar')) {
+            $imageKitService->queueUpload($request->file('avatar'), User::class, $user->id, 'profile_pic', '/avatars');
+        }
 
         return back()->with('success', 'Profile updated successfully.');
     }
@@ -262,19 +259,25 @@ class CustomerPortalController extends Controller
         ]);
     }
 
-    private function uploadKycImage(Request $request, ImageKitService $imageKitService, string $field, string $folder, ?string $existing): ?string
-    {
+    private function queueKycImage(
+        Request $request,
+        ImageKitService $imageKitService,
+        string $field,
+        string $modelClass,
+        int $modelId,
+        string $column,
+        string $folder,
+        ?string $existing
+    ): void {
         if (!$request->hasFile($field)) {
-            return $existing;
+            return;
         }
 
         if ($existing && !str_starts_with($existing, 'http') && !str_starts_with($existing, '/') && Storage::disk('public')->exists($existing)) {
             Storage::disk('public')->delete($existing);
         }
 
-        $uploadRes = $imageKitService->upload($request->file($field), null, $folder);
-
-        return !empty($uploadRes['url']) ? $uploadRes['url'] : $existing;
+        $imageKitService->queueUpload($request->file($field), $modelClass, $modelId, $column, $folder);
     }
 
     public function submitRetailer(Request $request, ImageKitService $imageKitService): RedirectResponse
@@ -302,17 +305,6 @@ class CustomerPortalController extends Controller
             'sync_delivery_address' => 'nullable|boolean',
         ]);
 
-        if ($request->hasFile('avatar')) {
-            $newAvatar = $this->uploadKycImage($request, $imageKitService, 'avatar', '/retailer/avatars', $user->profile_pic);
-            if ($newAvatar) {
-                $user->update(['profile_pic' => $newAvatar]);
-            }
-        }
-
-        $shopImagePath = $this->uploadKycImage($request, $imageKitService, 'shop_image', '/retailer/shops', $existingProfile?->shop_image);
-        $frontPath = $this->uploadKycImage($request, $imageKitService, 'aadhaar_front', '/retailer/aadhaar', $existingProfile?->aadhaar_card_front);
-        $backPath = $this->uploadKycImage($request, $imageKitService, 'aadhaar_back', '/retailer/aadhaar', $existingProfile?->aadhaar_card_back);
-
         $shopName = Str::title(trim($validated['shop_name']));
         $line1 = Str::title(trim($validated['line1']));
         $line2 = !empty($validated['line2']) ? Str::title(trim($validated['line2'])) : null;
@@ -326,18 +318,23 @@ class CustomerPortalController extends Controller
             'shop_name' => $shopName,
             'shop_address' => $shopAddress,
             'gst_number' => !empty($validated['gst_number']) ? strtoupper(trim($validated['gst_number'])) : null,
-            'shop_image' => $shopImagePath,
+            'shop_image' => $existingProfile?->shop_image,
             'aadhaar_card' => $validated['aadhaar_card'],
-            'aadhaar_card_front' => $frontPath,
-            'aadhaar_card_back' => $backPath,
+            'aadhaar_card_front' => $existingProfile?->aadhaar_card_front,
+            'aadhaar_card_back' => $existingProfile?->aadhaar_card_back,
             'status' => 'PENDING',
             'rejection_reason' => null,
         ];
 
-        RetailerProfile::updateOrCreate(
+        $profile = RetailerProfile::updateOrCreate(
             ['user_id' => $user->id],
             $profileData
         );
+
+        $this->queueKycImage($request, $imageKitService, 'avatar', User::class, $user->id, 'profile_pic', '/retailer/avatars', $user->profile_pic);
+        $this->queueKycImage($request, $imageKitService, 'shop_image', RetailerProfile::class, $profile->id, 'shop_image', '/retailer/shops', $existingProfile?->shop_image);
+        $this->queueKycImage($request, $imageKitService, 'aadhaar_front', RetailerProfile::class, $profile->id, 'aadhaar_card_front', '/retailer/aadhaar', $existingProfile?->aadhaar_card_front);
+        $this->queueKycImage($request, $imageKitService, 'aadhaar_back', RetailerProfile::class, $profile->id, 'aadhaar_card_back', '/retailer/aadhaar', $existingProfile?->aadhaar_card_back);
 
         NewUserRegisteredNotification::notifyAdmins($user, $validated['shop_name']);
 
